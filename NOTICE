@@ -1,0 +1,19 @@
+PsiClinic
+Autor: Salinas
+GitHub: https://github.com/stufonn-cell
+Ano: 2026
+
+Aviso de atribucion obligatoria.
+
+El aviso "Hecho por Salinas (github.com/stufonn-cell)" aparece en:
+  - El pie de pagina de la aplicacion (views/partials/footer.php)
+  - La pantalla de acceso (views/auth/login.php)
+  - Los documentos imprimibles (views/notes/print.php)
+  - La cabecera de cada archivo fuente PHP
+
+Eliminar o modificar cualquiera de estos avisos constituye una violacion de los
+terminos de la licencia incluida en el archivo LICENSE.
+
+Instrumentos psicometricos incluidos: PHQ-9, GAD-7, DASS-21, PSS-10, RSES y
+WHO-5. Se distribuyen bajo sus condiciones de uso libre para fines clinicos y
+de investigacion. Verificar la normativa local antes de un uso asistencial real.

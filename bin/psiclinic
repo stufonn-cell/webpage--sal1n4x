@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+#
+# PsiClinic - control de la aplicacion en WSL o Linux.
+# Hecho por Salinas | github.com/stufonn-cell
+#
+# Uso: psiclinic [up|down|restart|status|logs|install|test|shell|db|backup|open]
+
+set -euo pipefail
+
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$PROJECT_DIR"
+
+APP_PORT="$(grep -E '^APP_PORT=' .env 2>/dev/null | cut -d= -f2 | tr -d '[:space:]' || true)"
+APP_PORT="${APP_PORT:-8080}"
+
+log() { printf '  %s\n' "$1"; }
+
+require_env() {
+    if [ ! -f .env ]; then
+        log "No existe .env. Copiando desde .env.example."
+        cp .env.example .env
+        log "Revisa las claves del archivo .env antes de usarlo con datos reales."
+    fi
+}
+
+wait_for_database() {
+    log "Esperando a que MySQL responda..."
+    for _ in $(seq 1 45); do
+        if docker compose exec -T mysql mysqladmin ping -h 127.0.0.1 --silent >/dev/null 2>&1; then
+            log "MySQL listo."
+            return 0
+        fi
+        sleep 2
+    done
+    log "MySQL no respondio a tiempo. Revisa: docker compose logs mysql"
+    return 1
+}
+
+command_up() {
+    require_env
+    log "Levantando contenedores..."
+    docker compose up -d
+    wait_for_database
+    docker compose exec -T app php bin/console migrate >/dev/null
+    log "PsiClinic disponible en http://localhost:${APP_PORT}"
+}
+
+command_down() {
+    docker compose down
+    log "Contenedores detenidos. Los datos se conservan."
+}
+
+command_status() {
+    docker compose ps
+}
+
+command_open() {
+    local url="http://localhost:${APP_PORT}"
+    if command -v explorer.exe >/dev/null 2>&1; then
+        explorer.exe "$url" >/dev/null 2>&1 || true
+    elif command -v xdg-open >/dev/null 2>&1; then
+        xdg-open "$url" >/dev/null 2>&1 || true
+    else
+        log "Abre manualmente: $url"
+    fi
+}
+
+command_backup() {
+    local file="respaldo-$(date +%F-%H%M).sql.gz"
+    local root_password
+    root_password="$(grep -E '^DB_ROOT_PASSWORD=' .env | cut -d= -f2)"
+    local database
+    database="$(grep -E '^DB_DATABASE=' .env | cut -d= -f2)"
+
+    docker compose exec -T mysql mysqldump -u root -p"$root_password" --single-transaction "$database" | gzip > "$file"
+    log "Respaldo creado: $file"
+}
+
+case "${1:-up}" in
+    up)       command_up ;;
+    down)     command_down ;;
+    restart)  command_down; command_up ;;
+    status)   command_status ;;
+    logs)     docker compose logs -f app web ;;
+    install)  require_env; docker compose up -d; wait_for_database; docker compose exec app php bin/console install ;;
+    test)     docker compose exec app php bin/test "${2:-}" ;;
+    shell)    docker compose exec app sh ;;
+    db)       docker compose exec mysql mysql -u root -p"$(grep -E '^DB_ROOT_PASSWORD=' .env | cut -d= -f2)" ;;
+    backup)   command_backup ;;
+    open)     command_open ;;
+    *)
+        cat <<'HELP'
+  PsiClinic - comandos disponibles
+
+    psiclinic up        Levanta los contenedores y aplica migraciones pendientes
+    psiclinic down      Detiene los contenedores conservando los datos
+    psiclinic restart   Reinicia todo
+    psiclinic status    Muestra el estado de los contenedores
+    psiclinic logs      Sigue los registros de PHP y Nginx
+    psiclinic install   Primera instalacion con datos de demostracion
+    psiclinic test      Ejecuta la suite de pruebas
+    psiclinic shell     Abre una terminal dentro del contenedor de PHP
+    psiclinic db        Abre el cliente de MySQL
+    psiclinic backup    Genera un volcado comprimido de la base de datos
+    psiclinic open      Abre la aplicacion en el navegador
+HELP
+        ;;
+esac

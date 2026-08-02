@@ -1,0 +1,290 @@
+/**
+ * PsiClinic - hoja de estilos / comportamiento de la interfaz.
+ * Hecho por Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ */
+
+.auth {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1.05fr .95fr;
+    background: var(--bg);
+}
+
+.auth__aside {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(150deg, #1b2570 0%, #2c41d8 45%, #12b39a 130%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 3rem 3.4rem;
+}
+
+.auth__aside::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 18% 12%, rgba(255, 255, 255, .16), transparent 42%),
+        radial-gradient(circle at 82% 78%, rgba(47, 208, 181, .28), transparent 46%);
+    pointer-events: none;
+}
+
+.auth__aside > * { position: relative; z-index: 1; }
+
+.auth__brand {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: -.02em;
+}
+
+.auth__headline {
+    font-size: 2.35rem;
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -.03em;
+    margin: 0 0 .9rem;
+    max-width: 15ch;
+}
+
+.auth__lead {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, .82);
+    max-width: 44ch;
+    margin-bottom: 2rem;
+}
+
+.auth__illustration {
+    width: min(100%, 430px);
+    margin: 1rem 0 1.6rem;
+    filter: drop-shadow(0 18px 40px rgba(0, 0, 0, .28));
+}
+
+.auth__features { display: flex; flex-direction: column; gap: .85rem; }
+
+.auth__feature {
+    display: flex;
+    align-items: flex-start;
+    gap: .7rem;
+    font-size: .88rem;
+    color: rgba(255, 255, 255, .9);
+}
+
+.auth__feature-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, .16);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.auth__footnote { font-size: .76rem; color: rgba(255, 255, 255, .6); }
+
+.auth__panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem;
+}
+
+.auth__card {
+    width: min(100%, 400px);
+}
+
+.auth__title { font-size: 1.65rem; margin-bottom: .25rem; }
+.auth__subtitle { color: var(--text-soft); font-size: .92rem; margin-bottom: 1.7rem; }
+
+.auth__field { margin-bottom: 1rem; position: relative; }
+
+.auth__field label {
+    display: block;
+    font-size: .78rem;
+    font-weight: 650;
+    color: var(--text-soft);
+    margin-bottom: .35rem;
+}
+
+.auth__input-wrap { position: relative; display: flex; align-items: center; }
+
+.auth__input-wrap > .icon {
+    position: absolute;
+    left: .85rem;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.auth__field input {
+    width: 100%;
+    padding: .78rem .9rem .78rem 2.6rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-size: .92rem;
+    font-family: inherit;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.auth__field input:focus {
+    outline: none;
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 4px var(--brand-50);
+}
+
+.auth__toggle {
+    position: absolute;
+    right: .55rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: .35rem;
+    border-radius: 6px;
+    display: inline-flex;
+}
+
+.auth__toggle:hover { color: var(--text); background: var(--surface-alt); }
+
+.auth__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: .82rem;
+    margin-bottom: 1.3rem;
+}
+
+.auth__remember { display: inline-flex; align-items: center; gap: .4rem; color: var(--text-soft); cursor: pointer; }
+.auth__remember input { accent-color: var(--brand-600); }
+
+.auth__submit {
+    width: 100%;
+    padding: .82rem;
+    border: none;
+    border-radius: var(--radius);
+    background: linear-gradient(120deg, var(--brand-600), var(--brand-500) 55%, var(--accent-500));
+    background-size: 160% 100%;
+    color: #fff;
+    font-size: .95rem;
+    font-weight: 650;
+    font-family: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    transition: background-position 300ms ease, transform var(--transition), box-shadow var(--transition);
+    box-shadow: 0 8px 22px rgba(44, 65, 216, .28);
+}
+
+.auth__submit:hover { background-position: 100% 0; box-shadow: 0 12px 28px rgba(44, 65, 216, .34); }
+.auth__submit:active { transform: translateY(1px); }
+
+.auth__divider {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    margin: 1.5rem 0 1.1rem;
+    color: var(--text-muted);
+    font-size: .74rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+}
+
+.auth__divider::before,
+.auth__divider::after {
+    content: "";
+    height: 1px;
+    background: var(--border);
+    flex: 1;
+}
+
+.auth__demo {
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    padding: .85rem 1rem;
+    font-size: .8rem;
+    color: var(--text-soft);
+    background: var(--surface-alt);
+}
+
+.auth__demo-row {
+    display: flex;
+    justify-content: space-between;
+    gap: .8rem;
+    padding: .2rem 0;
+}
+
+.auth__demo button {
+    background: none;
+    border: none;
+    color: var(--brand-600);
+    font-weight: 650;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: .8rem;
+    padding: 0;
+}
+
+.auth__theme {
+    position: absolute;
+    top: 1.4rem;
+    right: 1.6rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-soft);
+}
+
+.pulse-node { animation: pulse-node 3.6s ease-in-out infinite; transform-origin: center; }
+.pulse-node--delay { animation-delay: 1.2s; }
+.pulse-node--delay-2 { animation-delay: 2.4s; }
+
+@keyframes pulse-node {
+    0%, 100% { opacity: .45; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.12); }
+}
+
+.drift { animation: drift 9s ease-in-out infinite; }
+
+@keyframes drift {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-9px); }
+}
+
+@media (max-width: 980px) {
+    .auth { grid-template-columns: 1fr; }
+    .auth__aside { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pulse-node, .drift { animation: none; }
+}
+
+.auth__credit {
+    margin-top: 1.6rem;
+    text-align: center;
+    font-size: .74rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    flex-wrap: wrap;
+}
+
+.auth__credit a { color: var(--text-soft); font-weight: 600; display: inline-flex; align-items: center; gap: .25rem; }
+.auth__credit a:hover { color: var(--brand-600); }

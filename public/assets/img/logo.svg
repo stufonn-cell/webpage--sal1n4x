@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="PsiClinic">
+  <defs>
+    <linearGradient id="logoGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3f5ff2"/>
+      <stop offset="1" stop-color="#12b39a"/>
+    </linearGradient>
+  </defs>
+  <rect width="48" height="48" rx="13" fill="url(#logoGradient)"/>
+  <path d="M24 10c-5.6 0-10 4.1-10 9.4 0 3.4 1.8 6.3 4.7 8v3.1a1.4 1.4 0 0 0 2.2 1.1l2-1.4c.4 0 .7.1 1.1.1 5.6 0 10-4.1 10-9.4S29.6 10 24 10Z" fill="#fff" opacity=".92"/>
+  <circle cx="19.4" cy="19.4" r="1.9" fill="#2433ae"/>
+  <circle cx="28.6" cy="17.2" r="1.9" fill="#2433ae"/>
+  <circle cx="27.1" cy="23.6" r="1.9" fill="#0d8f7c"/>
+  <path d="M19.4 19.4 28.6 17.2 27.1 23.6Z" fill="none" stroke="#2433ae" stroke-width="1.2" stroke-linejoin="round" opacity=".65"/>
+  <path d="M15 35.5h18" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".55"/>
+</svg>

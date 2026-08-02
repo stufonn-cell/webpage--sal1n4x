@@ -1,0 +1,12 @@
+.git
+.github
+.env
+.env.local
+docs
+tests
+storage/logs/*
+storage/uploads/*
+*.md
+!README.md
+Makefile
+.editorconfig

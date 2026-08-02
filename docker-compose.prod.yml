@@ -1,0 +1,77 @@
+# Archivo autonomo de produccion. No es una sobrecapa: se usa en lugar de
+# docker-compose.yml para evitar que un volumen de desarrollo sobreescriba el
+# codigo que viaja dentro de la imagen.
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Diferencias con el entorno local:
+#   - El codigo se copia en la imagen (etapa production del Dockerfile).
+#   - Solo storage/ se monta como volumen, para conservar los adjuntos.
+#   - MySQL no publica puerto y Adminer no se levanta.
+#   - OPcache no revalida archivos.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      target: production
+    container_name: psiclinic_app
+    restart: always
+    working_dir: /var/www/html
+    volumes:
+      - ./storage:/var/www/html/storage
+    env_file: .env
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(extension_loaded('pdo_mysql') ? 0 : 1);"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks: [psiclinic]
+
+  web:
+    image: nginx:1.27-alpine
+    container_name: psiclinic_web
+    restart: always
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:80"
+    volumes:
+      - ./public:/var/www/html/public:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: [app]
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/login"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks: [psiclinic]
+
+  mysql:
+    image: mysql:8.4
+    container_name: psiclinic_mysql
+    restart: always
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    networks: [psiclinic]
+
+volumes:
+  mysql_data:
+
+networks:
+  psiclinic:
+    driver: bridge

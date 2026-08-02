@@ -1,0 +1,25 @@
+Copyright (c) 2026 Salinas (https://github.com/stufonn-cell)
+
+Todos los derechos reservados.
+
+Este software y su codigo fuente son propiedad intelectual de su autor. Se
+concede permiso para consultar y ejecutar el software con fines de evaluacion
+personal. Queda expresamente prohibido, sin autorizacion previa y por escrito
+del titular:
+
+1. Redistribuir, publicar o sublicenciar el codigo fuente, total o parcialmente.
+2. Utilizar el software o cualquier obra derivada con fines comerciales.
+3. Eliminar, alterar u ocultar los avisos de autoria, copyright o atribucion
+   presentes en el codigo, en la interfaz o en la documentacion.
+4. Presentar el software o partes de el como obra propia.
+
+Toda obra derivada debe conservar de forma visible el aviso de autoria
+"Hecho por Salinas (github.com/stufonn-cell)".
+
+EL SOFTWARE SE PROPORCIONA "TAL CUAL", SIN GARANTIA DE NINGUN TIPO, EXPRESA O
+IMPLICITA. EN NINGUN CASO EL AUTOR SERA RESPONSABLE DE RECLAMACIONES, DANOS U
+OTRAS RESPONSABILIDADES DERIVADAS DEL USO DEL SOFTWARE.
+
+Este proyecto es una implementacion independiente inspirada en el modelo
+funcional de sistemas de historia clinica de codigo abierto. No incluye ni
+deriva del codigo fuente de OpenEMR.

@@ -1,0 +1,21 @@
+{
+  "name": "entirety/psiclinic",
+  "description": "Sistema de gestion clinica para psicologia, derivado del modelo funcional de OpenEMR",
+  "type": "project",
+  "license": "GPL-3.0-or-later",
+  "require": {
+    "php": ">=8.1",
+    "ext-pdo": "*",
+    "ext-pdo_mysql": "*",
+    "ext-json": "*",
+    "ext-mbstring": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "PsiClinic\\": "src/"
+    }
+  },
+  "config": {
+    "optimize-autoloader": true
+  }
+}

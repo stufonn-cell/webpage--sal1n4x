@@ -1,0 +1,12 @@
+/vendor/
+/node_modules/
+.env
+.env.local
+storage/logs/*.log
+storage/uploads/*
+!storage/uploads/.gitkeep
+.DS_Store
+.idea/
+.vscode/
+*.sql.gz
+docker/mysql-data/

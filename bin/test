@@ -1,0 +1,12 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use PsiClinic\Tests\Runner;
+
+require dirname(__DIR__) . '/tests/bootstrap.php';
+
+fwrite(STDOUT, PHP_EOL . '  PsiClinic - suite de pruebas' . PHP_EOL);
+
+exit((new Runner())->run($argv[1] ?? ''));
