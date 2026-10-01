@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -11,34 +11,43 @@ declare(strict_types=1);
 use PsiClinic\Core\App;
 use PsiClinic\Core\Env;
 use PsiClinic\Core\HttpException;
-use PsiClinic\Core\Lang;
+use PsiClinic\Core\Log;
 use PsiClinic\Core\Request;
 use PsiClinic\Core\Response;
 use PsiClinic\Core\Router;
 
 require dirname(__DIR__) . '/src/autoload.php';
 
+// Security headers for every API response. Nginx sets the site-wide ones
+// too; these keep the API safe if it is ever served without that Nginx.
+header_remove('X-Powered-By');
 header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
 header('Referrer-Policy: same-origin');
+header('Cross-Origin-Resource-Policy: same-origin');
 
 try {
     App::boot(dirname(__DIR__));
 
     $request = Request::capture();
-    Lang::detect($request->header('Accept-Language'));
 
     /** @var Router $router */
     $router = require dirname(__DIR__) . '/src/routes.php';
     $router->dispatch($request);
 } catch (HttpException $exception) {
-    Response::json($exception->toArray(), $exception->status());
+    Response::json($exception->toArray(), $exception->status(), $exception->headers());
 } catch (Throwable $exception) {
-    // El detalle tecnico va al log; a la persona solo un mensaje humano.
-    error_log(sprintf('[%s] %s en %s:%d', $exception::class, $exception->getMessage(), $exception->getFile(), $exception->getLine()));
+    // Technical details (including SQL errors) go to the log only; the
+    // person sees a human message.
+    Log::error(sprintf('[%s] %s in %s:%d', $exception::class, $exception->getMessage(), $exception->getFile(), $exception->getLine()));
 
-    $body = ['error' => ['message' => Lang::t('Algo salió mal de nuestro lado. Intenta de nuevo en unos minutos.')]];
+    $body = ['error' => ['message' => 'Something went wrong on our end. Please try again in a few minutes.']];
+    // Local debugging aid only. SQL errors are never echoed, not even locally:
+    // they can quote data and reveal the schema.
     if (Env::bool('APP_DEBUG', false) && App::isLocal()) {
-        $body['error']['debug'] = $exception->getMessage();
+        $body['error']['debug'] = $exception instanceof PDOException
+            ? 'Database error. The details are in the server log.'
+            : $exception->getMessage();
     }
 
     Response::json($body, 500);

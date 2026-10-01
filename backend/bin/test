@@ -1,12 +1,25 @@
 #!/usr/bin/env php
 <?php
 
+/**
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
+ */
+
+/*
+ * Usage: php bin/test [unit|feature] [ClassNameSubstring]
+ *   php bin/test                  runs every suite
+ *   php bin/test feature          runs only the feature suite
+ *   php bin/test feature patient  runs feature classes whose name contains "patient"
+ */
+
 declare(strict_types=1);
 
 use PsiClinic\Tests\Runner;
 
 require dirname(__DIR__) . '/tests/bootstrap.php';
 
-fwrite(STDOUT, PHP_EOL . '  PsiClinic - suite de pruebas' . PHP_EOL);
+fwrite(STDOUT, PHP_EOL . '  PsiClinic - test suite' . PHP_EOL);
 
-exit((new Runner())->run($argv[1] ?? ''));
+exit((new Runner())->run($argv[1] ?? '', $argv[2] ?? ''));

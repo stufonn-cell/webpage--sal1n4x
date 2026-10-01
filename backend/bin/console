@@ -12,13 +12,13 @@ Env::load(dirname(__DIR__) . '/.env');
 date_default_timezone_set((string) Env::get('APP_TIMEZONE', 'UTC'));
 
 $availableCommands = [
-    'install' => 'Ejecuta las migraciones y carga los datos de demostracion',
-    'migrate' => 'Crea las tablas a partir de database/migrations',
-    'cie11' => 'Vuelve a cargar el catalogo CIE-11 desde database/data',
-    'seed' => 'Carga unicamente los datos de demostracion',
-    'fresh' => 'Elimina todas las tablas y vuelve a instalar desde cero',
-    'key' => 'Genera un valor para APP_KEY',
-    'hash' => 'Genera el hash de una contrasena: bin/console hash MiClave',
+    'install' => 'Runs the migrations and loads the demo data',
+    'migrate' => 'Creates the tables from database/migrations',
+    'icd11' => 'Reloads the ICD-11 catalog from database/data',
+    'seed' => 'Loads only the demo data',
+    'fresh' => 'Drops every table and reinstalls from scratch',
+    'key' => 'Generates a value for APP_KEY',
+    'hash' => 'Generates a password hash: bin/console hash MyPassword',
 ];
 
 $command = $argv[1] ?? 'help';
@@ -27,7 +27,7 @@ try {
     match ($command) {
         'install' => Installer::install(),
         'migrate' => Installer::migrate(),
-        'cie11' => Installer::importIcd11(),
+        'icd11' => Installer::importIcd11(),
         'seed' => Installer::seed(),
         'fresh' => Installer::fresh(),
         'key' => print base64_encode(random_bytes(32)) . PHP_EOL,

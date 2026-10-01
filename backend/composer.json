@@ -1,6 +1,6 @@
 {
   "name": "entirety/psiclinic",
-  "description": "Sistema de gestion clinica para psicologia, derivado del modelo funcional de OpenEMR",
+  "description": "Clinical management system for psychology practices, based on the functional model of OpenEMR",
   "type": "project",
   "license": "GPL-3.0-or-later",
   "require": {
