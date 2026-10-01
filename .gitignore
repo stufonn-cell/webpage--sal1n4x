@@ -12,3 +12,4 @@ backend/storage/tmp/
 .vscode/
 *.sql.gz
 docker/mysql-data/
+*.tsbuildinfo
