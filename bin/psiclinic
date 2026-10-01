@@ -3,7 +3,7 @@
 # PsiClinic - control de la aplicacion en WSL o Linux.
 # Hecho por Salinas | github.com/stufonn-cell
 #
-# Uso: psiclinic [up|down|restart|status|logs|install|test|shell|db|backup|open]
+# Uso: psiclinic [up|down|restart|status|logs|build|install|test|test-front|shell|db|backup|open]
 
 set -euo pipefail
 
@@ -36,13 +36,23 @@ wait_for_database() {
     return 1
 }
 
+command_build() {
+    log "Compilando el frontend..."
+    docker compose run --rm --no-deps frontend sh -c "npm install --no-audit --no-fund && npm run build"
+    log "Frontend compilado en frontend/dist."
+}
+
 command_up() {
     require_env
+    if [ ! -f frontend/dist/index.html ]; then
+        command_build
+    fi
     log "Levantando contenedores..."
     docker compose up -d
     wait_for_database
     docker compose exec -T app php bin/console migrate >/dev/null
     log "PsiClinic disponible en http://localhost:${APP_PORT}"
+    log "Frontend con recarga en caliente en http://localhost:5173"
 }
 
 command_down() {
@@ -81,9 +91,11 @@ case "${1:-up}" in
     down)     command_down ;;
     restart)  command_down; command_up ;;
     status)   command_status ;;
-    logs)     docker compose logs -f app web ;;
-    install)  require_env; docker compose up -d; wait_for_database; docker compose exec app php bin/console install ;;
+    logs)     docker compose logs -f app web frontend ;;
+    build)    command_build ;;
+    install)  require_env; command_build; docker compose up -d; wait_for_database; docker compose exec app php bin/console install ;;
     test)     docker compose exec app php bin/test "${2:-}" ;;
+    test-front) docker compose run --rm --no-deps frontend sh -c "npm install --no-audit --no-fund && npm run typecheck && npm test" ;;
     shell)    docker compose exec app sh ;;
     db)       docker compose exec mysql mysql -u root -p"$(grep -E '^DB_ROOT_PASSWORD=' .env | cut -d= -f2)" ;;
     backup)   command_backup ;;
@@ -96,9 +108,11 @@ case "${1:-up}" in
     psiclinic down      Detiene los contenedores conservando los datos
     psiclinic restart   Reinicia todo
     psiclinic status    Muestra el estado de los contenedores
-    psiclinic logs      Sigue los registros de PHP y Nginx
+    psiclinic logs      Sigue los registros de PHP, Nginx y Vite
+    psiclinic build     Compila el frontend (frontend/dist)
     psiclinic install   Primera instalacion con datos de demostracion
-    psiclinic test      Ejecuta la suite de pruebas
+    psiclinic test      Ejecuta la suite de pruebas del backend
+    psiclinic test-front Comprueba tipos y ejecuta las pruebas del frontend
     psiclinic shell     Abre una terminal dentro del contenedor de PHP
     psiclinic db        Abre el cliente de MySQL
     psiclinic backup    Genera un volcado comprimido de la base de datos

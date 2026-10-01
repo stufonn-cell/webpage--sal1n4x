@@ -3,10 +3,12 @@
 .env
 .env.local
 docs
-tests
-storage/logs/*
-storage/uploads/*
 *.md
-!README.md
 Makefile
 .editorconfig
+backend/tests
+backend/storage/logs/*
+backend/storage/uploads/*
+backend/storage/tmp
+frontend/node_modules
+frontend/dist

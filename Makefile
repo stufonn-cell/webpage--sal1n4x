@@ -1,19 +1,23 @@
-.PHONY: up down install fresh logs shell db reset test test-unit test-feature lint prod
+.PHONY: up down install fresh logs shell db reset build test test-unit test-feature test-front lint prod
 
-up:
+up: build
 	docker compose up -d --build
 
 down:
 	docker compose down
 
-install:
+build:
+	docker compose run --rm --no-deps frontend sh -c "npm install --no-audit --no-fund && npm run build"
+
+install: build
+	docker compose up -d
 	docker compose exec app php bin/console install
 
 fresh:
 	docker compose exec app php bin/console fresh
 
 logs:
-	docker compose logs -f app web
+	docker compose logs -f app web frontend
 
 shell:
 	docker compose exec app sh
@@ -30,8 +34,11 @@ test-unit:
 test-feature:
 	docker compose exec app php bin/test feature
 
+test-front:
+	docker compose run --rm --no-deps frontend sh -c "npm install --no-audit --no-fund && npm run typecheck && npm test"
+
 lint:
-	docker compose exec app sh -c "find src public bin tests views -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null && echo 'Sintaxis correcta'"
+	docker compose exec app sh -c "find src public bin tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null && echo 'Sintaxis correcta'"
 
 prod:
 	docker compose -f docker-compose.prod.yml up -d --build

@@ -7,9 +7,12 @@ on:
     branches: [main]
 
 jobs:
-  tests:
-    name: Pruebas y analisis
+  backend:
+    name: Backend (PHP)
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
 
     services:
       mysql:
@@ -40,12 +43,9 @@ jobs:
       - name: Comprobar la sintaxis de todos los archivos PHP
         run: find src public bin tests -name '*.php' -print0 | xargs -0 -n1 php -l
 
-      - name: Comprobar la sintaxis de las vistas
-        run: find views -name '*.php' -print0 | xargs -0 -n1 php -l
-
       - name: Preparar el entorno
         run: |
-          cp .env.example .env
+          cp ../.env.example .env
           sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' .env
           sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=psiclinic_ci/' .env
           sed -i 's/^DB_DATABASE=.*/DB_DATABASE=psiclinic_test/' .env
@@ -54,13 +54,40 @@ jobs:
       - name: Ejecutar la suite de pruebas
         run: php bin/test
 
-  build:
-    name: Construir la imagen
+  frontend:
+    name: Frontend (React)
     runs-on: ubuntu-latest
-    needs: tests
+    defaults:
+      run:
+        working-directory: frontend
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Construir la imagen de produccion
-        run: docker build -f docker/php/Dockerfile --target production -t psiclinic:ci .
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci --no-audit --no-fund
+      - name: Comprobar tipos
+        run: npm run typecheck
+      - name: Pruebas
+        run: npm test
+      - name: Compilar
+        run: npm run build
+
+  images:
+    name: Construir las imagenes de produccion
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Imagen del backend
+        run: docker build -f docker/php/Dockerfile --target production -t psiclinic-app:ci .
+
+      - name: Imagen web (frontend + Nginx)
+        run: docker build -f docker/frontend/Dockerfile -t psiclinic-web:ci .
