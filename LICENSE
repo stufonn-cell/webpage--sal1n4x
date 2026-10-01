@@ -1,25 +1,28 @@
 Copyright (c) 2026 Salinas (https://github.com/stufonn-cell)
 
-Todos los derechos reservados.
+All rights reserved.
 
-Este software y su codigo fuente son propiedad intelectual de su autor. Se
-concede permiso para consultar y ejecutar el software con fines de evaluacion
-personal. Queda expresamente prohibido, sin autorizacion previa y por escrito
-del titular:
+This software and its source code are the intellectual property of its author.
+Permission is granted to view and run the software for personal evaluation
+purposes. Without the prior written authorization of the copyright holder, it is
+expressly forbidden to:
 
-1. Redistribuir, publicar o sublicenciar el codigo fuente, total o parcialmente.
-2. Utilizar el software o cualquier obra derivada con fines comerciales.
-3. Eliminar, alterar u ocultar los avisos de autoria, copyright o atribucion
-   presentes en el codigo, en la interfaz o en la documentacion.
-4. Presentar el software o partes de el como obra propia.
+1. Redistribute, publish or sublicense the source code, in whole or in part.
+2. Use the software or any derivative work for commercial purposes.
+3. Remove, alter or hide the authorship, copyright or attribution notices
+   found in the code, in the interface or in the documentation.
+4. Present the software, or any part of it, as your own work.
 
-Toda obra derivada debe conservar de forma visible el aviso de autoria
-"Hecho por Salinas (github.com/stufonn-cell)".
+Every derivative work must visibly keep the authorship notice
+"Made by Salinas (github.com/stufonn-cell)".
 
-EL SOFTWARE SE PROPORCIONA "TAL CUAL", SIN GARANTIA DE NINGUN TIPO, EXPRESA O
-IMPLICITA. EN NINGUN CASO EL AUTOR SERA RESPONSABLE DE RECLAMACIONES, DANOS U
-OTRAS RESPONSABILIDADES DERIVADAS DEL USO DEL SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
 
-Este proyecto es una implementacion independiente inspirada en el modelo
-funcional de sistemas de historia clinica de codigo abierto. No incluye ni
-deriva del codigo fuente de OpenEMR.
+This project is an independent implementation inspired by the functional model
+of open-source clinical record systems. It does not include, and is not derived
+from, the OpenEMR source code.
+
+Third-party data included in the software (such as the WHO ICD-11 catalog) is
+distributed under its own licence, described in the NOTICE file.

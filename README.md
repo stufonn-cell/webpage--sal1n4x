@@ -1,185 +1,218 @@
 # PsiClinic
 
-Sistema de historia clínica para consulta psicológica, con sitio público, portal
-del paciente y módulo de instrumentos psicométricos con corrección automática.
+Clinical records system for psychology practices, with a public website, a
+patient portal and a psychometric instruments module with automatic scoring.
 
-Desde la versión 2.0 el proyecto está separado en dos piezas:
+Since version 2.0 the project is split into two parts:
 
-| Pieza | Tecnología | Responsabilidad |
+| Part | Technology | Responsibility |
 |---|---|---|
-| `backend/` | PHP 8.3 sin frameworks, MySQL 8.4 | API JSON bajo `/api`, reglas clínicas, seguridad, auditoría |
-| `frontend/` | React 19, TypeScript, Vite | Sitio público, aplicación del equipo clínico y portal del paciente |
+| `backend/` | PHP 8.3 with no frameworks, MySQL 8.4 | JSON API under `/api`, clinical rules, security, audit log |
+| `frontend/` | React 19, TypeScript, Vite | Public website, staff application and patient portal |
 
-Nginx sirve el frontend compilado y reenvía `/api/*` a PHP-FPM: el navegador ve
-un único origen, así que la cookie de sesión y el token CSRF funcionan sin CORS.
+Nginx serves the compiled frontend and forwards `/api/*` to PHP-FPM: the browser
+sees a single origin, so the session cookie and the CSRF token work without CORS.
 
-Hecho por Salinas — [github.com/stufonn-cell](https://github.com/stufonn-cell)
+The whole application is in English.
 
----
-
-## Qué incluye
-
-**Sitio público** (`/`)
-
-- Portada con presentación de la clínica, servicios explorables, cómo empezar,
-  equipo (solo profesionales que activan su perfil), confidencialidad, preguntas
-  frecuentes y contacto.
-- Solicitud de cita en tres pasos, con validación por paso, campo trampa para
-  bots y límite de envíos por conexión. Las solicitudes llegan a una bandeja del
-  equipo.
-- Aviso permanente de ayuda inmediata con la línea de emergencias configurable.
-- Página de privacidad basada en los consentimientos que la clínica ya usa.
-- Metadatos, Open Graph, URL canónica y datos estructurados (schema.org).
-
-**Equipo clínico** (`/app`)
-
-- Panel del día, bandeja de solicitudes, agenda semanal con detección de choques,
-  pacientes, notas SOAP/DAP/libres con firma que bloquea, diagnósticos CIE-10 y
-  DSM-5, evaluaciones con bandas de severidad e ítems críticos, consentimientos
-  con firma de trazo, documentos, facturación con pagos parciales,
-  configuración, usuarios y auditoría.
-- Búsqueda global con `Ctrl+K`, modo claro y oscuro, versión imprimible de notas
-  y facturas.
-
-**Portal del paciente** (`/portal`)
-
-- Próxima sesión con acceso a la videollamada, cuestionarios con progreso, curva
-  de evolución, firma de consentimientos y descarga de documentos.
-
-**Instrumentos**: PHQ-9, GAD-7, DASS-21, PSS-10, RSES y WHO-5.
+Made by Salinas — [github.com/stufonn-cell](https://github.com/stufonn-cell)
 
 ---
 
-## Arranque rápido
+## What's included
 
-Requisitos: Docker Desktop con WSL2 (Windows) o Docker Engine (Linux, macOS).
+**Public website** (`/`)
+
+- Home page with the practice's introduction, browsable services, how to get
+  started, team (only professionals who turn on their public profile),
+  confidentiality, frequently asked questions and contact details.
+- Three-step appointment request (`/request-appointment`) with per-step
+  validation, a honeypot field for bots and a submission limit per connection.
+  Requests land in a staff inbox.
+- Always-visible "get help now" notice with a configurable crisis line.
+- Privacy page (`/privacy`) based on the consents the practice already uses,
+  and terms and conditions (`/terms`). Both can be read in English or Spanish
+  (`?lang=es`); have a lawyer review them before going live.
+- Metadata, Open Graph, canonical URL and structured data (schema.org).
+
+**Staff** (`/app`)
+
+- Today's dashboard, appointment requests inbox, weekly schedule with clash
+  detection, patients, SOAP/DAP/free-form session notes with signing that locks
+  the note, assessments with severity bands and critical items, informed
+  consents signed by hand, documents, billing with partial payments, settings,
+  users and audit log.
+- **Documents in English or Spanish.** The interface is English, but informed
+  consents, printed session notes, invoices and assessment reports can be
+  produced in English or Spanish. *Settings → Documents* sets the default; each
+  consent is created in a chosen language (and signed in it, also from the
+  portal), and the other documents have a language switch next to *Print*.
+- **ICD-11 coding.** Diagnoses are coded with the WHO ICD-11 MMS 2025-01 catalog
+  (adopted in Colombia by Resolution 1442 of 2024), searchable by code or by
+  words. Each ICD-11 code stores its WHO ICD-10 equivalent, so every diagnosis
+  is dual coded during the transition. DSM-5 and ICD-10 remain available.
+- **RIPS reports** (Colombia, Resolution 2275 of 2023). Administrators generate
+  "RIPS without invoice" JSON reports (`tipoNota` `RS`) for the completed
+  appointments in a period. Before generating, you can see which appointments
+  are missing data. Download the JSON for the Ministry's local validator, or send
+  it to the Ministry's MUV Docker API (SISPRO credentials are used for that
+  request only and are never stored), and track each report's status:
+  generated, validated (with its CUV) or rejected. Each appointment is reported
+  once; a report that was not validated can be deleted to generate it again.
+  *Settings → RIPS* holds the reporter NIT, REPS provider code, service code
+  (default `344` Psychology), default purpose and cause codes, first note
+  number, environment and validator URL.
+- Global search with `Ctrl+K`, light and dark mode, printable notes and
+  invoices.
+
+**Patient portal** (`/portal`)
+
+- Next session with a link to the video call, questionnaires with progress,
+  progress chart, consent signing and document downloads.
+
+**Instruments**: PHQ-9, GAD-7, DASS-21, PSS-10, RSES and WHO-5.
+
+---
+
+## Quick start
+
+Requirements: Docker Desktop with WSL2 (Windows) or Docker Engine (Linux, macOS).
 
 ```bash
 git clone https://github.com/stufonn-cell/psiclinic.git
 cd psiclinic
 cp .env.example .env
-make install          # compila el frontend, levanta todo y carga datos demo
+make install          # builds the frontend, starts everything and loads demo data
 ```
 
-Sin `make`:
+Without `make`:
 
 ```bash
 docker compose run --rm --no-deps frontend sh -c "npm install && npm run build"
 docker compose up -d
 ```
 
-| Dirección | Qué es |
+| Address | What it is |
 |---|---|
-| <http://localhost:8080> | Aplicación completa (frontend compilado + API) |
-| <http://localhost:5173> | Frontend con recarga en caliente para desarrollar |
-| <http://localhost:8081> | Adminer (servidor `mysql`) |
+| <http://localhost:8080> | Full application (compiled frontend + API) |
+| <http://localhost:5173> | Frontend with hot reload, for development |
+| <http://localhost:8081> | Adminer (server `mysql`) |
 
-Cuentas de demostración (solo con `APP_ENV=local`; la pantalla de ingreso las
-muestra para rellenarlas con un clic):
+Demo accounts (only with `APP_ENV=local`; the sign-in screen at `/login` lists
+them so you can fill them in with one click):
 
-| Rol | Usuario | Contraseña |
+| Role | Username | Password |
 |---|---|---|
-| Administración | `admin` | `Psiclinic2026` |
-| Psicóloga | `l.moreno` | `Psiclinic2026` |
-| Paciente | `hc-2026-0001` | `Paciente2026` |
+| Administrator | `admin` | `Psiclinic2026` |
+| Psychologist | `l.moreno` | `Psiclinic2026` |
+| Patient | `mr-2026-0001` | `Patient2026` |
 
-La guía detallada para Windows está en [docs/INSTALACION-WSL.md](docs/INSTALACION-WSL.md).
+Patient portal usernames are the lowercase record number (record numbers look
+like `MR-2026-0001`).
+
+The detailed guide for Windows is in [docs/INSTALL-WSL.md](docs/INSTALL-WSL.md).
 
 ---
 
-## Comandos
+## Commands
 
 ```bash
-bin/psiclinic up          # levanta todo (compila el frontend si falta)
-bin/psiclinic build       # vuelve a compilar el frontend
-bin/psiclinic test        # pruebas del backend
-bin/psiclinic test-front  # tipos y pruebas del frontend
-bin/psiclinic logs        # registros de PHP, Nginx y Vite
-bin/psiclinic down        # detiene todo conservando los datos
+bin/psiclinic up          # starts everything (builds the frontend if missing)
+bin/psiclinic build       # rebuilds the frontend
+bin/psiclinic test        # backend tests
+bin/psiclinic test-front  # frontend type check and tests
+bin/psiclinic logs        # PHP, Nginx and Vite logs
+bin/psiclinic down        # stops everything and keeps the data
 ```
 
-Dentro del contenedor del backend:
+Inside the backend container:
 
 ```bash
-php bin/console install    # migraciones + datos de demostración
-php bin/console migrate    # solo el esquema (idempotente)
-php bin/console fresh      # borra todo y reinstala
-php bin/console key        # genera un APP_KEY
+php bin/console install    # migrations + demo data
+php bin/console migrate    # schema only (idempotent)
+php bin/console fresh      # wipes everything and reinstalls
+php bin/console key        # generates an APP_KEY
 ```
 
-Equivalentes con `make`: `make up`, `make build`, `make test`, `make test-front`,
+`install` and `migrate` also load the ICD-11 catalog from
+`backend/database/data/icd11-2025-01.tsv` and its ICD-10 equivalences from
+`backend/database/data/icd11-to-icd10.tsv`.
+
+`make` equivalents: `make up`, `make build`, `make test`, `make test-front`,
 `make fresh`, `make logs`, `make down`.
 
 ---
 
-## Pruebas
+## Tests
 
-- **Backend**: 167 pruebas sin PHPUnit ni Composer (`php bin/test`). Incluyen
-  pruebas de la API real con rutas, middlewares, CSRF, permisos por rol, IDOR,
-  firmas, choques de agenda, validación y límites de envío.
-- **Frontend**: comprobación estricta de tipos (`npm run typecheck`) y pruebas
-  con Vitest (`npm test`).
+- **Backend**: a test suite with no PHPUnit or Composer (`php bin/test`). It
+  includes tests against the real API with routes, middlewares, CSRF, role
+  permissions, IDOR, signatures, schedule clashes, validation and submission
+  limits.
+- **Frontend**: strict type check (`npm run typecheck`) and Vitest tests
+  (`npm test`).
 
-Detalle en [docs/PRUEBAS.md](docs/PRUEBAS.md). CI ejecuta ambas suites y
-construye las dos imágenes de producción en cada push.
+Details in [docs/TESTING.md](docs/TESTING.md). CI runs both suites and builds
+the two production images on every push.
 
 ---
 
-## Estructura
+## Structure
 
 ```
 psiclinic/
 ├── backend/
-│   ├── bin/                 console y test
-│   ├── database/migrations  esquema SQL idempotente
-│   ├── public/index.php     controlador frontal de la API
-│   ├── src/Core             router, request, sesión, auth, CSRF, errores HTTP
-│   ├── src/Controllers      un controlador por módulo (JSON)
-│   ├── src/Domain           reglas de negocio y consultas
-│   ├── src/Support          serialización, firma, instalador
-│   └── tests/               unitarias y de integración
+│   ├── bin/                 console and test
+│   ├── database/migrations  idempotent SQL schema
+│   ├── database/data        ICD-11 catalog and ICD-10 equivalences (TSV)
+│   ├── public/index.php     API front controller
+│   ├── src/Core             router, request, session, auth, CSRF, HTTP errors
+│   ├── src/Controllers      one controller per module (JSON)
+│   ├── src/Domain           business rules and queries
+│   ├── src/Support          serialization, signature, installer, MUV client
+│   └── tests/               unit and integration tests
 ├── frontend/
 │   └── src/
-│       ├── styles/          tokens del sistema de diseño y base
-│       ├── components/      ui, gráficas y formularios compartidos
-│       ├── site/            sitio público
-│       ├── app/             aplicación del equipo clínico
-│       ├── portal/          portal del paciente
-│       ├── session/         sesión y tema
-│       ├── hooks/ lib/      utilidades, cliente de la API, tipos
-│       └── pages/           ingreso, perfil, errores
-├── docker/                  Dockerfiles y Nginx
-├── bin/psiclinic            atajos para el día a día
+│       ├── styles/          design system tokens and base styles
+│       ├── components/      shared UI, charts and forms
+│       ├── site/            public website
+│       ├── app/             staff application
+│       ├── portal/          patient portal
+│       ├── session/         session and theme
+│       ├── hooks/ lib/      utilities, API client, types
+│       └── pages/           sign-in, profile, errors
+├── docker/                  Dockerfiles and Nginx
+├── bin/psiclinic            day-to-day shortcuts
 └── docs/
 ```
 
-Arquitectura en [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md), referencia de la
-API en [docs/API.md](docs/API.md) y cambios de la versión 2 en
-[docs/MIGRACION-2.0.md](docs/MIGRACION-2.0.md).
+Architecture in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), API reference in
+[docs/API.md](docs/API.md) and version 2 changes in
+[docs/MIGRATION-2.0.md](docs/MIGRATION-2.0.md).
 
 ---
 
-## Despliegue
+## Deployment
 
 ```bash
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-Construye una imagen del backend con el código dentro y otra de Nginx con el
-frontend ya compilado. Ver [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md).
+This builds a backend image with the code inside and an Nginx image with the
+frontend already compiled. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ---
 
-## Advertencia clínica y legal
+## Clinical and legal notice
 
-El uso de instrumentos psicométricos requiere formación profesional. Los puntajes
-son orientativos y no sustituyen el juicio clínico ni constituyen un diagnóstico.
-Antes de usar el sistema con datos reales, revisa la normativa local de
-protección de datos de salud y la sección [SECURITY.md](SECURITY.md).
+Using psychometric instruments requires professional training. Scores are a
+guide: they do not replace clinical judgment and are not a diagnosis. Before
+using the system with real data, review your local rules on health data
+protection and read [SECURITY.md](SECURITY.md).
 
 ---
 
-## Licencia
+## License
 
-Software propietario. Ver [LICENSE](LICENSE) y [NOTICE](NOTICE).
-El aviso de autoría debe conservarse en cualquier copia o derivado.
+Proprietary software. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+The authorship notice must be kept in every copy or derivative work.

@@ -1,19 +1,34 @@
 PsiClinic
-Autor: Salinas
+Author: Salinas
 GitHub: https://github.com/stufonn-cell
-Ano: 2026
+Year: 2026
 
-Aviso de atribucion obligatoria.
+Required attribution notice.
 
-El aviso "Hecho por Salinas (github.com/stufonn-cell)" aparece en:
-  - El pie de pagina de la aplicacion (views/partials/footer.php)
-  - La pantalla de acceso (views/auth/login.php)
-  - Los documentos imprimibles (views/notes/print.php)
-  - La cabecera de cada archivo fuente PHP
+The notice "Made by Salinas (github.com/stufonn-cell)" appears in:
+  - The footer of the public website, the staff application and the patient
+    portal (the AuthorCredit component, frontend/src/components/ui/Logo.tsx)
+  - The sign-in screen (frontend/src/pages/LoginPage.tsx)
+  - The not-found page (frontend/src/pages/NotFoundPage.tsx)
+  - The header of every PHP source file
 
-Eliminar o modificar cualquiera de estos avisos constituye una violacion de los
-terminos de la licencia incluida en el archivo LICENSE.
+Removing or changing any of these notices is a breach of the licence terms in
+the LICENSE file.
 
-Instrumentos psicometricos incluidos: PHQ-9, GAD-7, DASS-21, PSS-10, RSES y
-WHO-5. Se distribuyen bajo sus condiciones de uso libre para fines clinicos y
-de investigacion. Verificar la normativa local antes de un uso asistencial real.
+Psychometric instruments included: PHQ-9, GAD-7, DASS-21, PSS-10, RSES and
+WHO-5. They are distributed under their free-use terms for clinical and
+research purposes. Check your local rules before using them in real care.
+
+Third-party data notice.
+
+  ICD-11 for Mortality and Morbidity Statistics (ICD-11 MMS), release 2025-01,
+  and the ICD-11 to ICD-10 mapping tables.
+  Copyright (c) World Health Organization (WHO).
+  Licensed under Creative Commons Attribution-NoDerivatives 3.0 IGO
+  (CC BY-ND 3.0 IGO): https://creativecommons.org/licenses/by-nd/3.0/igo/
+  Source: https://icd.who.int
+  Files: backend/database/data/icd11-2025-01.tsv
+         backend/database/data/icd11-to-icd10.tsv
+  The files are extracts of the WHO release files, limited to the columns
+  PsiClinic uses (code, titles, chapter, leaf flag and ICD-10 equivalent).
+  WHO does not endorse this software and is not responsible for it.
