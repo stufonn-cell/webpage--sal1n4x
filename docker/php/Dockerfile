@@ -15,7 +15,7 @@ RUN mkdir -p storage/uploads storage/logs \
 EXPOSE 9000
 CMD ["php-fpm"]
 
-# Entorno local: el codigo llega por un volumen montado.
+# Entorno local: el codigo de backend/ llega por un volumen montado.
 FROM base AS development
 
 USER psiclinic
@@ -23,9 +23,9 @@ USER psiclinic
 # Entorno de produccion: el codigo viaja dentro de la imagen.
 FROM base AS production
 
-COPY --chown=psiclinic:psiclinic . /var/www/html
+COPY --chown=psiclinic:psiclinic backend/ /var/www/html
 
-RUN rm -rf /var/www/html/tests /var/www/html/docs /var/www/html/.github \
+RUN rm -rf /var/www/html/tests \
     && echo 'opcache.validate_timestamps=0' >> /usr/local/etc/php/conf.d/psiclinic.ini
 
 USER psiclinic
