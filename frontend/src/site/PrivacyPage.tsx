@@ -1,95 +1,170 @@
-import { useRef } from 'react';
-import { ButtonLink } from '@/components/ui/Button';
-import { useDocumentTitle, useMetaDescription } from '@/hooks/useDocumentTitle';
-import { useReveal } from '@/hooks/useReveal';
+import { clinicInfo, LegalDocument, useLegalLang, type ClinicInfo, type LegalContent } from './LegalDocument';
 import { useSite } from './useSite';
 
 /**
- * Aviso de privacidad. El contenido resume las plantillas de consentimiento
- * que la clinica ya usa ("datos" y "general") y describe lo que el sistema
- * hace realmente con la informacion del formulario.
+ * Privacy notice, in English or Spanish (`?lang=es`). The content summarizes
+ * the consent templates the clinic already uses ("data" and "general") and
+ * describes what the system actually does with the information from the form.
  */
 export default function PrivacyPage() {
   const { data: site } = useSite();
-  const root = useRef<HTMLDivElement>(null);
-  const clinic = site?.clinic;
-  const name = clinic?.clinic_name || 'el consultorio';
-
-  useDocumentTitle('Privacidad y datos', clinic?.clinic_name);
-  useMetaDescription('Cómo tratamos tus datos personales y de salud, y cómo protegemos la confidencialidad de tu proceso.');
-  useReveal(root);
+  const lang = useLegalLang();
+  const info = clinicInfo(site);
 
   return (
-    <article className="legal" ref={root} aria-labelledby="privacidad-title">
-      <div className="container container--narrow">
-        <header className="legal__head enter">
-          <p className="eyebrow">Privacidad</p>
-          <h1 className="request__title serif" id="privacidad-title">
-            Cómo cuidamos tu información
-          </h1>
-          <p className="request__lead">
-            Sabemos que hablar de salud mental implica confianza. Aquí te contamos, en palabras sencillas, qué datos
-            usamos, para qué y qué derechos tienes.
-          </p>
-        </header>
+    <LegalDocument
+      id="privacy"
+      lang={lang}
+      content={lang === 'es' ? spanishPrivacy(info) : englishPrivacy(info)}
+      clinicName={site?.clinic.clinic_name}
+    />
+  );
+}
 
-        <section className="legal__section reveal">
-          <h2>Para qué usamos tus datos</h2>
+function englishPrivacy(info: ClinicInfo): LegalContent {
+  const name = info.name || 'the practice';
+
+  return {
+    documentTitle: 'Privacy and data',
+    description: 'How we handle your personal and health data, and how we protect the confidentiality of your process.',
+    eyebrow: 'Privacy',
+    title: 'How we look after your information',
+    lead: 'We know that talking about mental health takes trust. Here we explain, in plain words, what data we use, what we use it for and what rights you have.',
+    sections: [
+      {
+        id: 'data-use',
+        title: 'What we use your data for',
+        body: (
           <p>
-            Usamos tus datos personales y tus datos sensibles de salud con una finalidad exclusiva: prestarte el servicio
-            de atención psicológica, facturarlo y cumplir las obligaciones legales que aplican a las historias clínicas.
+            We use your personal data and your sensitive health data for one purpose only: to provide you with
+            psychological care, bill for it and meet the legal obligations that apply to clinical records.
           </p>
-        </section>
-
-        <section className="legal__section reveal">
-          <h2>Cuando envías una solicitud de cita</h2>
+        ),
+      },
+      {
+        id: 'appointment-requests',
+        title: 'When you send an appointment request',
+        body: (
           <ul>
-            <li>Guardamos tu nombre, tus datos de contacto y tus preferencias de horario y modalidad.</li>
-            <li>Solo el equipo de {name} puede verla, y lo usa únicamente para contactarte.</li>
-            <li>No guardamos tu dirección IP: solo una huella cifrada que sirve para evitar envíos masivos.</li>
-            <li>No usamos cookies de publicidad ni herramientas de seguimiento de terceros.</li>
+            <li>We keep your name, your contact details and your preferred times and type of care.</li>
+            <li>Only the team at {name} can see it, and they use it only to contact you.</li>
+            <li>We do not store your IP address: only an encrypted fingerprint that helps prevent bulk submissions.</li>
+            <li>We do not use advertising cookies or third-party tracking tools.</li>
           </ul>
-        </section>
-
-        <section className="legal__section reveal">
-          <h2>Secreto profesional</h2>
+        ),
+      },
+      {
+        id: 'confidentiality',
+        title: 'Professional confidentiality',
+        body: (
           <p>
-            La información que compartes en sesión está protegida por el secreto profesional. Solo puede levantarse cuando
-            existe riesgo para tu vida o la de otras personas, o por requerimiento de una autoridad judicial competente.
+            What you share in session is protected by professional confidentiality. It can only be lifted when there is a
+            risk to your life or someone else’s, or when a competent court requires it.
           </p>
-        </section>
-
-        <section className="legal__section reveal">
-          <h2>Tus derechos</h2>
-          <p>
-            Puedes pedir acceso, corrección, actualización o supresión de tus datos, y solicitar copia de tu historia
-            clínica. Los datos de la historia se conservan durante el tiempo que exige la normativa aplicable.
-          </p>
-          {clinic?.clinic_email && (
+        ),
+      },
+      {
+        id: 'your-rights',
+        title: 'Your rights',
+        body: (
+          <>
             <p>
-              Para ejercer estos derechos escríbenos a <a href={`mailto:${clinic.clinic_email}`}>{clinic.clinic_email}</a>.
+              You can ask to access, correct, update or delete your data, and request a copy of your clinical record.
+              Clinical record data is kept for as long as the applicable regulations require.
             </p>
-          )}
-        </section>
+            {info.email && (
+              <p>
+                To exercise these rights, write to us at <a href={`mailto:${info.email}`}>{info.email}</a>.
+              </p>
+            )}
+          </>
+        ),
+      },
+      {
+        id: 'security',
+        title: 'Security',
+        body: (
+          <p>
+            Access to the clinical record is limited by role: each professional sees what they need to care for you, and
+            every view, change or download is recorded in an audit log. Signed session notes cannot be changed.
+          </p>
+        ),
+      },
+    ],
+  };
+}
 
-        <section className="legal__section reveal">
-          <h2>Seguridad</h2>
+function spanishPrivacy(info: ClinicInfo): LegalContent {
+  return {
+    documentTitle: 'Privacidad y datos',
+    description: 'Cómo tratamos tus datos personales y de salud, y cómo protegemos la confidencialidad de tu proceso.',
+    eyebrow: 'Privacidad',
+    title: 'Cómo cuidamos tu información',
+    lead: 'Sabemos que hablar de salud mental implica confianza. Aquí te contamos, en palabras sencillas, qué datos usamos, para qué los usamos y qué derechos tienes.',
+    sections: [
+      {
+        id: 'data-use',
+        title: 'Para qué usamos tus datos',
+        body: (
+          <p>
+            Usamos tus datos personales y tus datos sensibles de salud con una única finalidad: prestarte el servicio de
+            atención psicológica, facturarlo y cumplir las obligaciones legales que aplican a las historias clínicas.
+          </p>
+        ),
+      },
+      {
+        id: 'appointment-requests',
+        title: 'Cuando envías una solicitud de cita',
+        body: (
+          <ul>
+            <li>Guardamos tu nombre, tus datos de contacto y tus preferencias de horario y de modalidad de atención.</li>
+            <li>
+              {info.name ? `Solo el equipo de ${info.name} puede verla` : 'Solo nuestro equipo puede verla'}, y la usa
+              únicamente para contactarte.
+            </li>
+            <li>No guardamos tu dirección IP: solo una huella cifrada que nos ayuda a evitar envíos masivos.</li>
+            <li>No usamos cookies publicitarias ni herramientas de seguimiento de terceros.</li>
+          </ul>
+        ),
+      },
+      {
+        id: 'confidentiality',
+        title: 'Secreto profesional',
+        body: (
+          <p>
+            Lo que compartes en sesión está protegido por el secreto profesional. Solo puede levantarse cuando existe un
+            riesgo para tu vida o la de otras personas, o cuando una autoridad judicial competente lo exige.
+          </p>
+        ),
+      },
+      {
+        id: 'your-rights',
+        title: 'Tus derechos',
+        body: (
+          <>
+            <p>
+              Puedes pedir acceso, corrección, actualización o supresión de tus datos, y solicitar una copia de tu historia
+              clínica. Los datos de la historia clínica se conservan durante el tiempo que exige la normativa aplicable.
+            </p>
+            {info.email && (
+              <p>
+                Para ejercer estos derechos, escríbenos a <a href={`mailto:${info.email}`}>{info.email}</a>.
+              </p>
+            )}
+          </>
+        ),
+      },
+      {
+        id: 'security',
+        title: 'Seguridad',
+        body: (
           <p>
             El acceso a la historia clínica está limitado por rol: cada profesional ve lo que necesita para atenderte, y
-            cada consulta, cambio o descarga queda registrada en un historial de auditoría. Las notas de sesión firmadas
-            no pueden modificarse.
+            cada consulta, cambio o descarga queda registrada en un historial de auditoría. Las notas de sesión firmadas no
+            se pueden modificar.
           </p>
-        </section>
-
-        <div className="legal__actions reveal">
-          <ButtonLink to="/solicitar-cita" variant="primary">
-            Solicitar una cita
-          </ButtonLink>
-          <ButtonLink to="/" variant="quiet">
-            Volver al inicio
-          </ButtonLink>
-        </div>
-      </div>
-    </article>
-  );
+        ),
+      },
+    ],
+  };
 }

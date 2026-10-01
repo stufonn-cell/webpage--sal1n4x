@@ -10,7 +10,7 @@ import type { DocumentRow } from '@/lib/types';
 import { MODALITY_LABELS, STATUS_LABELS, type PortalAppointment } from '../types';
 
 export function AppointmentsPage() {
-  useDocumentTitle('Mis citas');
+  useDocumentTitle('My appointments');
   const query = useQuery({ queryKey: ['portal', 'appointments'], queryFn: () => get<PortalAppointment[]>('/api/portal/appointments') });
   const now = Date.now();
   const upcoming = (query.data ?? []).filter((item) => new Date(item.starts_at.replace(' ', 'T')).getTime() >= now).reverse();
@@ -27,7 +27,7 @@ export function AppointmentsPage() {
       {appointment.meeting_url && appointment.modality !== 'in_person' && ['scheduled', 'confirmed'].includes(appointment.status) && (
         <a className="btn btn--sm" href={appointment.meeting_url} target="_blank" rel="noopener noreferrer">
           <Icon name="video" size={15} />
-          <span className="btn__label">Enlace</span>
+          <span className="btn__label">Link</span>
         </a>
       )}
       <Badge tone={APPOINTMENT_STATUS_TONE[appointment.status]}>{STATUS_LABELS[appointment.status] ?? appointment.status}</Badge>
@@ -36,12 +36,12 @@ export function AppointmentsPage() {
 
   return (
     <>
-      <PageHeader title="Mis citas" subtitle="Si necesitas cambiar una cita, comunícate con el consultorio." />
+      <PageHeader title="My appointments" subtitle="If you need to change an appointment, please contact the practice." />
       <QueryState isPending={query.isPending} error={query.error} onRetry={query.refetch}>
         <div className="section-gap">
-          <Panel title="Próximas" titleId="proximas" flush>
+          <Panel title="Upcoming" titleId="upcoming" flush>
             {upcoming.length === 0 ? (
-              <EmptyState icon="calendar" title="No tienes citas próximas" />
+              <EmptyState icon="calendar" title="You have no upcoming appointments" />
             ) : (
               <ul className="list">
                 {upcoming.map((appointment) => (
@@ -51,7 +51,7 @@ export function AppointmentsPage() {
             )}
           </Panel>
           {past.length > 0 && (
-            <Panel title="Anteriores" titleId="anteriores" flush>
+            <Panel title="Past" titleId="past" flush>
               <ul className="list">
                 {past.map((appointment) => (
                   <Row key={appointment.id} appointment={appointment} />
@@ -66,16 +66,16 @@ export function AppointmentsPage() {
 }
 
 export function DocumentsPage() {
-  useDocumentTitle('Mis documentos');
+  useDocumentTitle('My documents');
   const query = useQuery({ queryKey: ['portal', 'documents'], queryFn: () => get<DocumentRow[]>('/api/portal/documents') });
 
   return (
     <>
-      <PageHeader title="Mis documentos" subtitle="Informes y documentos que tu profesional compartió contigo." />
+      <PageHeader title="My documents" subtitle="Reports and documents your professional has shared with you." />
       <Panel flush>
         <QueryState isPending={query.isPending} error={query.error} onRetry={query.refetch}>
           {query.data?.length === 0 ? (
-            <EmptyState icon="file" title="Aún no hay documentos" />
+            <EmptyState icon="file" title="No documents yet" />
           ) : (
             <ul className="list">
               {query.data?.map((document) => (
@@ -89,7 +89,7 @@ export function DocumentsPage() {
                   </span>
                   <a className="btn btn--sm" href={`/api/documents/${document.id}/download`}>
                     <Icon name="download" size={15} />
-                    <span className="btn__label">Descargar</span>
+                    <span className="btn__label">Download</span>
                   </a>
                 </li>
               ))}

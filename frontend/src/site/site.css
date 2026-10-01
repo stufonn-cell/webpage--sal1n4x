@@ -1,8 +1,8 @@
 /*
- * PsiClinic - sitio publico.
- * Editorial y sereno: tipografia serif para los titulares, mucho aire, pocas
- * superficies elevadas. Las secciones alternan papel y un tono apenas tintado
- * en lugar de apilar tarjetas.
+ * PsiClinic - public site.
+ * Editorial and calm: serif type for headings, lots of breathing room, few
+ * raised surfaces. Sections alternate between paper and a barely tinted tone
+ * instead of stacking cards.
  */
 
 .site {
@@ -23,110 +23,234 @@ body.no-scroll {
   overflow: hidden;
 }
 
-/* --- Navegacion ----------------------------------------------------- */
+/* --- Header --------------------------------------------------------- */
 
-.site-nav {
+/*
+ * Two tiers. A slim utility strip (help line, phone, account, theme) and the
+ * main bar (logo, sections, booking). The header sticks with a negative top
+ * equal to the strip height, so on scroll the strip slides away with the page
+ * and only the bar stays. No script and no animation needed for that.
+ */
+.site-header {
+  --strip-height: 2.5rem;
+  --bar-height: 4.5rem;
   position: sticky;
-  top: 0;
+  top: calc(-1 * var(--strip-height));
   z-index: 40;
-  background: transparent;
-  border-bottom: 1px solid transparent;
-  transition:
-    background-color var(--duration) var(--ease-out),
-    border-color var(--duration) var(--ease-out),
-    box-shadow var(--duration) var(--ease-out);
 }
 
-.site-nav.is-scrolled,
-.site-nav.is-open {
-  background: color-mix(in srgb, var(--paper) 90%, transparent);
-  border-bottom-color: var(--line);
-  backdrop-filter: saturate(1.2) blur(10px);
+.site-strip {
+  height: var(--strip-height);
+  background: var(--surface-sunk);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+  line-height: 1.2;
 }
 
-.site-nav__inner {
+.site-strip__inner {
   display: flex;
   align-items: center;
   gap: var(--space-6);
-  height: 4.5rem;
-  transition: height var(--duration) var(--ease-out);
+  height: 100%;
 }
 
-.site-nav.is-scrolled .site-nav__inner {
-  height: 3.75rem;
+.site-strip__help {
+  margin-right: auto;
+  white-space: nowrap;
 }
 
-.site-nav__links {
+.site-strip__help a {
+  color: var(--accent);
+  font-weight: 700;
+  text-underline-offset: 0.22em;
+}
+
+.site-strip__help a:hover {
+  color: var(--accent);
+  text-decoration-thickness: 2px;
+}
+
+.site-strip__contact {
+  list-style: none;
   display: flex;
-  gap: var(--space-1);
-  margin-left: auto;
+  gap: var(--space-5);
 }
 
-.site-nav__link {
-  position: relative;
-  padding: var(--space-2) var(--space-3);
+.site-strip__contact a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   color: var(--ink-soft);
-  font-size: var(--text-sm);
-  font-weight: 500;
   text-decoration: none;
-  border-radius: var(--radius-sm);
-  transition: color var(--duration-fast);
+  white-space: nowrap;
 }
 
-.site-nav__link::after {
+.site-strip__contact a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+/* Short hairlines between groups, in the strip and in the bar. */
+.site-strip__contact::after,
+.site-bar__links::after {
   content: '';
-  position: absolute;
-  left: var(--space-3);
-  right: var(--space-3);
-  bottom: 2px;
-  height: 1.5px;
-  background: var(--primary);
-  border-radius: 2px;
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform var(--duration) var(--ease-out);
+  align-self: center;
+  width: 1px;
+  height: 1rem;
+  background: var(--line-strong);
 }
 
-.site-nav__link:hover {
-  color: var(--ink);
+.site-strip__contact::after {
+  margin-left: calc(var(--space-6) - var(--space-5));
 }
 
-.site-nav__link:hover::after,
-.site-nav__link.is-active::after {
-  transform: scaleX(1);
-}
-
-.site-nav__link.is-active {
-  color: var(--ink);
-}
-
-.site-nav__actions {
+.site-strip__account {
   display: flex;
   align-items: center;
   gap: var(--space-2);
 }
 
-.site-nav__login {
-  padding: var(--space-2) var(--space-3);
-  color: var(--ink-soft);
-  font-size: var(--text-sm);
+.site-strip__login {
+  padding: var(--space-1) var(--space-1);
+  color: var(--ink);
   font-weight: 600;
   text-decoration: none;
+  white-space: nowrap;
 }
 
-.site-nav__login:hover {
+.site-strip__login:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
+}
+
+.site-strip .btn--icon {
+  width: 2.25rem;
+  min-height: 2.25rem;
+  margin-right: calc(-1 * var(--space-2));
+  border-radius: var(--radius-sm);
+}
+
+.site-bar {
+  border-bottom: 1px solid transparent;
+  transition:
+    background-color var(--duration) var(--ease-out),
+    border-color var(--duration) var(--ease-out);
+}
+
+.site-header.is-scrolled .site-bar,
+.site-header.is-open .site-bar {
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  border-bottom-color: var(--line);
+  backdrop-filter: saturate(1.2) blur(10px);
+}
+
+.site-bar__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  height: var(--bar-height);
+  transition: height var(--duration) var(--ease-out);
+}
+
+.site-header.is-scrolled .site-bar__inner {
+  height: 3.75rem;
+}
+
+.site-bar .logo {
+  font-size: 1.3125rem;
+}
+
+.site-bar__links {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-6);
+  margin-left: auto;
+}
+
+.site-bar__links::after {
+  height: 1.125rem;
+  margin-left: calc(var(--space-8) - var(--space-6));
+}
+
+.site-bar__link {
+  position: relative;
+  padding-block: var(--space-2);
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--duration-fast);
+}
+
+.site-bar__link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--duration) var(--ease-out);
+}
+
+.site-bar__link:hover,
+.site-bar__link.is-active {
   color: var(--ink);
 }
 
-.site-nav__menu {
+.site-bar__link:hover::after,
+.site-bar__link.is-active::after {
+  transform: scaleX(1);
+}
+
+/* Booking: a quiet underlined action set apart by a hairline, not a pill. */
+.site-bar__cta {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+  color: var(--primary);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  text-underline-offset: 0.35em;
+  transition: text-decoration-color var(--duration-fast);
+}
+
+.site-bar__cta:hover {
+  color: var(--primary-hover);
+  text-decoration-color: currentColor;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .site-bar__cta .icon {
+    transition: translate var(--duration) var(--ease-out);
+  }
+
+  .site-bar__cta:hover .icon {
+    translate: 3px 0;
+  }
+}
+
+.site-bar__menu {
   display: none;
 }
 
 .mobile-menu {
-  border-top: 1px solid var(--line);
-  height: calc(100dvh - 4.5rem);
+  /* --menu-top is measured when the menu opens (strip visible or not). */
+  height: calc(100dvh - var(--menu-top, 6.5rem));
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: var(--space-6) 0 var(--space-10);
+  background: var(--paper);
 }
 
 .mobile-menu__list {
@@ -151,10 +275,31 @@ body.no-scroll {
   text-decoration: none;
 }
 
+.mobile-menu__list .icon {
+  color: var(--ink-muted);
+}
+
 .mobile-menu__actions {
   display: grid;
   gap: var(--space-3);
   margin-top: var(--space-8);
+}
+
+.mobile-menu__contact {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-6);
+  margin-top: var(--space-6);
+  font-size: var(--text-sm);
+}
+
+.mobile-menu__contact a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+  color: var(--ink-soft);
 }
 
 @media (min-width: 900px) {
@@ -163,19 +308,45 @@ body.no-scroll {
   }
 }
 
+@media (max-width: 1060px) {
+  .site-bar__inner {
+    gap: var(--space-6);
+  }
+
+  .site-bar__links {
+    gap: var(--space-5);
+  }
+
+  .site-bar__links::after {
+    margin-left: calc(var(--space-6) - var(--space-5));
+  }
+}
+
 @media (max-width: 899px) {
-  .site-nav__links,
-  .site-nav__login,
-  .site-nav__cta {
+  .site-header {
+    --bar-height: 4rem;
+  }
+
+  .site-bar__links,
+  .site-bar__cta,
+  .site-strip__contact {
     display: none;
   }
 
-  .site-nav__actions {
-    margin-left: auto;
+  .site-strip__inner {
+    gap: var(--space-4);
   }
 
-  .site-nav__menu {
+  .site-bar__menu {
     display: inline-flex;
+    margin-left: auto;
+    margin-right: calc(-1 * var(--space-2));
+  }
+}
+
+@media (max-width: 360px) {
+  .site-strip__help-long {
+    display: none;
   }
 }
 
@@ -332,7 +503,7 @@ body.no-scroll {
   }
 }
 
-/* --- Secciones ------------------------------------------------------ */
+/* --- Sections ------------------------------------------------------- */
 
 .section {
   padding: var(--space-24) 0;
@@ -397,7 +568,7 @@ body.no-scroll {
   }
 }
 
-/* --- Servicios ------------------------------------------------------ */
+/* --- Services ------------------------------------------------------- */
 
 .services {
   display: grid;
@@ -590,7 +761,7 @@ body.no-scroll {
   }
 }
 
-/* --- Acordeon (servicios en movil y preguntas) --------------------- */
+/* --- Accordion (services on mobile and FAQ) ------------------------- */
 
 .accordion {
   border-bottom: 1px solid var(--line);
@@ -640,7 +811,7 @@ body.no-scroll {
   color: var(--primary);
 }
 
-/* --- Pasos ---------------------------------------------------------- */
+/* --- Steps ---------------------------------------------------------- */
 
 .steps {
   list-style: none;
@@ -720,7 +891,7 @@ body.no-scroll {
   }
 }
 
-/* --- Equipo --------------------------------------------------------- */
+/* --- Team ----------------------------------------------------------- */
 
 .team {
   list-style: none;
@@ -758,7 +929,7 @@ body.no-scroll {
   color: var(--ink-muted);
 }
 
-/* --- Confianza ------------------------------------------------------ */
+/* --- Trust ---------------------------------------------------------- */
 
 .trust {
   display: grid;
@@ -823,7 +994,7 @@ body.no-scroll {
   }
 }
 
-/* --- Preguntas ------------------------------------------------------ */
+/* --- FAQ ------------------------------------------------------------ */
 
 .faq {
   display: grid;
@@ -842,7 +1013,7 @@ body.no-scroll {
   }
 }
 
-/* --- Contacto ------------------------------------------------------- */
+/* --- Contact -------------------------------------------------------- */
 
 .contact {
   display: grid;
@@ -903,7 +1074,7 @@ body.no-scroll {
   }
 }
 
-/* --- Aviso de crisis ----------------------------------------------- */
+/* --- Crisis notice -------------------------------------------------- */
 
 .crisis {
   background: var(--accent-soft);
@@ -929,7 +1100,7 @@ body.no-scroll {
   font-weight: 700;
 }
 
-/* --- Pie ------------------------------------------------------------ */
+/* --- Footer --------------------------------------------------------- */
 
 .site-footer {
   padding: var(--space-16) 0 var(--space-8);
@@ -940,11 +1111,6 @@ body.no-scroll {
   display: grid;
   grid-template-columns: 1.4fr repeat(3, 1fr);
   gap: var(--space-10);
-}
-
-.site-footer__brand p {
-  margin-top: var(--space-4);
-  max-width: 18rem;
 }
 
 .site-footer__list {
@@ -993,7 +1159,7 @@ body.no-scroll {
   }
 }
 
-/* --- Solicitud de cita --------------------------------------------- */
+/* --- Appointment request -------------------------------------------- */
 
 .request {
   padding: var(--space-12) 0 var(--space-20);
@@ -1134,7 +1300,7 @@ body.no-scroll {
   }
 }
 
-/* --- Paginas legales ------------------------------------------------ */
+/* --- Legal pages ---------------------------------------------------- */
 
 .legal {
   padding: var(--space-12) 0 var(--space-20);

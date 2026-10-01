@@ -2,24 +2,24 @@ import { Icon } from '@/components/ui/Icon';
 import type { Faq as FaqItem } from '../content';
 
 /**
- * Preguntas frecuentes con <details>: funciona sin JavaScript, con teclado y
- * con lectores de pantalla. El atributo name hace que se abra una a la vez.
+ * Frequently asked questions with <details>: works without JavaScript, with a
+ * keyboard and with screen readers. The name attribute opens one at a time.
  */
 export function Faq({ items }: { items: FaqItem[] }) {
   return (
-    <section className="section" id="preguntas" aria-labelledby="preguntas-title">
+    <section className="section" id="faq" aria-labelledby="faq-title">
       <div className="container faq">
         <header className="section__head reveal">
-          <p className="eyebrow">Preguntas frecuentes</p>
-          <h2 className="section__title serif" id="preguntas-title">
-            Lo que suelen preguntarnos antes de empezar
+          <p className="eyebrow">Frequently asked questions</p>
+          <h2 className="section__title serif" id="faq-title">
+            What people often ask us before starting
           </h2>
-          <p className="section__lead">Si tu duda no está aquí, escríbenos. Ninguna pregunta está de más.</p>
+          <p className="section__lead">If your question is not here, write to us. No question is too small.</p>
         </header>
 
         <div className="faq__list reveal">
           {items.map((item) => (
-            <details key={item.question} className="accordion" name="preguntas">
+            <details key={item.question} className="accordion" name="faq">
               <summary>
                 <span className="accordion__label">{item.question}</span>
                 <Icon name="plus" size={18} className="accordion__chevron accordion__chevron--plus" />

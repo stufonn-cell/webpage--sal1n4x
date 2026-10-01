@@ -33,15 +33,15 @@ export interface PortalHomeData {
 }
 
 export const MODALITY_LABELS: Record<string, string> = {
-  in_person: 'Presencial',
-  online: 'Videollamada',
-  phone: 'Llamada telefónica',
+  in_person: 'In person',
+  online: 'Video call',
+  phone: 'Phone call',
 };
 
 export const STATUS_LABELS: Record<string, string> = {
-  scheduled: 'Programada',
-  confirmed: 'Confirmada',
-  completed: 'Realizada',
-  cancelled: 'Cancelada',
-  no_show: 'No asististe',
+  scheduled: 'Scheduled',
+  confirmed: 'Confirmed',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  no_show: 'You did not attend',
 };

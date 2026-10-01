@@ -3,8 +3,8 @@ import { useRouteError } from 'react-router';
 import { MessagePage } from './NotFoundPage';
 
 /**
- * Error inesperado de renderizado o de carga de un modulo. Se registra en la
- * consola para depurar, pero a la persona solo se le muestra un mensaje claro.
+ * Unexpected rendering or module loading error. It is logged to the console
+ * for debugging, but the person only sees a clear message.
  */
 export function RouteError() {
   const error = useRouteError();
@@ -17,12 +17,12 @@ export function RouteError() {
 
   return (
     <MessagePage
-      code="Ups"
-      title={chunkFailed ? 'Hay una versión nueva disponible' : 'Algo no salió como esperábamos'}
+      code="Oops"
+      title={chunkFailed ? 'A new version is available' : 'Something did not go as expected'}
       text={
         chunkFailed
-          ? 'Recarga la página para continuar con la versión más reciente.'
-          : 'No perdiste nada de lo que ya estaba guardado. Recarga la página o vuelve al inicio para intentarlo de nuevo.'
+          ? 'Reload the page to continue with the latest version.'
+          : 'You have not lost anything that was already saved. Reload the page or go back to home to try again.'
       }
     />
   );

@@ -1,11 +1,11 @@
 /**
- * Textos editoriales del sitio publico, en un solo lugar para poder
- * revisarlos sin tocar componentes.
+ * Editorial copy for the public site, kept in one place so it can be
+ * reviewed without touching components.
  *
- * Criterio: cada afirmacion se apoya en algo que el sistema ya hace o en los
- * documentos que la clinica ya usa (consentimientos, instrumentos, catalogo
- * de intervenciones). No hay testimonios, cifras de exito ni promesas
- * clinicas: en psicologia esas afirmaciones requieren respaldo profesional.
+ * Rule of thumb: every claim rests on something the system already does or on
+ * documents the clinic already uses (consents, instruments, intervention
+ * catalog). There are no testimonials, success figures or clinical promises:
+ * in psychology those claims require professional backing.
  */
 
 import type { IconName } from '@/components/ui/Icon';
@@ -22,91 +22,91 @@ export interface Service {
 
 export const SERVICES: Service[] = [
   {
-    id: 'adultos',
-    title: 'Psicoterapia para adultos',
-    short: 'Un espacio individual para entender lo que estás viviendo y encontrar formas de afrontarlo.',
+    id: 'adults',
+    title: 'Therapy for adults',
+    short: 'A one-on-one space to understand what you are going through and find ways to cope with it.',
     forWhom:
-      'Personas adultas que atraviesan un momento difícil: ansiedad, tristeza persistente, estrés, cambios vitales o dificultades en sus relaciones.',
+      'Adults going through a hard time: anxiety, lasting sadness, stress, life changes or difficulties in their relationships.',
     how: [
-      'Una primera conversación para conocer lo que te trae y lo que esperas del proceso.',
-      'Objetivos acordados contigo y revisados a lo largo del camino.',
-      'Sesiones periódicas con herramientas concretas para practicar entre una y otra.',
+      'A first conversation to learn what brings you here and what you hope to get from the process.',
+      'Goals agreed on with you and reviewed along the way.',
+      'Regular sessions with practical tools to try out between one session and the next.',
     ],
-    modality: 'Presencial o virtual',
+    modality: 'In person or online',
     icon: 'user',
   },
   {
-    id: 'infancia',
-    title: 'Niñas, niños y adolescentes',
-    short: 'Acompañamiento adaptado a cada edad, con la familia como parte del proceso.',
+    id: 'children',
+    title: 'Children and teens',
+    short: 'Support adapted to each age, with the family as part of the process.',
     forWhom:
-      'Menores de edad y sus familias, con la autorización de su representante legal. Cuidamos los espacios de confidencialidad que cada proceso necesita.',
+      'Minors and their families, with the consent of their legal guardian. We protect the confidential space each process needs.',
     how: [
-      'Un primer encuentro con la familia para entender la situación.',
-      'Sesiones con la niña, el niño o adolescente en un lenguaje cercano a su edad.',
-      'Encuentros de orientación con la familia cuando el proceso lo requiere.',
+      'A first meeting with the family to understand the situation.',
+      'Sessions with the child or teen, in language that fits their age.',
+      'Guidance sessions with the family when the process calls for it.',
     ],
-    modality: 'Presencial o virtual según la edad',
+    modality: 'In person or online, depending on age',
     icon: 'heart',
   },
   {
-    id: 'evaluacion',
-    title: 'Evaluación psicológica',
-    short: 'Cuestionarios estandarizados que ayudan a conocer cómo estás y a seguir tu evolución.',
+    id: 'assessment',
+    title: 'Psychological assessment',
+    short: 'Standardized questionnaires that help us understand how you are doing and follow your progress.',
     forWhom:
-      'Quienes inician un proceso o quieren tener una referencia clara de su bienestar emocional a lo largo del tiempo.',
+      'Anyone starting a process, or who wants a clear reference point for their emotional wellbeing over time.',
     how: [
-      'Instrumentos de uso internacional sobre estado de ánimo, ansiedad, estrés, autoestima y bienestar.',
-      'Puedes responderlos en consulta o desde tu portal, con calma y desde tu casa.',
-      'Los resultados orientan la conversación con tu profesional: no reemplazan su criterio ni son un diagnóstico.',
+      'Internationally used instruments on mood, anxiety, stress, self-esteem and wellbeing.',
+      'You can answer them in session or from your portal, calmly and from home.',
+      'The results guide the conversation with your professional: they do not replace their judgment and they are not a diagnosis.',
     ],
-    modality: 'En consulta o desde el portal del paciente',
+    modality: 'In session or from the patient portal',
     icon: 'chart',
   },
   {
-    id: 'virtual',
-    title: 'Atención virtual',
-    short: 'Sesiones por videollamada o teléfono, con el mismo cuidado que en el consultorio.',
-    forWhom: 'Personas que viven lejos, tienen horarios difíciles o se sienten más cómodas conversando desde su casa.',
+    id: 'online',
+    title: 'Online care',
+    short: 'Sessions by video call or phone, with the same care as in the office.',
+    forWhom: 'People who live far away, have tight schedules or feel more comfortable talking from home.',
     how: [
-      'El enlace de cada sesión queda disponible en tu portal de paciente.',
-      'Te recomendamos un lugar privado y una conexión estable.',
-      'Antes de empezar firmas un consentimiento que explica sus alcances y sus límites.',
+      'The link for each session is waiting for you in your patient portal.',
+      'We recommend a private place and a stable connection.',
+      'Before you start, you sign a consent form that explains what online care can and cannot do.',
     ],
-    modality: 'Videollamada o teléfono',
+    modality: 'Video call or phone',
     icon: 'video',
   },
 ];
 
 export const STEPS = [
   {
-    title: 'Nos escribes',
-    text: 'Cuéntanos para quién es la cita y cuándo te queda mejor. No necesitas explicar detalles personales en el formulario.',
+    title: 'You write to us',
+    text: 'Tell us who the appointment is for and when works best for you. You do not need to share personal details in the form.',
   },
   {
-    title: 'Te contactamos',
-    text: 'Te escribimos o llamamos por el medio que prefieras para resolver tus dudas y acordar un horario.',
+    title: 'We get in touch',
+    text: 'We write or call you, however you prefer, to answer your questions and agree on a time.',
   },
   {
-    title: 'Primera sesión',
-    text: 'Conversamos sobre lo que te trae y definimos juntos si este espacio es el adecuado para ti.',
+    title: 'First session',
+    text: 'We talk about what brings you here and decide together whether this space is the right fit for you.',
   },
 ];
 
 export const PRIVACY_POINTS: { title: string; text: string; icon: IconName }[] = [
   {
-    title: 'Secreto profesional',
-    text: 'Lo que compartes en sesión es confidencial. Solo puede levantarse si existe riesgo para tu vida o la de otras personas, o por orden de una autoridad judicial.',
+    title: 'Professional confidentiality',
+    text: 'What you share in session is confidential. It can only be lifted if there is a risk to your life or someone else’s, or by order of a court.',
     icon: 'lock',
   },
   {
-    title: 'Tus datos, para tu atención',
-    text: 'Usamos tu información solo para atenderte, facturar y cumplir la ley. Puedes pedir acceso, corrección o supresión cuando quieras.',
+    title: 'Your data, for your care',
+    text: 'We use your information only to care for you, bill for our services and comply with the law. You can ask to access, correct or delete it whenever you like.',
     icon: 'shield',
   },
   {
-    title: 'Acceso controlado',
-    text: 'Tu historia clínica solo la ve el equipo que te atiende, y cada consulta a ella queda registrada.',
+    title: 'Controlled access',
+    text: 'Only the team caring for you can see your clinical record, and every time someone opens it, it is logged.',
     icon: 'clipboard',
   },
 ];
@@ -120,45 +120,45 @@ export function buildFaqs(sessionMinutes: string, crisisLine: string): Faq[] {
   const minutes = Number(sessionMinutes) > 0 ? sessionMinutes : '50';
   return [
     {
-      question: '¿Cuánto dura una sesión?',
-      answer: `Cada sesión dura alrededor de ${minutes} minutos. La frecuencia la acuerdas con tu profesional según lo que necesites.`,
+      question: 'How long is a session?',
+      answer: `Each session lasts about ${minutes} minutes. You and your professional agree on how often to meet, based on what you need.`,
     },
     {
-      question: '¿Puedo tener las sesiones por videollamada?',
+      question: 'Can I have my sessions by video call?',
       answer:
-        'Sí. Atendemos por videollamada o teléfono. Te pedimos ubicarte en un lugar privado durante la sesión, y antes de empezar firmas un consentimiento específico para la atención virtual.',
+        'Yes. We offer sessions by video call or phone. We ask you to find a private place for the session, and before you start you sign a consent form specific to online care.',
     },
     {
-      question: '¿Lo que cuento es confidencial?',
+      question: 'Is what I share confidential?',
       answer:
-        'Sí, lo protege el secreto profesional. Solo hay dos excepciones: que exista riesgo para tu vida o la de otra persona, o que una autoridad judicial lo exija. Antes de empezar te explicamos esto por escrito.',
+        'Yes, it is protected by professional confidentiality. There are only two exceptions: a risk to your life or someone else’s, or a court order. We explain this to you in writing before you start.',
     },
     {
-      question: '¿Atienden a niñas, niños y adolescentes?',
+      question: 'Do you see children and teens?',
       answer:
-        'Sí. Necesitamos la autorización de su representante legal. La familia participa en el proceso cuando es útil, y respetamos los espacios de confidencialidad que la persona menor de edad necesite.',
+        'Yes. We need the consent of their legal guardian. The family takes part in the process when it helps, and we respect the confidential space the young person needs.',
     },
     {
-      question: '¿Qué pasa después de enviar la solicitud?',
+      question: 'What happens after I send my request?',
       answer:
-        'La solicitud todavía no es una cita confirmada. Una persona del equipo la revisa y se comunica contigo por el medio que elegiste para acordar día y hora.',
+        'A request is not yet a confirmed appointment. Someone from our team reviews it and gets in touch with you, the way you chose, to agree on a day and time.',
     },
     {
-      question: '¿Puedo dejar el proceso cuando quiera?',
+      question: 'Can I stop whenever I want?',
       answer:
-        'Sí. Puedes pausarlo o terminarlo en cualquier momento, pedir copia de tu historia clínica y preguntar por cualquier parte del proceso.',
+        'Yes. You can pause or end the process at any time, ask for a copy of your clinical record and ask about any part of the process.',
     },
     {
-      question: '¿Cuánto cuesta?',
+      question: 'How much does it cost?',
       answer:
-        'Las tarifas dependen del tipo de atención. Puedes preguntarlas en tu solicitud o por teléfono y te las compartimos antes de agendar.',
+        'Fees depend on the type of care. You can ask about them in your request or by phone, and we will share them with you before scheduling.',
     },
     {
-      question: '¿Atienden urgencias?',
-      answer: `No somos un servicio de urgencias. Si tú o alguien cercano está en peligro, comunícate de inmediato con la línea de emergencias ${crisisLine} o acude al servicio de urgencias más cercano.`,
+      question: 'Do you handle emergencies?',
+      answer: `We are not an emergency service. If you or someone close to you is in danger, call the emergency line ${crisisLine} right away or go to the nearest emergency room.`,
     },
   ];
 }
 
 export const DEFAULT_ABOUT =
-  'Acompañamos procesos individuales y familiares con calma, respeto y confidencialidad. Cada proceso empieza por escucharte.';
+  'We support individuals and families with calm, respect and confidentiality. Every process starts by listening to you.';

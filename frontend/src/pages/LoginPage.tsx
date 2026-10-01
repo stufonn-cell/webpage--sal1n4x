@@ -26,14 +26,14 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const state = (location.state ?? {}) as LocationState;
-  useDocumentTitle('Ingresar', clinicName);
+  useDocumentTitle('Log in', clinicName);
 
   const form = useForm({
     initial: { identifier: '', password: '' },
     validate: (values) => {
       const errors: Record<string, string> = {};
-      if (!values.identifier.trim()) errors.identifier = 'Escribe tu usuario o tu correo.';
-      if (!values.password) errors.password = 'Escribe tu contraseña.';
+      if (!values.identifier.trim()) errors.identifier = 'Please enter your username or email.';
+      if (!values.password) errors.password = 'Please enter your password.';
       return errors;
     },
     onSubmit: async (values) => {
@@ -51,50 +51,50 @@ export default function LoginPage() {
         <ThemeToggle />
       </header>
 
-      <main className="solo__main" id="contenido">
+      <main className="solo__main" id="main-content">
         <div className="login enter">
           <p className="eyebrow">{greeting()}</p>
-          <h1 className="login__title">Ingresa a tu espacio</h1>
+          <h1 className="login__title">Log in to your space</h1>
           <p className="login__lead">
-            Para el equipo clínico y para pacientes con acceso al portal. Si aún no tienes cuenta, tu profesional puede
-            crearla por ti.
+            For the clinical team and for patients with portal access. If you do not have an account yet, your
+            professional can create one for you.
           </p>
 
           <form className="login__form" onSubmit={form.handleSubmit} noValidate>
             {state.expired && !form.formError && (
               <Alert tone="info">
-                Ingresa para continuar. Por seguridad, las sesiones se cierran tras un tiempo sin actividad.
+                Log in to continue. For your security, sessions close after a period of inactivity.
               </Alert>
             )}
             <FormAlert message={form.formError} />
 
             <TextField
-              label="Usuario o correo"
+              label="Username or email"
               autoComplete="username"
               autoCapitalize="none"
               spellCheck={false}
               autoFocus
               {...form.bind('identifier')}
             />
-            <PasswordField label="Contraseña" autoComplete="current-password" {...form.bind('password')} />
+            <PasswordField label="Password" autoComplete="current-password" {...form.bind('password')} />
 
-            <Button type="submit" variant="primary" size="lg" block loading={form.submitting} loadingLabel="Verificando">
-              Ingresar
+            <Button type="submit" variant="primary" size="lg" block loading={form.submitting} loadingLabel="Checking">
+              Log in
             </Button>
           </form>
 
           <p className="login__note">
             <Icon name="lock" size={15} />
             <span>
-              Cada acceso queda registrado. Si olvidaste tu contraseña, pide al consultorio
-              que la restablezca.
+              Every login is recorded. If you forgot your password, ask the practice to
+              reset it.
             </span>
           </p>
 
           {demoAccounts.length > 0 && (
             <section className="demo-accounts" aria-labelledby="demo-title">
               <p className="eyebrow" id="demo-title">
-                Cuentas de demostración · solo en local
+                Demo accounts · local only
               </p>
               <ul className="demo-accounts__list">
                 {demoAccounts.map((account) => (
@@ -116,7 +116,7 @@ export default function LoginPage() {
 
       <footer className="solo__bottom">
         <ButtonLink to="/" variant="quiet" size="sm" icon="arrowLeft">
-          Volver al sitio
+          Back to the site
         </ButtonLink>
         <AuthorCredit />
       </footer>

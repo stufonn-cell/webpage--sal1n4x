@@ -5,15 +5,15 @@ import { PRIVACY_POINTS } from '../content';
 
 export function Trust() {
   return (
-    <section className="section section--ink" aria-labelledby="confianza-title">
+    <section className="section section--ink" aria-labelledby="trust-title">
       <div className="container trust">
         <header className="trust__head reveal">
-          <p className="eyebrow">Confidencialidad</p>
-          <h2 className="section__title serif" id="confianza-title">
-            Lo que compartes aquí se queda aquí
+          <p className="eyebrow">Confidentiality</p>
+          <h2 className="section__title serif" id="trust-title">
+            What you share here stays here
           </h2>
-          <Link className="trust__link" to="/privacidad">
-            Cómo cuidamos tu información <Icon name="arrowRight" size={16} />
+          <Link className="trust__link" to="/privacy">
+            How we look after your information <Icon name="arrowRight" size={16} />
           </Link>
         </header>
         <ul className="trust__points">

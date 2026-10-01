@@ -15,12 +15,12 @@ import type { Instrument } from '@/lib/types';
 import type { PortalAssessment } from '../types';
 
 export function QuestionnairesPage() {
-  useDocumentTitle('Cuestionarios');
+  useDocumentTitle('Questionnaires');
   const query = useQuery({ queryKey: ['portal', 'questionnaires'], queryFn: () => get<PortalAssessment[]>('/api/portal/questionnaires') });
   const pending = query.data?.filter((item) => item.status === 'pending') ?? [];
   const completed = query.data?.filter((item) => item.status === 'completed') ?? [];
 
-  // Una curva por instrumento con al menos dos aplicaciones.
+  // One curve per instrument with at least two administrations.
   const byCode = completed.reduce<Record<string, PortalAssessment[]>>((groups, item) => {
     (groups[item.instrument_code] ??= []).push(item);
     return groups;
@@ -28,24 +28,24 @@ export function QuestionnairesPage() {
 
   return (
     <>
-      <PageHeader title="Cuestionarios" subtitle="Te ayudan a ti y a tu profesional a ver cómo vas. No hay respuestas correctas ni incorrectas." />
+      <PageHeader title="Questionnaires" subtitle="They help you and your professional see how you are doing. There are no right or wrong answers." />
       <QueryState isPending={query.isPending} error={query.error} onRetry={query.refetch}>
         <div className="section-gap">
-          <Panel title="Por responder" titleId="por-responder" flush>
+          <Panel title="To answer" titleId="to-answer" flush>
             {pending.length === 0 ? (
-              <EmptyState icon="checkCircle" title="Estás al día" text="Cuando tu profesional te asigne un cuestionario aparecerá aquí." />
+              <EmptyState icon="checkCircle" title="You are all caught up" text="When your professional assigns you a questionnaire, it will show up here." />
             ) : (
               <ul className="list">
                 {pending.map((item) => (
                   <li key={item.id}>
-                    <Link className="list__item" to={`/portal/cuestionarios/${item.id}`}>
+                    <Link className="list__item" to={`/portal/questionnaires/${item.id}`}>
                       <span className="list__main">
                         <span className="list__title">{item.instrument_name}</span>
                         <span className="list__meta">
-                          {item.items_count} preguntas · asignado el {formatDate(item.created_at)}
+                          {item.items_count} questions · assigned on {formatDate(item.created_at)}
                         </span>
                       </span>
-                      <span className="btn btn--sm btn--primary">Responder</span>
+                      <span className="btn btn--sm btn--primary">Answer</span>
                     </Link>
                   </li>
                 ))}
@@ -56,9 +56,9 @@ export function QuestionnairesPage() {
           {Object.entries(byCode)
             .filter(([, items]) => items.length > 1)
             .map(([code, items]) => (
-              <Panel key={code} title={`Tu evolución · ${items[0].instrument_domain}`} subtitle={items[0].instrument_name} titleId={`evolucion-${code}`}>
+              <Panel key={code} title={`Your progress · ${items[0].instrument_domain}`} subtitle={items[0].instrument_name} titleId={`progress-${code}`}>
                 <LineChart
-                  label={`Tu evolución en ${items[0].instrument_name}`}
+                  label={`Your progress on ${items[0].instrument_name}`}
                   max={items[0].max_score}
                   height={150}
                   points={[...items].reverse().map((item) => ({
@@ -66,12 +66,12 @@ export function QuestionnairesPage() {
                     value: Number(item.total_score),
                   }))}
                 />
-                <p className="xsmall muted">Tu profesional te ayudará a entender estos resultados en sesión.</p>
+                <p className="xsmall muted">Your professional will help you understand these results in session.</p>
               </Panel>
             ))}
 
           {completed.length > 0 && (
-            <Panel title="Respondidos" titleId="respondidos" flush>
+            <Panel title="Answered" titleId="answered" flush>
               <ul className="list">
                 {completed.map((item) => (
                   <li key={item.id} className="list__item">
@@ -79,7 +79,7 @@ export function QuestionnairesPage() {
                       <span className="list__title">{item.instrument_name}</span>
                       <span className="list__meta">{formatDate(item.administered_at)}</span>
                     </span>
-                    <Badge tone="success">Enviado</Badge>
+                    <Badge tone="success">Submitted</Badge>
                   </li>
                 ))}
               </ul>
@@ -106,14 +106,14 @@ export function QuestionnairePage() {
     queryFn: () => get<{ id: number; instrument: Instrument }>(`/api/portal/questionnaires/${id}`),
   });
   const instrument = query.data?.instrument;
-  useDocumentTitle(instrument?.name ?? 'Cuestionario');
+  useDocumentTitle(instrument?.name ?? 'Questionnaire');
 
   const submit = async () => {
     if (!instrument) return;
     const missing = instrument.items.findIndex((_, index) => answers[index] === undefined);
     if (missing >= 0) {
       setShowMissing(true);
-      setError('Te falta responder alguna pregunta. Las que faltan están marcadas para que las encuentres fácil.');
+      setError('Some questions still need an answer. The missing ones are marked so you can find them easily.');
       document.getElementById(`item-${missing}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
@@ -122,11 +122,11 @@ export function QuestionnairePage() {
     setError('');
     try {
       const result = await post(`/api/portal/questionnaires/${id}`, { answers: instrument.items.map((_, index) => answers[index]) });
-      toast.success(result.message ?? 'Gracias por responder.');
+      toast.success(result.message ?? 'Thank you for your answers.');
       await queryClient.invalidateQueries({ queryKey: ['portal'] });
-      navigate('/portal/cuestionarios');
+      navigate('/portal/questionnaires');
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'No pudimos enviar tus respuestas. Inténtalo de nuevo.');
+      setError(caught instanceof ApiError ? caught.message : 'We could not send your answers. Please try again.');
     } finally {
       setSending(false);
     }
@@ -136,21 +136,21 @@ export function QuestionnairePage() {
 
   return (
     <div className="container--narrow">
-      <PageHeader back={{ to: '/portal/cuestionarios', label: 'Cuestionarios' }} title={instrument?.name ?? 'Cuestionario'} />
+      <PageHeader back={{ to: '/portal/questionnaires', label: 'Questionnaires' }} title={instrument?.name ?? 'Questionnaire'} />
       {conflict ? (
         <EmptyState
           icon="checkCircle"
-          title="Ya respondiste este cuestionario"
-          text="Gracias. Tu profesional lo revisará contigo."
-          action={<ButtonLink to="/portal" size="sm">Volver al inicio</ButtonLink>}
+          title="You already answered this questionnaire"
+          text="Thank you. Your professional will go over it with you."
+          action={<ButtonLink to="/portal" size="sm">Back to home</ButtonLink>}
         />
       ) : (
         <QueryState isPending={query.isPending} error={query.error} onRetry={query.refetch}>
           {instrument && (
             <div className="section-gap">
               <Alert tone="info" icon="heart">
-                Responde pensando en <strong>{instrument.window.toLowerCase()}</strong>. Elige la opción que mejor describa cómo te has
-                sentido; no hay respuestas buenas ni malas. Puedes tomarte el tiempo que necesites.
+                Answer thinking about <strong>{instrument.window.toLowerCase()}</strong>. Choose the option that best describes how you
+                have been feeling; there are no good or bad answers. Take all the time you need.
               </Alert>
               <Questionnaire
                 instrument={instrument}
@@ -162,10 +162,10 @@ export function QuestionnairePage() {
               <FormAlert message={error} />
               <div className="split">
                 <p className="xsmall muted">
-                  <Icon name="lock" size={13} className="inline-icon" /> Solo tu profesional verá tus respuestas.
+                  <Icon name="lock" size={13} className="inline-icon" /> Only your professional will see your answers.
                 </p>
-                <Button variant="primary" size="lg" onClick={submit} loading={sending} loadingLabel="Enviando">
-                  Enviar respuestas
+                <Button variant="primary" size="lg" onClick={submit} loading={sending} loadingLabel="Sending">
+                  Send answers
                 </Button>
               </div>
             </div>

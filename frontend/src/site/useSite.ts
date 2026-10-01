@@ -10,8 +10,8 @@ export function useSite() {
   });
 }
 
-/** Enlace de WhatsApp a partir del numero guardado en la configuracion. */
-export function whatsappLink(number: string, text = 'Hola, quisiera información para agendar una cita.'): string {
+/** WhatsApp link built from the number saved in settings. */
+export function whatsappLink(number: string, text = 'Hi, I would like some information about booking an appointment.'): string {
   return `https://wa.me/${number.replace(/\D+/g, '')}?text=${encodeURIComponent(text)}`;
 }
 

@@ -31,34 +31,34 @@ const STEP_FIELDS: (keyof RequestValues)[][] = [
   ['full_name', 'email', 'phone', 'contact_preference', 'privacy_accepted'],
 ];
 
-const STEP_TITLES = ['¿Para quién es la cita?', '¿Cuándo te queda mejor?', '¿Cómo te contactamos?'];
+const STEP_TITLES = ['Who is the appointment for?', 'When works best for you?', 'How can we reach you?'];
 
 const ATTENDEE_HINTS: Record<string, string> = {
-  self: 'Quieres empezar un proceso propio.',
-  minor: 'Eres madre, padre o representante legal.',
-  other: 'Pides información en nombre de alguien.',
+  self: 'You want to start a process for yourself.',
+  minor: 'You are a parent or legal guardian.',
+  other: 'You are asking on behalf of someone else.',
 };
 
 const MODALITY_HINTS: Record<string, string> = {
-  in_person: 'En el consultorio.',
-  online: 'Por videollamada o teléfono.',
-  no_preference: 'Lo decidimos juntos.',
+  in_person: 'At the office.',
+  online: 'By video call or phone.',
+  no_preference: 'We decide together.',
 };
 
 function validateStep(step: number, values: RequestValues): FieldErrors {
   const errors: FieldErrors = {};
   if (step === 0) {
-    if (!values.attendee) errors.attendee = 'Elige una opción.';
-    if (!values.modality) errors.modality = 'Elige una opción.';
+    if (!values.attendee) errors.attendee = 'Choose an option.';
+    if (!values.modality) errors.modality = 'Choose an option.';
   }
   if (step === 2) {
-    if (!values.full_name.trim()) errors.full_name = 'Escribe tu nombre.';
-    if (!values.email.trim()) errors.email = 'Escribe tu correo.';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) errors.email = 'Revisa el correo; parece incompleto.';
+    if (!values.full_name.trim()) errors.full_name = 'Please enter your name.';
+    if (!values.email.trim()) errors.email = 'Please enter your email.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) errors.email = 'Check your email; it looks incomplete.';
     if (['phone', 'whatsapp'].includes(values.contact_preference) && !values.phone.trim()) {
-      errors.phone = 'Déjanos un número para poder llamarte o escribirte.';
+      errors.phone = 'Leave us a number so we can call or message you.';
     }
-    if (!values.privacy_accepted) errors.privacy_accepted = 'Necesitamos tu autorización para contactarte.';
+    if (!values.privacy_accepted) errors.privacy_accepted = 'We need your permission to contact you.';
   }
   return errors;
 }
@@ -118,17 +118,17 @@ export default function RequestPage() {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const firstRender = useRef(true);
 
-  const service = SERVICES.find((item) => item.id === params.get('servicio'));
-  useDocumentTitle('Solicitar una cita', site?.clinic.clinic_name);
-  useMetaDescription('Solicita una primera cita de atención psicológica, presencial o virtual. Te contactamos para acordar el horario.');
+  const service = SERVICES.find((item) => item.id === params.get('service'));
+  useDocumentTitle('Request an appointment', site?.clinic.clinic_name);
+  useMetaDescription('Request a first appointment for psychological care, in person or online. We will contact you to agree on a time.');
 
   const form = useForm<RequestValues>({
     initial: {
-      attendee: service?.id === 'infancia' ? 'minor' : '',
-      modality: service?.id === 'virtual' ? 'online' : '',
+      attendee: service?.id === 'children' ? 'minor' : '',
+      modality: service?.id === 'online' ? 'online' : '',
       preferred_times: [],
       preferred_professional_id: '',
-      message: service ? `Me interesa: ${service.title}.` : '',
+      message: service ? `I am interested in: ${service.title}.` : '',
       full_name: '',
       email: '',
       phone: '',
@@ -146,7 +146,7 @@ export default function RequestPage() {
     },
   });
 
-  // Si la API devuelve errores de un paso anterior, se vuelve a ese paso.
+  // If the API returns errors for an earlier step, go back to that step.
   useEffect(() => {
     const fields = Object.keys(form.errors);
     if (fields.length === 0) return;
@@ -188,22 +188,22 @@ export default function RequestPage() {
               <Icon name="check" size={26} />
             </span>
             <h1 className="request__title serif" id="request-done-title" ref={headingRef} tabIndex={-1}>
-              Gracias{sentName ? `, ${sentName}` : ''}. Recibimos tu solicitud.
+              Thank you{sentName ? `, ${sentName}` : ''}. We received your request.
             </h1>
             <p className="request__lead">
-              Pedir ayuda no siempre es fácil, y ya diste el primer paso. Una persona de nuestro equipo revisará tu solicitud y
-              se comunicará contigo por el medio que elegiste para acordar día y hora.
+              Asking for help is not always easy, and you have already taken the first step. Someone from our team will review
+              your request and get in touch with you, the way you chose, to agree on a day and time.
             </p>
-            <Alert tone="info" title="Si necesitas ayuda inmediata">
-              Esta solicitud no es una cita de urgencia. Si estás en peligro, llama a la línea de emergencias{' '}
+            <Alert tone="info" title="If you need help right now">
+              This request is not an emergency appointment. If you are in danger, call the emergency line{' '}
               <a href={telLink(crisisLine)}>{crisisLine}</a>.
             </Alert>
             <div className="cluster">
               <ButtonLink to="/" variant="primary">
-                Volver al inicio
+                Back to home
               </ButtonLink>
-              <ButtonLink to="/#preguntas" variant="quiet">
-                Leer preguntas frecuentes
+              <ButtonLink to="/#faq" variant="quiet">
+                Read the FAQ
               </ButtonLink>
             </div>
           </div>
@@ -216,29 +216,29 @@ export default function RequestPage() {
     <section className="request" aria-labelledby="request-title">
       <div className="container container--narrow">
         <header className="request__header enter">
-          <p className="eyebrow">Solicitud de cita</p>
+          <p className="eyebrow">Appointment request</p>
           <h1 className="request__title serif" id="request-title">
-            Cuéntanos un poco y te contactamos
+            Tell us a little and we will get in touch
           </h1>
           <p className="request__lead">
-            Son tres pasos cortos. No necesitas contar aquí los motivos de la consulta: eso lo conversaremos con calma.
+            It is three short steps. You do not need to explain your reasons for reaching out here: we will talk about that calmly.
           </p>
         </header>
 
         <div className="request__progress" aria-live="polite">
           <div className="split">
             <span className="small">
-              Paso {step + 1} de 3 · <strong>{STEP_TITLES[step]}</strong>
+              Step {step + 1} of 3 · <strong>{STEP_TITLES[step]}</strong>
             </span>
           </div>
-          <Progress value={step + 1} max={3} label="Avance de la solicitud" />
+          <Progress value={step + 1} max={3} label="Request progress" />
         </div>
 
         <form
           className="request__card"
           noValidate
           onSubmit={(event) => {
-            // Enter en los primeros pasos avanza en lugar de enviar.
+            // Pressing Enter in the first steps moves forward instead of submitting.
             if (step < 2) {
               event.preventDefault();
               next();
@@ -253,9 +253,9 @@ export default function RequestPage() {
 
           <FormAlert message={form.formError} />
 
-          {/* Campo trampa para bots: oculto a personas y a lectores de pantalla. */}
+          {/* Honeypot field for bots: hidden from people and from screen readers. */}
           <div className="visually-hidden" aria-hidden="true">
-            <label htmlFor="website">No completes este campo</label>
+            <label htmlFor="website">Do not fill in this field</label>
             <input
               id="website"
               name="website"
@@ -270,7 +270,7 @@ export default function RequestPage() {
             <div className="request__step" key="step-0">
               <ChoiceGroup
                 name="attendee"
-                legend="La cita es…"
+                legend="The appointment is…"
                 options={site?.form.attendees ?? []}
                 value={form.values.attendee}
                 hints={ATTENDEE_HINTS}
@@ -279,7 +279,7 @@ export default function RequestPage() {
               />
               <ChoiceGroup
                 name="modality"
-                legend="¿Cómo prefieres la atención?"
+                legend="How would you prefer to be seen?"
                 options={site?.form.modalities ?? []}
                 value={form.values.modality}
                 hints={MODALITY_HINTS}
@@ -288,8 +288,8 @@ export default function RequestPage() {
               />
               {form.values.attendee === 'minor' && (
                 <Alert tone="info">
-                  Para atender a una persona menor de edad necesitaremos la autorización de su representante legal. Te lo
-                  explicamos en el primer contacto.
+                  To see a minor, we will need the consent of their legal guardian. We will explain this when we first get in
+                  touch.
                 </Alert>
               )}
             </div>
@@ -299,7 +299,7 @@ export default function RequestPage() {
             <div className="request__step" key="step-1">
               <fieldset className="request__group">
                 <legend className="field__label">
-                  Franjas que te quedan mejor <span className="field__optional">(puedes elegir varias)</span>
+                  Times that work best for you <span className="field__optional">(you can choose more than one)</span>
                 </legend>
                 <div className="chip-set">
                   {(site?.form.times ?? []).map((time) => (
@@ -318,20 +318,20 @@ export default function RequestPage() {
 
               {site && site.professionals.length > 0 && (
                 <SelectField
-                  label="¿Prefieres a alguien del equipo?"
+                  label="Would you prefer someone from the team?"
                   optional
-                  placeholder="Sin preferencia"
+                  placeholder="No preference"
                   options={site.professionals.map((person) => ({ value: String(person.id), label: person.full_name }))}
                   {...form.bind('preferred_professional_id')}
                 />
               )}
 
               <TextAreaField
-                label="¿Algo que quieras que sepamos?"
+                label="Anything you would like us to know?"
                 optional
                 rows={4}
                 maxLength={600}
-                hint="Por ejemplo, días en los que no puedes. Evita incluir información de salud: la hablaremos en privado."
+                hint="For example, days when you are not available. Please avoid health details: we will talk about them in private."
                 {...form.bind('message')}
               />
             </div>
@@ -340,10 +340,10 @@ export default function RequestPage() {
           {step === 2 && (
             <div className="request__step" key="step-2">
               <div className="form-grid">
-                <TextField label="Nombre" autoComplete="name" {...form.bind('full_name')} wrapperClassName="span-full" />
-                <TextField label="Correo electrónico" type="email" autoComplete="email" inputMode="email" {...form.bind('email')} />
+                <TextField label="Name" autoComplete="name" {...form.bind('full_name')} wrapperClassName="span-full" />
+                <TextField label="Email" type="email" autoComplete="email" inputMode="email" {...form.bind('email')} />
                 <TextField
-                  label="Teléfono"
+                  label="Phone"
                   type="tel"
                   autoComplete="tel"
                   inputMode="tel"
@@ -354,7 +354,7 @@ export default function RequestPage() {
 
               <ChoiceGroup
                 name="contact_preference"
-                legend="¿Cómo prefieres que te contactemos?"
+                legend="How would you like us to contact you?"
                 options={(site?.form.contactPreferences ?? []).filter(
                   (option) => option.value !== 'whatsapp' || Boolean(site?.clinic.whatsapp_number),
                 )}
@@ -374,9 +374,13 @@ export default function RequestPage() {
                     aria-describedby={form.errors.privacy_accepted ? 'privacy-error' : undefined}
                   />
                   <span>
-                    Autorizo usar estos datos solo para responder a mi solicitud, según la{' '}
-                    <Link to="/privacidad" target="_blank">
-                      política de privacidad
+                    I agree that this information will be used only to respond to my request, as described in the{' '}
+                    <Link to="/privacy" target="_blank">
+                      privacy policy
+                    </Link>
+                    , and I have read the{' '}
+                    <Link to="/terms" target="_blank">
+                      terms and conditions
                     </Link>
                     .
                   </span>
@@ -393,18 +397,18 @@ export default function RequestPage() {
           <div className="request__nav">
             {step > 0 ? (
               <Button variant="quiet" icon="arrowLeft" onClick={() => setStep((current) => current - 1)}>
-                Atrás
+                Back
               </Button>
             ) : (
               <span />
             )}
             {step < 2 ? (
               <Button variant="primary" iconRight="arrowRight" onClick={next} disabled={isPending}>
-                Continuar
+                Continue
               </Button>
             ) : (
-              <Button type="submit" variant="primary" loading={form.submitting} loadingLabel="Enviando solicitud">
-                Enviar solicitud
+              <Button type="submit" variant="primary" loading={form.submitting} loadingLabel="Sending request">
+                Send request
               </Button>
             )}
           </div>
@@ -412,7 +416,7 @@ export default function RequestPage() {
 
         <p className="request__footnote">
           <Icon name="lock" size={14} />
-          Solo el equipo del consultorio puede ver tu solicitud.
+          Only the practice team can see your request.
         </p>
       </div>
     </section>

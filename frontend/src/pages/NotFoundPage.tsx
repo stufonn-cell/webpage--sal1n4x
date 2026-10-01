@@ -11,18 +11,18 @@ export function MessagePage({ code, title, text }: { code: string; title: string
       <header className="solo__top">
         <Logo name={clinicName} />
       </header>
-      <main className="solo__main" id="contenido">
+      <main className="solo__main" id="main-content">
         <div className="message-page enter">
           <p className="message-page__code">{code}</p>
           <h1>{title}</h1>
           <p>{text}</p>
           <div className="cluster cluster--center">
             <ButtonLink to="/" variant={user ? 'default' : 'primary'}>
-              Ir al inicio
+              Go to home
             </ButtonLink>
             {user && (
               <ButtonLink to={homeFor(user)} variant="primary">
-                Volver a mi espacio
+                Back to my space
               </ButtonLink>
             )}
           </div>
@@ -36,12 +36,12 @@ export function MessagePage({ code, title, text }: { code: string; title: string
 }
 
 export function NotFoundPage() {
-  useDocumentTitle('Página no encontrada');
+  useDocumentTitle('Page not found');
   return (
     <MessagePage
       code="404"
-      title="Esta página no existe"
-      text="Puede que el enlace haya cambiado o que se haya escrito con un error. Desde el inicio puedes encontrar lo que buscas."
+      title="This page does not exist"
+      text="The link may have changed or it may have a typo. You can find what you are looking for from the home page."
     />
   );
 }

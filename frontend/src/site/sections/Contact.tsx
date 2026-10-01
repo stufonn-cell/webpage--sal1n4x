@@ -7,19 +7,19 @@ export function Contact({ site }: { site?: PublicSite }) {
   const clinic = site?.clinic;
 
   return (
-    <section className="section section--tinted" id="contacto" aria-labelledby="contacto-title">
+    <section className="section section--tinted" id="contact" aria-labelledby="contact-title">
       <div className="container contact">
         <div className="contact__intro reveal">
-          <p className="eyebrow">Contacto</p>
-          <h2 className="section__title serif" id="contacto-title">
-            Cuando quieras, aquí estamos
+          <p className="eyebrow">Contact</p>
+          <h2 className="section__title serif" id="contact-title">
+            We are here whenever you are ready
           </h2>
           <p className="section__lead">
-            La forma más sencilla de empezar es la solicitud en línea. Si prefieres hablar con alguien, también puedes
-            llamarnos o escribirnos.
+            The easiest way to start is the online request. If you would rather talk to someone, you can also call us or
+            write to us.
           </p>
-          <ButtonLink to="/solicitar-cita" variant="primary" size="lg" iconRight="arrowRight">
-            Solicitar una cita
+          <ButtonLink to="/request-appointment" variant="primary" size="lg" iconRight="arrowRight">
+            Request an appointment
           </ButtonLink>
         </div>
 
@@ -28,7 +28,7 @@ export function Contact({ site }: { site?: PublicSite }) {
             <li>
               <Icon name="phone" size={18} />
               <div>
-                <span className="contact__label">Teléfono</span>
+                <span className="contact__label">Phone</span>
                 <a href={telLink(clinic.clinic_phone)}>{clinic.clinic_phone}</a>
               </div>
             </li>
@@ -39,7 +39,7 @@ export function Contact({ site }: { site?: PublicSite }) {
               <div>
                 <span className="contact__label">WhatsApp</span>
                 <a href={whatsappLink(clinic.whatsapp_number)} target="_blank" rel="noopener noreferrer">
-                  Escribir por WhatsApp
+                  Message us on WhatsApp
                 </a>
               </div>
             </li>
@@ -48,7 +48,7 @@ export function Contact({ site }: { site?: PublicSite }) {
             <li>
               <Icon name="mail" size={18} />
               <div>
-                <span className="contact__label">Correo</span>
+                <span className="contact__label">Email</span>
                 <a href={`mailto:${clinic.clinic_email}`}>{clinic.clinic_email}</a>
               </div>
             </li>
@@ -57,7 +57,7 @@ export function Contact({ site }: { site?: PublicSite }) {
             <li>
               <Icon name="mapPin" size={18} />
               <div>
-                <span className="contact__label">Consultorio</span>
+                <span className="contact__label">Office</span>
                 <span>{clinic.clinic_address}</span>
               </div>
             </li>
@@ -66,9 +66,9 @@ export function Contact({ site }: { site?: PublicSite }) {
             <li>
               <Icon name="clock" size={18} />
               <div>
-                <span className="contact__label">Horario de atención</span>
+                <span className="contact__label">Opening hours</span>
                 <span>
-                  De {clinic.working_hours_start} a {clinic.working_hours_end}
+                  From {clinic.working_hours_start} to {clinic.working_hours_end}
                 </span>
               </div>
             </li>

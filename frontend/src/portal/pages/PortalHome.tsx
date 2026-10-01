@@ -12,20 +12,20 @@ import { MODALITY_LABELS, type PortalAppointment, type PortalHomeData } from '..
 function NextAppointment({ appointment }: { appointment: PortalAppointment }) {
   const online = appointment.modality !== 'in_person';
   return (
-    <section className="next-session enter" aria-labelledby="proxima">
-      <p className="eyebrow" id="proxima">
-        Tu próxima sesión
+    <section className="next-session enter" aria-labelledby="next-session-title">
+      <p className="eyebrow" id="next-session-title">
+        Your next session
       </p>
       <p className="next-session__date serif">
         {relativeDay(appointment.starts_at)}, {formatTime(appointment.starts_at)}
       </p>
       <p className="soft">
-        {formatLongDate(appointment.starts_at)} · {MODALITY_LABELS[appointment.modality] ?? appointment.modality} con {appointment.psychologist_name}
+        {formatLongDate(appointment.starts_at)} · {MODALITY_LABELS[appointment.modality] ?? appointment.modality} with {appointment.psychologist_name}
       </p>
       {online && appointment.meeting_url ? (
         <a className="btn btn--primary" href={appointment.meeting_url} target="_blank" rel="noopener noreferrer">
           <Icon name="video" size={17} />
-          <span className="btn__label">Entrar a la videollamada</span>
+          <span className="btn__label">Join the video call</span>
         </a>
       ) : (
         appointment.location && (
@@ -39,7 +39,7 @@ function NextAppointment({ appointment }: { appointment: PortalAppointment }) {
 }
 
 export default function PortalHome() {
-  useDocumentTitle('Inicio');
+  useDocumentTitle('Home');
   const query = useQuery({ queryKey: ['portal', 'home'], queryFn: () => get<PortalHomeData>('/api/portal') });
   const data = query.data;
   const pendingConsents = data?.consents.filter((consent) => consent.status === 'pending') ?? [];
@@ -55,8 +55,8 @@ export default function PortalHome() {
             </h1>
             <p className="soft">
               {tasks === 0
-                ? 'No tienes nada pendiente. Este es tu espacio para consultar tus citas y documentos cuando lo necesites.'
-                : `Tienes ${tasks === 1 ? 'una cosa' : `${tasks} cosas`} por revisar. Sin prisa: puedes hacerlo cuando quieras.`}
+                ? 'You have nothing pending. This is your space to check your appointments and documents whenever you need to.'
+                : `You have ${tasks === 1 ? 'one thing' : `${tasks} things`} to review. No rush: you can do it whenever you like.`}
             </p>
           </header>
 
@@ -64,21 +64,21 @@ export default function PortalHome() {
             <NextAppointment appointment={data.appointments[0]} />
           ) : (
             <Panel>
-              <EmptyState icon="calendar" title="No tienes citas próximas" text="Cuando tu profesional agende una sesión aparecerá aquí." />
+              <EmptyState icon="calendar" title="You have no upcoming appointments" text="When your professional schedules a session, it will show up here." />
             </Panel>
           )}
 
           {tasks > 0 && (
-            <Panel title="Por revisar" titleId="pendientes" flush>
+            <Panel title="To review" titleId="to-review" flush>
               <ul className="list">
                 {data.pending.map((item) => (
                   <li key={`a-${item.id}`}>
-                    <Link className="list__item" to={`/portal/cuestionarios/${item.id}`}>
+                    <Link className="list__item" to={`/portal/questionnaires/${item.id}`}>
                       <Icon name="clipboard" size={18} />
                       <span className="list__main">
                         <span className="list__title">{item.instrument_name}</span>
                         <span className="list__meta">
-                          Cuestionario de {item.items_count} preguntas · unos {Math.max(2, Math.round(item.items_count / 3))} minutos
+                          {item.items_count}-question questionnaire · about {Math.max(2, Math.round(item.items_count / 3))} minutes
                         </span>
                       </span>
                       <Icon name="chevronRight" size={18} />
@@ -87,11 +87,11 @@ export default function PortalHome() {
                 ))}
                 {pendingConsents.map((consent) => (
                   <li key={`c-${consent.id}`}>
-                    <Link className="list__item" to={`/portal/consentimientos/${consent.id}`}>
+                    <Link className="list__item" to={`/portal/consents/${consent.id}`}>
                       <Icon name="pen" size={18} />
                       <span className="list__main">
                         <span className="list__title">{consent.title}</span>
-                        <span className="list__meta">Documento para leer y firmar</span>
+                        <span className="list__meta">Document to read and sign</span>
                       </span>
                       <Icon name="chevronRight" size={18} />
                     </Link>
@@ -103,17 +103,17 @@ export default function PortalHome() {
 
           <div className="grid-2">
             <Panel
-              title="Próximas citas"
-              titleId="citas"
+              title="Upcoming appointments"
+              titleId="appointments"
               flush
               actions={
-                <ButtonLink to="/portal/citas" size="sm" variant="quiet" iconRight="chevronRight">
-                  Ver todas
+                <ButtonLink to="/portal/appointments" size="sm" variant="quiet" iconRight="chevronRight">
+                  See all
                 </ButtonLink>
               }
             >
               {data.appointments.length === 0 ? (
-                <EmptyState icon="calendar" title="Sin citas agendadas" />
+                <EmptyState icon="calendar" title="No appointments scheduled" />
               ) : (
                 <ul className="list">
                   {data.appointments.map((appointment) => (
@@ -132,30 +132,30 @@ export default function PortalHome() {
               )}
             </Panel>
 
-            <Panel title="Lo que ya completaste" titleId="completado" flush>
+            <Panel title="What you have completed" titleId="completed" flush>
               {data.completed.length === 0 && data.consents.every((consent) => consent.status !== 'signed') ? (
-                <EmptyState icon="checkCircle" title="Aquí verás lo que vayas completando" />
+                <EmptyState icon="checkCircle" title="What you complete will show up here" />
               ) : (
                 <ul className="list">
                   {data.completed.slice(0, 4).map((item) => (
                     <li key={item.id} className="list__item">
                       <span className="list__main">
                         <span className="list__title">{item.instrument_name}</span>
-                        <span className="list__meta">Respondido el {formatDate(item.administered_at)}</span>
+                        <span className="list__meta">Answered on {formatDate(item.administered_at)}</span>
                       </span>
-                      <Badge tone="success">Enviado</Badge>
+                      <Badge tone="success">Submitted</Badge>
                     </li>
                   ))}
                   {data.consents
                     .filter((consent) => consent.status === 'signed')
                     .map((consent) => (
                       <li key={consent.id}>
-                        <Link className="list__item" to={`/portal/consentimientos/${consent.id}`}>
+                        <Link className="list__item" to={`/portal/consents/${consent.id}`}>
                           <span className="list__main">
                             <span className="list__title">{consent.title}</span>
-                            <span className="list__meta">Firmado el {formatDate(consent.signed_at)}</span>
+                            <span className="list__meta">Signed on {formatDate(consent.signed_at)}</span>
                           </span>
-                          <Badge tone="success">Firmado</Badge>
+                          <Badge tone="success">Signed</Badge>
                         </Link>
                       </li>
                     ))}

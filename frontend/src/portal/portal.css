@@ -1,6 +1,7 @@
 /*
- * PsiClinic - portal del paciente. Mas aire y un tono mas calido que la app
- * clinica: aqui la persona no trabaja, viene a ocuparse de si misma.
+ * PsiClinic - patient portal. More breathing room and a warmer tone than the
+ * clinical app: here the person is not working, they come to take care of
+ * themselves.
  */
 
 .portal {
@@ -129,10 +130,10 @@
   vertical-align: -2px;
 }
 
-/* En movil la navegacion pasa a una barra inferior al alcance del pulgar. */
+/* On mobile the navigation moves to a bottom bar within thumb's reach. */
 @media (max-width: 760px) {
-  /* backdrop-filter crea un bloque contenedor: anularia el position: fixed
-     de la barra inferior. */
+  /* backdrop-filter creates a containing block: it would cancel the
+     position: fixed of the bottom bar. */
   .portal-nav {
     backdrop-filter: none;
     background: var(--paper);

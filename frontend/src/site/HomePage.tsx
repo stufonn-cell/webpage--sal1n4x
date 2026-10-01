@@ -12,7 +12,7 @@ import { Team } from './sections/Team';
 import { Trust } from './sections/Trust';
 import { useSite } from './useSite';
 
-/** Datos estructurados (schema.org) para buscadores. */
+/** Structured data (schema.org) for search engines. */
 function useStructuredData(site: PublicSite | undefined) {
   useEffect(() => {
     if (!site) return;
@@ -23,13 +23,14 @@ function useStructuredData(site: PublicSite | undefined) {
       name: clinic.clinic_name,
       description: clinic.clinic_about || clinic.clinic_tagline,
       url: window.location.origin,
+      inLanguage: 'en',
       telephone: clinic.clinic_phone || undefined,
       email: clinic.clinic_email || undefined,
       address: clinic.clinic_address || undefined,
       employee: site.professionals.map((person) => ({
         '@type': 'Person',
         name: person.full_name,
-        jobTitle: person.specialty || 'Psicología',
+        jobTitle: person.specialty || 'Psychology',
       })),
     };
     const script = document.createElement('script');
@@ -45,7 +46,7 @@ export default function HomePage() {
   const root = useRef<HTMLDivElement>(null);
   const name = site?.clinic.clinic_name || 'PsiClinic';
 
-  useDocumentTitle('', `${name} · Atención psicológica`);
+  useDocumentTitle('', `${name} · Psychological care`);
   useMetaDescription(site?.clinic.clinic_about || DEFAULT_ABOUT);
   useStructuredData(site);
   useReveal(root);

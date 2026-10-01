@@ -4,12 +4,12 @@ import { STEPS } from '../content';
 
 export function Process() {
   return (
-    <section className="section section--tinted" id="proceso" aria-labelledby="proceso-title">
+    <section className="section section--tinted" id="getting-started" aria-labelledby="getting-started-title">
       <div className="container">
         <header className="section__head reveal">
-          <p className="eyebrow">Cómo empezar</p>
-          <h2 className="section__title serif" id="proceso-title">
-            Dar el primer paso puede ser sencillo
+          <p className="eyebrow">Getting started</p>
+          <h2 className="section__title serif" id="getting-started-title">
+            Taking the first step can be simple
           </h2>
         </header>
 
@@ -26,10 +26,10 @@ export function Process() {
         </ol>
 
         <div className="section__cta reveal">
-          <ButtonLink to="/solicitar-cita" variant="primary" size="lg">
-            Empezar ahora
+          <ButtonLink to="/request-appointment" variant="primary" size="lg">
+            Get started now
           </ButtonLink>
-          <p className="muted small">Toma unos dos minutos. Puedes escribirnos sin compromiso.</p>
+          <p className="muted small">It takes about two minutes. Writing to us does not commit you to anything.</p>
         </div>
       </div>
     </section>

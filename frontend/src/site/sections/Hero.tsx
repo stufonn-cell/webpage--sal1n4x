@@ -5,12 +5,12 @@ import { enterDelay } from '@/lib/style';
 import { DEFAULT_ABOUT } from '../content';
 
 /**
- * Ilustracion de linea: dos sillones enfrentados junto a una ventana. Evoca
- * una conversacion sin recurrir a fotos de stock genericas.
+ * Line illustration: two armchairs facing each other by a window. It evokes a
+ * conversation without resorting to generic stock photos.
  */
 function ConversationIllustration() {
   return (
-    <svg className="hero__art" viewBox="0 0 480 420" role="img" aria-label="Dos sillones enfrentados junto a una ventana, listos para conversar">
+    <svg className="hero__art" viewBox="0 0 480 420" role="img" aria-label="Two armchairs facing each other by a window, ready for a conversation">
       <path
         className="hero__blob"
         d="M84 92c46-56 142-78 222-56 82 22 150 86 156 170 6 86-52 170-142 196-92 26-206 8-262-56C2 282 6 186 84 92Z"
@@ -40,33 +40,33 @@ export function Hero({ site }: { site?: PublicSite }) {
     <section className="hero" aria-labelledby="hero-title">
       <div className="container hero__grid">
         <div className="hero__copy">
-          <p className="eyebrow enter">Atención psicológica · presencial y virtual</p>
+          <p className="eyebrow enter">Psychological care · in person and online</p>
           <h1 className="hero__title serif enter" id="hero-title" style={enterDelay(60)}>
-            Un lugar tranquilo para hablar de lo que <em>te pesa</em>.
+            A quiet place to talk about what <em>weighs on you</em>.
           </h1>
           <p className="hero__lead enter" style={enterDelay(140)}>
             {clinic?.clinic_about || DEFAULT_ABOUT}
           </p>
           <div className="hero__actions enter" style={enterDelay(220)}>
-            <ButtonLink to="/solicitar-cita" variant="primary" size="lg" iconRight="arrowRight">
-              Solicitar una primera cita
+            <ButtonLink to="/request-appointment" variant="primary" size="lg" iconRight="arrowRight">
+              Request a first appointment
             </ButtonLink>
-            <a className="hero__secondary" href="#proceso">
-              ¿Cómo es el primer paso?
+            <a className="hero__secondary" href="#getting-started">
+              What is the first step like?
             </a>
           </div>
           <ul className="hero__facts enter" style={enterDelay(300)}>
             <li>
               <Icon name="clock" size={16} />
-              Sesiones de {minutes} minutos
+              {minutes}-minute sessions
             </li>
             <li>
               <Icon name="lock" size={16} />
-              Confidencialidad profesional
+              Professional confidentiality
             </li>
             <li>
               <Icon name="video" size={16} />
-              En consultorio o en línea
+              In the office or online
             </li>
           </ul>
         </div>

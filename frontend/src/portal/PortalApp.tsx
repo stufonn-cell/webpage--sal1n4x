@@ -15,20 +15,20 @@ import { QuestionnairePage, QuestionnairesPage } from './pages/Questionnaires';
 import './portal.css';
 
 const LINKS: { to: string; label: string; icon: IconName; end?: boolean }[] = [
-  { to: '/portal', label: 'Inicio', icon: 'home', end: true },
-  { to: '/portal/citas', label: 'Mis citas', icon: 'calendar' },
-  { to: '/portal/cuestionarios', label: 'Cuestionarios', icon: 'clipboard' },
-  { to: '/portal/documentos', label: 'Documentos', icon: 'file' },
+  { to: '/portal', label: 'Home', icon: 'home', end: true },
+  { to: '/portal/appointments', label: 'My appointments', icon: 'calendar' },
+  { to: '/portal/questionnaires', label: 'Questionnaires', icon: 'clipboard' },
+  { to: '/portal/documents', label: 'Documents', icon: 'file' },
 ];
 
 function ConsentPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
-  useDocumentTitle('Consentimiento');
+  useDocumentTitle('Consent');
 
   return (
     <>
-      <PageHeader back={{ to: '/portal', label: 'Volver al inicio' }} title="Consentimiento informado" />
+      <PageHeader back={{ to: '/portal', label: 'Back to home' }} title="Informed consent" />
       <ConsentDocument id={id} audience="patient" onSigned={() => navigate('/portal')} />
     </>
   );
@@ -41,15 +41,15 @@ export default function PortalApp() {
 
   const onLogout = async () => {
     await logout();
-    toast.info('Cerraste sesión. Cuídate mucho.');
-    navigate('/ingresar', { replace: true });
+    toast.info('You have logged out. Take good care of yourself.');
+    navigate('/login', { replace: true });
   };
 
   return (
     <div className="portal">
       <header className="portal-nav">
         <div className="container portal-nav__inner">
-          <Logo name={clinicName} to="/portal" tagline="Portal del paciente" />
+          <Logo name={clinicName} to="/portal" tagline="Patient portal" />
           <nav className="portal-nav__links" aria-label="Portal">
             {LINKS.map((link) => (
               <NavLink key={link.to} to={link.to} end={link.end} className="portal-nav__link">
@@ -60,35 +60,35 @@ export default function PortalApp() {
           </nav>
           <div className="portal-nav__actions">
             <ThemeToggle />
-            <NavLink to="/portal/perfil" className="btn btn--quiet btn--icon" aria-label="Mi perfil" title={user?.full_name}>
+            <NavLink to="/portal/profile" className="btn btn--quiet btn--icon" aria-label="My profile" title={user?.full_name}>
               <Icon name="user" size={18} />
             </NavLink>
-            <button className="btn btn--quiet btn--icon" type="button" onClick={onLogout} aria-label="Cerrar sesión" title="Cerrar sesión">
+            <button className="btn btn--quiet btn--icon" type="button" onClick={onLogout} aria-label="Log out" title="Log out">
               <Icon name="logout" size={18} />
             </button>
           </div>
         </div>
       </header>
 
-      <main id="contenido" className="container portal__main" tabIndex={-1}>
+      <main id="main-content" className="container portal__main" tabIndex={-1}>
         <Routes>
           <Route index element={<PortalHome />} />
-          <Route path="citas" element={<AppointmentsPage />} />
-          <Route path="cuestionarios" element={<QuestionnairesPage />} />
-          <Route path="cuestionarios/:id" element={<QuestionnairePage />} />
-          <Route path="documentos" element={<DocumentsPage />} />
-          <Route path="consentimientos/:id" element={<ConsentPage />} />
-          <Route path="perfil" element={<ProfilePage />} />
+          <Route path="appointments" element={<AppointmentsPage />} />
+          <Route path="questionnaires" element={<QuestionnairesPage />} />
+          <Route path="questionnaires/:id" element={<QuestionnairePage />} />
+          <Route path="documents" element={<DocumentsPage />} />
+          <Route path="consents/:id" element={<ConsentPage />} />
+          <Route path="profile" element={<ProfilePage />} />
           <Route
             path="*"
-            element={<EmptyState icon="alert" title="Esta página no existe" action={<ButtonLink to="/portal" size="sm">Volver al inicio</ButtonLink>} />}
+            element={<EmptyState icon="alert" title="This page does not exist" action={<ButtonLink to="/portal" size="sm">Back to home</ButtonLink>} />}
           />
         </Routes>
       </main>
 
       <footer className="container portal__footer">
         <p className="xsmall muted">
-          Si estás en peligro o piensas en hacerte daño, no esperes a tu cita: llama a la línea de emergencias de tu país.
+          If you are in danger or thinking about hurting yourself, don’t wait for your appointment: call your country’s emergency line.
         </p>
         <AuthorCredit />
       </footer>

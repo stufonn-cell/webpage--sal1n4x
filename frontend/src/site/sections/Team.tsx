@@ -3,23 +3,23 @@ import type { PublicProfessional } from '@/lib/types';
 import { revealDelay } from '@/lib/style';
 
 /**
- * Equipo. Solo aparecen profesionales que activaron su perfil publico desde
- * la administracion; si no hay ninguno la seccion no se muestra.
+ * Team. Only professionals whose public profile was turned on from the admin
+ * area appear here; if there are none, the section is not shown.
  */
 export function Team({ professionals }: { professionals: PublicProfessional[] }) {
   if (professionals.length === 0) return null;
 
   return (
-    <section className="section" id="equipo" aria-labelledby="equipo-title">
+    <section className="section" id="team" aria-labelledby="team-title">
       <div className="container">
         <header className="section__head reveal">
-          <p className="eyebrow">Equipo</p>
-          <h2 className="section__title serif" id="equipo-title">
-            Quiénes te acompañan
+          <p className="eyebrow">Team</p>
+          <h2 className="section__title serif" id="team-title">
+            Who will be with you
           </h2>
           <p className="section__lead">
-            Cada profesional aparece con su número de registro profesional, para que puedas verificarlo antes de tu
-            primera sesión.
+            Each professional is listed with their professional license number, so you can verify it before your first
+            session.
           </p>
         </header>
 
@@ -32,7 +32,7 @@ export function Team({ professionals }: { professionals: PublicProfessional[] })
                 {person.specialty && <p className="team__specialty">{person.specialty}</p>}
                 {person.public_bio && <p className="team__bio">{person.public_bio}</p>}
                 {person.license_number && (
-                  <p className="team__license">Registro profesional {person.license_number}</p>
+                  <p className="team__license">Professional license {person.license_number}</p>
                 )}
               </div>
             </li>

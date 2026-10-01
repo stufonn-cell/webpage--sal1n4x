@@ -1,6 +1,4 @@
-import '@fontsource-variable/source-sans-3';
-import '@fontsource-variable/newsreader';
-import '@fontsource-variable/newsreader/wght-italic.css';
+import './styles/fonts.css';
 import './styles/tokens.css';
 import './styles/base.css';
 import './components/ui/ui.css';
