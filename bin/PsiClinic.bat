@@ -1,24 +1,24 @@
 @echo off
-REM PsiClinic - acceso directo para Windows.
-REM Hecho por Salinas | github.com/stufonn-cell
+REM PsiClinic - Windows shortcut.
+REM Made by Salinas | github.com/stufonn-cell
 REM
-REM Ajusta RUTA si clonaste el proyecto en otra carpeta dentro de WSL.
+REM Change PROJECT_DIR if you cloned the project into another folder inside WSL.
 
-set RUTA=~/proyectos/psiclinic
+set PROJECT_DIR=~/projects/psiclinic
 
-echo Iniciando Docker Desktop si no esta activo...
+echo Starting Docker Desktop if it is not running...
 tasklist /FI "IMAGENAME eq Docker Desktop.exe" | find /I "Docker Desktop.exe" >nul || (
     start "" "%ProgramFiles%\Docker\Docker\Docker Desktop.exe"
-    echo Esperando a que Docker Desktop termine de arrancar...
+    echo Waiting for Docker Desktop to finish starting...
     timeout /t 35 /nobreak >nul
 )
 
-echo Levantando PsiClinic...
-wsl -d Ubuntu-22.04 -- bash -lc "cd %RUTA% && ./bin/psiclinic up"
+echo Starting PsiClinic...
+wsl -d Ubuntu-22.04 -- bash -lc "cd %PROJECT_DIR% && ./bin/psiclinic up"
 
 start http://localhost:8080
 
 echo.
-echo PsiClinic esta corriendo en http://localhost:8080
-echo Esta ventana se puede cerrar.
+echo PsiClinic is running at http://localhost:8080
+echo You can close this window.
 pause

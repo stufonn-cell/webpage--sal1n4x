@@ -1,13 +1,16 @@
-# Archivo autonomo de produccion. Se usa en lugar de docker-compose.yml:
+# Standalone production file. It is used instead of docker-compose.yml:
 #
 #   docker compose -f docker-compose.prod.yml up -d --build
 #
-# Diferencias con el entorno local:
-#   - El backend se copia en su imagen (etapa production del Dockerfile).
-#   - El frontend se compila dentro de la imagen de Nginx (docker/frontend).
-#   - Solo backend/storage se monta como volumen, para conservar los adjuntos.
-#   - MySQL no publica puerto y Adminer no se levanta.
-#   - Nginx escucha solo en 127.0.0.1: delante debe ir un proxy con HTTPS.
+# Differences from the local environment:
+#   - The backend is copied into its image (production stage of the Dockerfile).
+#   - The frontend is built inside the Nginx image (docker/frontend).
+#   - Only backend/storage is mounted as a volume, to keep uploaded files.
+#   - MySQL does not publish a port and Adminer is not started.
+#   - Nginx listens only on 127.0.0.1: an HTTPS proxy must sit in front of it
+#     (it must send X-Forwarded-For and X-Forwarded-Proto; see SECURITY.md).
+#   - No container can gain privileges, and logs are capped so a flood of
+#     requests cannot fill the disk.
 
 services:
   app:
@@ -18,11 +21,22 @@ services:
     container_name: psiclinic_app
     restart: always
     working_dir: /var/www/html
-    # Solo el esquema: en produccion no se cargan datos de demostracion.
+    # Schema only: demo data is never loaded in production.
     command: ["sh", "-c", "php bin/console migrate && exec php-fpm"]
     volumes:
       - ./backend/storage:/var/www/html/storage
     env_file: .env
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
     depends_on:
       mysql:
         condition: service_healthy
@@ -41,6 +55,13 @@ services:
     restart: always
     ports:
       - "127.0.0.1:${APP_PORT:-8080}:80"
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
     depends_on: [app]
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost/api/session"]
@@ -61,6 +82,13 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${DB_ROOT_PASSWORD}"]
       interval: 10s

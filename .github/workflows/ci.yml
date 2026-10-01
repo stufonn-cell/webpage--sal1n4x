@@ -33,17 +33,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Preparar PHP
+      - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
           extensions: pdo_mysql, mbstring, intl, zip
           coverage: none
 
-      - name: Comprobar la sintaxis de todos los archivos PHP
+      - name: Check the syntax of every PHP file
         run: find src public bin tests -name '*.php' -print0 | xargs -0 -n1 php -l
 
-      - name: Preparar el entorno
+      - name: Prepare the environment
         run: |
           cp ../.env.example .env
           sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' .env
@@ -51,7 +51,7 @@ jobs:
           sed -i 's/^DB_DATABASE=.*/DB_DATABASE=psiclinic_test/' .env
           echo "DB_TEST_DATABASE=psiclinic_test" >> .env
 
-      - name: Ejecutar la suite de pruebas
+      - name: Run the test suite
         run: php bin/test
 
   frontend:
@@ -71,23 +71,23 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - run: npm ci --no-audit --no-fund
-      - name: Comprobar tipos
+      - name: Type check
         run: npm run typecheck
-      - name: Pruebas
+      - name: Tests
         run: npm test
-      - name: Compilar
+      - name: Build
         run: npm run build
 
   images:
-    name: Construir las imagenes de produccion
+    name: Build the production images
     runs-on: ubuntu-latest
     needs: [backend, frontend]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Imagen del backend
+      - name: Backend image
         run: docker build -f docker/php/Dockerfile --target production -t psiclinic-app:ci .
 
-      - name: Imagen web (frontend + Nginx)
+      - name: Web image (frontend + Nginx)
         run: docker build -f docker/frontend/Dockerfile -t psiclinic-web:ci .

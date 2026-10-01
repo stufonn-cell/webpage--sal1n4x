@@ -38,7 +38,7 @@ test-front:
 	docker compose run --rm --no-deps frontend sh -c "npm install --no-audit --no-fund && npm run typecheck && npm test"
 
 lint:
-	docker compose exec app sh -c "find src public bin tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null && echo 'Sintaxis correcta'"
+	docker compose exec app sh -c "find src public bin tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null && echo 'Syntax OK'"
 
 prod:
 	docker compose -f docker-compose.prod.yml up -d --build

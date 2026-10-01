@@ -7,20 +7,30 @@ RUN apk add --no-cache icu-dev oniguruma-dev libzip-dev \
 
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/psiclinic.ini
 
+# PHP-FPM pool: a bounded number of workers (a flood queues instead of eating
+# all the memory), no request can run forever, and only .php is executed.
+RUN { \
+        echo '[www]'; \
+        echo 'pm.max_children = 10'; \
+        echo 'request_terminate_timeout = 180s'; \
+        echo 'security.limit_extensions = .php'; \
+    } > /usr/local/etc/php-fpm.d/zz-psiclinic.conf
+
 WORKDIR /var/www/html
 
 RUN mkdir -p storage/uploads storage/logs \
-    && chown -R psiclinic:psiclinic /var/www/html
+    && chown -R psiclinic:psiclinic /var/www/html \
+    && chmod -R 0770 storage
 
 EXPOSE 9000
 CMD ["php-fpm"]
 
-# Entorno local: el codigo de backend/ llega por un volumen montado.
+# Local environment: the backend/ code arrives through a mounted volume.
 FROM base AS development
 
 USER psiclinic
 
-# Entorno de produccion: el codigo viaja dentro de la imagen.
+# Production environment: the code ships inside the image.
 FROM base AS production
 
 COPY --chown=psiclinic:psiclinic backend/ /var/www/html

@@ -1,4 +1,4 @@
-# Compila la SPA y la sirve con Nginx junto con el proxy hacia PHP-FPM.
+# Builds the SPA and serves it with Nginx, together with the proxy to PHP-FPM.
 FROM node:20-alpine AS build
 
 WORKDIR /app

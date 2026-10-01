@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# PsiClinic - control de la aplicacion en WSL o Linux.
-# Hecho por Salinas | github.com/stufonn-cell
+# PsiClinic - controls the application on WSL or Linux.
+# Made by Salinas | github.com/stufonn-cell
 #
-# Uso: psiclinic [up|down|restart|status|logs|build|install|test|test-front|shell|db|backup|open]
+# Usage: psiclinic [up|down|restart|status|logs|build|install|test|test-front|shell|db|backup|open|help]
 
 set -euo pipefail
 
@@ -17,29 +17,29 @@ log() { printf '  %s\n' "$1"; }
 
 require_env() {
     if [ ! -f .env ]; then
-        log "No existe .env. Copiando desde .env.example."
+        log "There is no .env file. Copying it from .env.example."
         cp .env.example .env
-        log "Revisa las claves del archivo .env antes de usarlo con datos reales."
+        log "Review the passwords and keys in .env before using it with real data."
     fi
 }
 
 wait_for_database() {
-    log "Esperando a que MySQL responda..."
+    log "Waiting for MySQL to respond..."
     for _ in $(seq 1 45); do
         if docker compose exec -T mysql mysqladmin ping -h 127.0.0.1 --silent >/dev/null 2>&1; then
-            log "MySQL listo."
+            log "MySQL is ready."
             return 0
         fi
         sleep 2
     done
-    log "MySQL no respondio a tiempo. Revisa: docker compose logs mysql"
+    log "MySQL did not respond in time. Check: docker compose logs mysql"
     return 1
 }
 
 command_build() {
-    log "Compilando el frontend..."
+    log "Building the frontend..."
     docker compose run --rm --no-deps frontend sh -c "npm install --no-audit --no-fund && npm run build"
-    log "Frontend compilado en frontend/dist."
+    log "Frontend built in frontend/dist."
 }
 
 command_up() {
@@ -47,17 +47,17 @@ command_up() {
     if [ ! -f frontend/dist/index.html ]; then
         command_build
     fi
-    log "Levantando contenedores..."
+    log "Starting the containers..."
     docker compose up -d
     wait_for_database
     docker compose exec -T app php bin/console migrate >/dev/null
-    log "PsiClinic disponible en http://localhost:${APP_PORT}"
-    log "Frontend con recarga en caliente en http://localhost:5173"
+    log "PsiClinic is running at http://localhost:${APP_PORT}"
+    log "Frontend with hot reload at http://localhost:5173"
 }
 
 command_down() {
     docker compose down
-    log "Contenedores detenidos. Los datos se conservan."
+    log "Containers stopped. Your data is kept."
 }
 
 command_status() {
@@ -71,19 +71,19 @@ command_open() {
     elif command -v xdg-open >/dev/null 2>&1; then
         xdg-open "$url" >/dev/null 2>&1 || true
     else
-        log "Abre manualmente: $url"
+        log "Open it manually: $url"
     fi
 }
 
 command_backup() {
-    local file="respaldo-$(date +%F-%H%M).sql.gz"
+    local file="backup-$(date +%F-%H%M).sql.gz"
     local root_password
     root_password="$(grep -E '^DB_ROOT_PASSWORD=' .env | cut -d= -f2)"
     local database
     database="$(grep -E '^DB_DATABASE=' .env | cut -d= -f2)"
 
     docker compose exec -T mysql mysqldump -u root -p"$root_password" --single-transaction "$database" | gzip > "$file"
-    log "Respaldo creado: $file"
+    log "Backup created: $file"
 }
 
 case "${1:-up}" in
@@ -102,21 +102,22 @@ case "${1:-up}" in
     open)     command_open ;;
     *)
         cat <<'HELP'
-  PsiClinic - comandos disponibles
+  PsiClinic - available commands
 
-    psiclinic up        Levanta los contenedores y aplica migraciones pendientes
-    psiclinic down      Detiene los contenedores conservando los datos
-    psiclinic restart   Reinicia todo
-    psiclinic status    Muestra el estado de los contenedores
-    psiclinic logs      Sigue los registros de PHP, Nginx y Vite
-    psiclinic build     Compila el frontend (frontend/dist)
-    psiclinic install   Primera instalacion con datos de demostracion
-    psiclinic test      Ejecuta la suite de pruebas del backend
-    psiclinic test-front Comprueba tipos y ejecuta las pruebas del frontend
-    psiclinic shell     Abre una terminal dentro del contenedor de PHP
-    psiclinic db        Abre el cliente de MySQL
-    psiclinic backup    Genera un volcado comprimido de la base de datos
-    psiclinic open      Abre la aplicacion en el navegador
+    psiclinic up         Starts the containers and applies pending migrations
+    psiclinic down       Stops the containers and keeps the data
+    psiclinic restart    Restarts everything
+    psiclinic status     Shows the status of the containers
+    psiclinic logs       Follows the PHP, Nginx and Vite logs
+    psiclinic build      Builds the frontend (frontend/dist)
+    psiclinic install    First install with demo data
+    psiclinic test       Runs the backend test suite
+    psiclinic test-front Checks types and runs the frontend tests
+    psiclinic shell      Opens a shell inside the PHP container
+    psiclinic db         Opens the MySQL client
+    psiclinic backup     Creates a compressed dump of the database
+    psiclinic open       Opens the application in the browser
+    psiclinic help       Shows this list
 HELP
         ;;
 esac
