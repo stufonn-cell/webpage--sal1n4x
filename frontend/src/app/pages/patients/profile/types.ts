@@ -2,13 +2,18 @@ import type { Appointment, Assessment, Consent, DocumentRow, Invoice, Note, Pati
 
 export interface Diagnosis {
   id: number;
-  system: 'icd10' | 'dsm5';
+  system: 'icd11' | 'icd10' | 'dsm5';
   code: string;
+  /** ICD-10 equivalent stored with ICD-11 and DSM-5 diagnoses (dual coding). */
+  icd10_code: string | null;
   title: string;
   status: string;
+  is_primary: boolean;
   onset_date: string | null;
   notes: string | null;
   created_at: string;
+  /** Code RIPS will receive, or null when it is not reportable yet. */
+  rips_code: string | null;
 }
 
 export interface PatientBundle {

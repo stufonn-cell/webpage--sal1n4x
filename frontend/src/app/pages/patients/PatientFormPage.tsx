@@ -18,6 +18,12 @@ const EMPTY = {
   gender: 'undisclosed',
   document_type: 'CC',
   document_id: '',
+  biological_sex: '',
+  rips_user_type: '12',
+  residence_country: '170',
+  residence_municipality: '',
+  residence_zone: '01',
+  origin_country: '170',
   email: '',
   phone: '',
   address: '',
@@ -37,14 +43,6 @@ const EMPTY = {
 };
 
 type Values = typeof EMPTY;
-
-const DOCUMENT_TYPES = [
-  { value: 'CC', label: 'Cédula de ciudadanía' },
-  { value: 'TI', label: 'Tarjeta de identidad' },
-  { value: 'CE', label: 'Cédula de extranjería' },
-  { value: 'PA', label: 'Pasaporte' },
-  { value: 'RC', label: 'Registro civil' },
-];
 
 function toValues(patient: Patient): Values {
   const values = { ...EMPTY };
@@ -81,27 +79,34 @@ function PatientForm({ patient }: { patient?: Patient }) {
     initial,
     validate: (values) => {
       const errors: Record<string, string> = {};
-      if (!values.first_name.trim()) errors.first_name = 'Escribe el nombre.';
-      if (!values.last_name.trim()) errors.last_name = 'Escribe los apellidos.';
-      if (values.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) errors.email = 'Revisa el formato del correo.';
+      if (!values.first_name.trim()) errors.first_name = 'Enter the first name.';
+      if (!values.last_name.trim()) errors.last_name = 'Enter the last name.';
+      if (values.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) errors.email = 'Check the email format.';
+      if (values.residence_municipality && !/^\d{5}$/.test(values.residence_municipality)) {
+        errors.residence_municipality = 'Use the 5-digit DIVIPOLA code, e.g. 11001.';
+      }
+      for (const field of ['residence_country', 'origin_country'] as const) {
+        if (values[field] && !/^\d{3}$/.test(values[field])) errors[field] = 'Use the 3-digit numeric code (170 for Colombia).';
+      }
       return errors;
     },
     onSubmit: async (values) => {
       if (patient) {
         const result = await put(`/api/patients/${patient.id}`, values);
-        toast.success(result.message ?? 'Cambios guardados.');
+        toast.success(result.message ?? 'Changes saved.');
         await invalidate(['patient', String(patient.id)], ['patients']);
-        navigate(`/app/pacientes/${patient.id}`);
+        navigate(`/app/patients/${patient.id}`);
       } else {
         const result = await post<{ id: number }>('/api/patients', values);
-        toast.success(result.message ?? 'Paciente registrado.');
+        toast.success(result.message ?? 'Patient registered.');
         await invalidate(['patients'], ['meta'], ['dashboard']);
-        navigate(`/app/pacientes/${result.data.id}`);
+        navigate(`/app/patients/${result.data.id}`);
       }
     },
   });
 
-  const cancelTo = patient ? `/app/pacientes/${patient.id}` : '/app/pacientes';
+  const cancelTo = patient ? `/app/patients/${patient.id}` : '/app/patients';
+  const livesInColombia = form.values.residence_country === '170' || form.values.residence_country === '';
 
   return (
     <form onSubmit={form.handleSubmit} noValidate>
@@ -109,56 +114,94 @@ function PatientForm({ patient }: { patient?: Patient }) {
         <FormAlert message={form.formError} />
 
         <section className="form-section">
-          <h2 className="form-section__title">Identificación</h2>
+          <h2 className="form-section__title">Identification</h2>
           <p className="form-section__intro">
-            {patient ? `Historia ${patient.record_number}.` : `Se asignará el número ${meta?.nextRecordNumber ?? '…'} al guardar.`}
+            {patient ? `Record ${patient.record_number}.` : `Record number ${meta?.nextRecordNumber ?? '…'} will be assigned when you save.`}
           </p>
           <div className="form-grid">
-            <TextField label="Nombres" autoComplete="off" {...form.bind('first_name')} />
-            <TextField label="Apellidos" autoComplete="off" {...form.bind('last_name')} />
-            <TextField label="Fecha de nacimiento" type="date" optional {...form.bind('birth_date')} />
-            <SelectField label="Género" options={meta?.genders ?? []} {...form.bind('gender')} />
-            <SelectField label="Tipo de documento" options={DOCUMENT_TYPES} {...form.bind('document_type')} />
-            <TextField label="Número de documento" optional inputMode="numeric" {...form.bind('document_id')} />
+            <TextField label="First name" autoComplete="off" {...form.bind('first_name')} />
+            <TextField label="Last name" autoComplete="off" {...form.bind('last_name')} />
+            <TextField label="Date of birth" type="date" optional {...form.bind('birth_date')} />
+            <SelectField label="Gender" options={meta?.genders ?? []} {...form.bind('gender')} />
+            <SelectField label="Document type" options={meta?.rips.documentTypes ?? []} {...form.bind('document_type')} />
+            <TextField label="Document number" optional inputMode="numeric" {...form.bind('document_id')} />
           </div>
         </section>
 
         <section className="form-section">
-          <h2 className="form-section__title">Contacto</h2>
-          <p className="form-section__intro">El correo es necesario para crear el acceso al portal del paciente.</p>
+          <h2 className="form-section__title">RIPS details</h2>
+          <p className="form-section__intro">
+            Needed to report this patient's consultations to the Ministry of Health (RIPS, Resolution 2275 of 2023). You can
+            complete them later; the RIPS screen lists anything missing.
+          </p>
           <div className="form-grid">
-            <TextField label="Correo" type="email" optional {...form.bind('email')} />
-            <TextField label="Teléfono" type="tel" optional {...form.bind('phone')} />
-            <TextField label="Dirección" optional wrapperClassName="span-full" {...form.bind('address')} />
-            <TextField label="Ciudad" optional {...form.bind('city')} />
-            <TextField label="País" optional {...form.bind('country')} />
-            <TextField label="Ocupación" optional {...form.bind('occupation')} />
-            <TextField label="Estado civil" optional {...form.bind('marital_status')} />
-          </div>
-        </section>
-
-        <section className="form-section">
-          <h2 className="form-section__title">Contacto de emergencia</h2>
-          <p className="form-section__intro">A quién llamar si es necesario durante el proceso.</p>
-          <div className="form-grid">
-            <TextField label="Nombre" optional {...form.bind('emergency_contact_name')} />
-            <TextField label="Teléfono" type="tel" optional {...form.bind('emergency_contact_phone')} />
-          </div>
-        </section>
-
-        <section className="form-section">
-          <h2 className="form-section__title">Información clínica</h2>
-          <p className="form-section__intro">Solo la ve el equipo clínico. El nivel de riesgo se actualiza también desde cada nota de sesión.</p>
-          <div className="form-grid">
-            <TextAreaField label="Motivo de consulta" optional rows={3} wrapperClassName="span-full" {...form.bind('reason_for_consult')} />
-            <TextAreaField label="Antecedentes relevantes" optional rows={3} wrapperClassName="span-full" {...form.bind('relevant_history')} />
-            <TextAreaField label="Medicación actual" optional rows={2} {...form.bind('current_medication')} />
-            <TextField label="Remitido por" optional {...form.bind('referred_by')} />
-            <SelectField label="Nivel de riesgo" options={meta?.riskLevels ?? []} {...form.bind('risk_level')} />
-            <SelectField label="Estado del proceso" options={meta?.patientStatuses ?? []} {...form.bind('status')} />
             <SelectField
-              label="Profesional a cargo"
-              placeholder="Sin asignar"
+              label="Sex on the ID document"
+              placeholder="Not recorded"
+              hint="As it appears on the identity document, which may differ from gender."
+              options={meta?.rips.sexes ?? []}
+              {...form.bind('biological_sex')}
+            />
+            <SelectField label="Health coverage" options={meta?.rips.userTypes ?? []} {...form.bind('rips_user_type')} />
+            <TextField
+              label="Country of residence"
+              inputMode="numeric"
+              maxLength={3}
+              hint="3-digit numeric code. 170 is Colombia."
+              {...form.bind('residence_country')}
+            />
+            {livesInColombia && (
+              <TextField
+                label="Municipality of residence"
+                optional
+                inputMode="numeric"
+                maxLength={5}
+                placeholder="11001"
+                hint="5-digit DIVIPOLA code, e.g. 11001 Bogota, 05001 Medellin, 76001 Cali."
+                {...form.bind('residence_municipality')}
+              />
+            )}
+            <SelectField label="Area of residence" options={meta?.rips.zones ?? []} {...form.bind('residence_zone')} />
+            <TextField label="Country of origin" inputMode="numeric" maxLength={3} hint="3-digit numeric code. 170 is Colombia." {...form.bind('origin_country')} />
+          </div>
+        </section>
+
+        <section className="form-section">
+          <h2 className="form-section__title">Contact</h2>
+          <p className="form-section__intro">The email is needed to create the patient's portal access.</p>
+          <div className="form-grid">
+            <TextField label="Email" type="email" optional {...form.bind('email')} />
+            <TextField label="Phone" type="tel" optional {...form.bind('phone')} />
+            <TextField label="Address" optional wrapperClassName="span-full" {...form.bind('address')} />
+            <TextField label="City" optional {...form.bind('city')} />
+            <TextField label="Country" optional {...form.bind('country')} />
+            <TextField label="Occupation" optional {...form.bind('occupation')} />
+            <TextField label="Marital status" optional {...form.bind('marital_status')} />
+          </div>
+        </section>
+
+        <section className="form-section">
+          <h2 className="form-section__title">Emergency contact</h2>
+          <p className="form-section__intro">Who to call if needed during the process.</p>
+          <div className="form-grid">
+            <TextField label="Name" optional {...form.bind('emergency_contact_name')} />
+            <TextField label="Phone" type="tel" optional {...form.bind('emergency_contact_phone')} />
+          </div>
+        </section>
+
+        <section className="form-section">
+          <h2 className="form-section__title">Clinical information</h2>
+          <p className="form-section__intro">Only the clinical team can see it. The risk level is also updated from each session note.</p>
+          <div className="form-grid">
+            <TextAreaField label="Reason for consultation" optional rows={3} wrapperClassName="span-full" {...form.bind('reason_for_consult')} />
+            <TextAreaField label="Relevant history" optional rows={3} wrapperClassName="span-full" {...form.bind('relevant_history')} />
+            <TextAreaField label="Current medication" optional rows={2} {...form.bind('current_medication')} />
+            <TextField label="Referred by" optional {...form.bind('referred_by')} />
+            <SelectField label="Risk level" options={meta?.riskLevels ?? []} {...form.bind('risk_level')} />
+            <SelectField label="Process status" options={meta?.patientStatuses ?? []} {...form.bind('status')} />
+            <SelectField
+              label="Professional in charge"
+              placeholder="Unassigned"
               options={(meta?.psychologists ?? []).map((person) => ({ value: String(person.id), label: person.full_name }))}
               {...form.bind('psychologist_id')}
             />
@@ -167,10 +210,10 @@ function PatientForm({ patient }: { patient?: Patient }) {
 
         <div className="form-actions">
           <ButtonLink to={cancelTo} variant="quiet">
-            Cancelar
+            Cancel
           </ButtonLink>
-          <Button type="submit" variant="primary" loading={form.submitting} loadingLabel="Guardando">
-            {patient ? 'Guardar cambios' : 'Registrar paciente'}
+          <Button type="submit" variant="primary" loading={form.submitting} loadingLabel="Saving">
+            {patient ? 'Save changes' : 'Register patient'}
           </Button>
         </div>
       </Panel>
@@ -181,7 +224,7 @@ function PatientForm({ patient }: { patient?: Patient }) {
 export default function PatientFormPage() {
   const { id } = useParams();
   const editing = Boolean(id);
-  useDocumentTitle(editing ? 'Editar paciente' : 'Nuevo paciente');
+  useDocumentTitle(editing ? 'Edit patient' : 'New patient');
 
   const query = useQuery({
     queryKey: ['patient', id],
@@ -192,9 +235,9 @@ export default function PatientFormPage() {
   return (
     <>
       <PageHeader
-        back={editing ? { to: `/app/pacientes/${id}`, label: 'Volver a la ficha' } : { to: '/app/pacientes', label: 'Pacientes' }}
-        title={editing ? 'Editar paciente' : 'Nuevo paciente'}
-        subtitle={editing ? undefined : 'Solo los nombres son obligatorios. El resto puedes completarlo más adelante.'}
+        back={editing ? { to: `/app/patients/${id}`, label: 'Back to the record' } : { to: '/app/patients', label: 'Patients' }}
+        title={editing ? 'Edit patient' : 'New patient'}
+        subtitle={editing ? undefined : 'Only the names are required. You can fill in the rest later.'}
       />
       {editing ? (
         <QueryState isPending={query.isPending} error={query.error} onRetry={query.refetch}>

@@ -3,8 +3,8 @@ import { Icon } from './Icon';
 import type { Option } from '@/lib/types';
 
 /**
- * Campo con etiqueta, ayuda y error asociados por aria-describedby. El error
- * se anuncia a lectores de pantalla y marca el control con aria-invalid.
+ * Field with a label, hint and error linked through aria-describedby. The error
+ * is announced to screen readers and marks the control with aria-invalid.
  */
 
 interface WrapperProps {
@@ -26,7 +26,7 @@ function FieldWrapper({ id, label, hint, error, optional, className, children }:
     <div className={['field', error && 'has-error', className].filter(Boolean).join(' ')}>
       <label className="field__label" htmlFor={id}>
         {label}
-        {optional && <span className="field__optional"> (opcional)</span>}
+        {optional && <span className="field__optional"> (optional)</span>}
       </label>
       {children(describedBy)}
       {hint && !error && (
@@ -94,7 +94,7 @@ export function PasswordField(props: Base & Omit<InputHTMLAttributes<HTMLInputEl
             type="button"
             className="btn btn--quiet btn--icon btn--sm input-group__action"
             onClick={() => setVisible((value) => !value)}
-            aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            aria-label={visible ? 'Hide password' : 'Show password'}
             aria-pressed={visible}
           >
             <Icon name={visible ? 'eyeOff' : 'eye'} size={17} />

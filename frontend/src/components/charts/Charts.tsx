@@ -2,8 +2,8 @@ import { useId, type CSSProperties } from 'react';
 import './charts.css';
 
 /**
- * Graficas SVG sin dependencias. Cada una incluye un resumen en texto para
- * lectores de pantalla y no anima nada mas alla de la entrada inicial.
+ * Dependency-free SVG charts. Each one includes a text summary for screen
+ * readers and animates nothing beyond the initial entrance.
  */
 
 export interface Point {
@@ -24,7 +24,7 @@ const WIDTH = 560;
 
 export function LineChart({ points, max, bands = [], label, height = 180 }: LineChartProps) {
   const gradientId = useId();
-  if (points.length === 0) return <p className="chart-empty">Aún no hay datos para graficar.</p>;
+  if (points.length === 0) return <p className="chart-empty">There is no data to chart yet.</p>;
 
   const padX = 28;
   const padTop = 14;
@@ -95,7 +95,7 @@ export function LineChart({ points, max, bands = [], label, height = 180 }: Line
 }
 
 export function BarChart({ points, label, height = 170 }: { points: Point[]; label: string; height?: number }) {
-  if (points.length === 0) return <p className="chart-empty">Aún no hay datos para graficar.</p>;
+  if (points.length === 0) return <p className="chart-empty">There is no data to chart yet.</p>;
 
   const padBottom = 26;
   const plotHeight = height - padBottom - 18;
@@ -138,7 +138,7 @@ interface Segment {
   tone: 'neutral' | 'success' | 'info' | 'warning' | 'danger' | 'primary';
 }
 
-/** Barra horizontal segmentada: mas legible que una dona para pocos valores. */
+/** Segmented horizontal bar: easier to read than a donut for a few values. */
 export function Distribution({ segments, label }: { segments: Segment[]; label: string }) {
   const total = segments.reduce((sum, segment) => sum + segment.value, 0);
 

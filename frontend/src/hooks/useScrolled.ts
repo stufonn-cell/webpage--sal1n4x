@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-/** true cuando la pagina se desplazo mas de `threshold` px. */
+/** true when the page has scrolled more than `threshold` px. */
 export function useScrolled(threshold = 8): boolean {
   const [scrolled, setScrolled] = useState(false);
 

@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { Badge, EmptyState, Panel } from '@/components/ui/Display';
 import { SelectField } from '@/components/ui/Field';
-import { formatDate, formatTime, pretty } from '@/lib/format';
+import { formatDate, formatTime } from '@/lib/format';
 import { APPOINTMENT_STATUS_TONE, labelOf, RISK_TONE, severityTone, useMeta } from '@/lib/meta';
 import { post } from '@/lib/api';
 import { useAction } from '../../../useAction';
@@ -15,25 +15,25 @@ export function NotesTab({ bundle }: { bundle: PatientBundle }) {
 
   return (
     <Panel
-      title="Notas de sesión"
-      titleId="notas"
+      title="Session notes"
+      titleId="notes"
       flush
       actions={
-        <ButtonLink to={`/app/notas/nueva?paciente=${id}`} size="sm" variant="primary" icon="plus">
-          Nueva nota
+        <ButtonLink to={`/app/notes/new?patient=${id}`} size="sm" variant="primary" icon="plus">
+          New note
         </ButtonLink>
       }
     >
       {bundle.notes.length === 0 ? (
-        <EmptyState icon="note" title="Aún no hay notas" text="Registra la primera sesión para empezar la evolución." />
+        <EmptyState icon="note" title="No notes yet" text="Record the first session to start tracking progress." />
       ) : (
         <ul className="list">
           {bundle.notes.map((note) => (
             <li key={note.id}>
-              <Link className="list__item" to={`/app/notas/${note.id}`}>
+              <Link className="list__item" to={`/app/notes/${note.id}`}>
                 <span className="list__main">
                   <span className="list__title">
-                    Sesión {note.session_number} · {formatDate(note.session_date)}
+                    Session {note.session_number} · {formatDate(note.session_date)}
                   </span>
                   <span className="list__meta">
                     {note.format.toUpperCase()} · {note.author_name}
@@ -41,7 +41,7 @@ export function NotesTab({ bundle }: { bundle: PatientBundle }) {
                   </span>
                 </span>
                 {note.risk_level !== 'none' && <Badge tone={RISK_TONE[note.risk_level]}>{labelOf(meta?.riskLevels, note.risk_level)}</Badge>}
-                {note.is_locked ? <Badge tone="success">Firmada</Badge> : <Badge tone="warning">Borrador</Badge>}
+                {note.is_locked ? <Badge tone="success">Signed</Badge> : <Badge tone="warning">Draft</Badge>}
               </Link>
             </li>
           ))}
@@ -63,34 +63,34 @@ export function AssessmentsTab({ bundle }: { bundle: PatientBundle }) {
   return (
     <div className="layout-aside">
       <Panel
-        title="Aplicaciones"
-        titleId="aplicaciones"
+        title="Assessments"
+        titleId="assessments"
         flush
         actions={
-          <ButtonLink to={`/app/evaluaciones/nueva?paciente=${id}`} size="sm" icon="plus">
-            Aplicar en consulta
+          <ButtonLink to={`/app/assessments/new?patient=${id}`} size="sm" icon="plus">
+            Administer in session
           </ButtonLink>
         }
       >
         {bundle.assessments.length === 0 ? (
-          <EmptyState icon="chart" title="Sin evaluaciones" text="Aplica un instrumento en consulta o envíalo al portal." />
+          <EmptyState icon="chart" title="No assessments yet" text="Administer an instrument in session or send it to the portal." />
         ) : (
           <ul className="list">
             {bundle.assessments.map((assessment) => (
               <li key={assessment.id}>
-                <Link className="list__item" to={`/app/evaluaciones/${assessment.id}`}>
+                <Link className="list__item" to={`/app/assessments/${assessment.id}`}>
                   <span className="list__main">
                     <span className="list__title">{assessment.instrument_code}</span>
                     <span className="list__meta">
                       {assessment.status === 'completed'
-                        ? `${formatDate(assessment.administered_at)} · ${assessment.total_score} puntos`
-                        : `Asignado el ${formatDate(assessment.created_at)}`}
+                        ? `${formatDate(assessment.administered_at)} · ${assessment.total_score} points`
+                        : `Assigned on ${formatDate(assessment.created_at)}`}
                     </span>
                   </span>
                   {assessment.status === 'completed' ? (
-                    <Badge tone={severityTone(assessment.severity)}>{pretty(assessment.severity)}</Badge>
+                    <Badge tone={severityTone(assessment.severity)}>{assessment.severity}</Badge>
                   ) : (
-                    <Badge tone="warning">Pendiente en el portal</Badge>
+                    <Badge tone="warning">Pending in the portal</Badge>
                   )}
                 </Link>
               </li>
@@ -99,19 +99,19 @@ export function AssessmentsTab({ bundle }: { bundle: PatientBundle }) {
         )}
       </Panel>
 
-      <Panel title="Enviar al portal" subtitle="El paciente lo responderá desde casa" titleId="asignar">
+      <Panel title="Send to the portal" subtitle="The patient will answer it from home" titleId="assign">
         <div className="inline-form">
           <SelectField
-            label="Instrumento"
+            label="Instrument"
             id="assign-instrument"
-            placeholder="Elige uno"
+            placeholder="Choose one"
             value={code}
             onChange={(event) => setCode(event.target.value)}
             options={meta?.instruments ?? []}
           />
           <div>
             <Button variant="primary" disabled={!code} loading={assign.pending} onClick={() => assign.run(undefined).catch(() => undefined)}>
-              Asignar cuestionario
+              Assign questionnaire
             </Button>
           </div>
         </div>
@@ -125,40 +125,40 @@ export function AppointmentsTab({ bundle }: { bundle: PatientBundle }) {
 
   return (
     <Panel
-      title="Historial de citas"
-      titleId="citas"
+      title="Appointment history"
+      titleId="appointments"
       flush
       actions={
-        <ButtonLink to={`/app/agenda/nueva?paciente=${bundle.patient.id}`} size="sm" variant="primary" icon="calendar">
-          Agendar
+        <ButtonLink to={`/app/schedule/new?patient=${bundle.patient.id}`} size="sm" variant="primary" icon="calendar">
+          Book
         </ButtonLink>
       }
     >
       {bundle.appointments.length === 0 ? (
-        <EmptyState icon="calendar" title="Sin citas registradas" />
+        <EmptyState icon="calendar" title="No appointments yet" />
       ) : (
         <div className="table-wrap">
           <table className="table table--stack">
             <thead>
               <tr>
-                <th scope="col">Fecha</th>
-                <th scope="col">Modalidad</th>
-                <th scope="col">Profesional</th>
-                <th scope="col">Estado</th>
+                <th scope="col">Date</th>
+                <th scope="col">Modality</th>
+                <th scope="col">Professional</th>
+                <th scope="col">Status</th>
               </tr>
             </thead>
             <tbody>
               {bundle.appointments.map((appointment) => (
                 <tr key={appointment.id}>
                   <td>
-                    <Link className="table__link" to={`/app/agenda/${appointment.id}/editar`}>
+                    <Link className="table__link" to={`/app/schedule/${appointment.id}/edit`}>
                       {formatDate(appointment.starts_at)}
                     </Link>
                     <span className="table__sub">{formatTime(appointment.starts_at)}</span>
                   </td>
-                  <td data-label="Modalidad">{labelOf(meta?.modalities, appointment.modality)}</td>
-                  <td data-label="Profesional">{appointment.psychologist_name}</td>
-                  <td data-label="Estado">
+                  <td data-label="Modality">{labelOf(meta?.modalities, appointment.modality)}</td>
+                  <td data-label="Professional">{appointment.psychologist_name}</td>
+                  <td data-label="Status">
                     <Badge tone={APPOINTMENT_STATUS_TONE[appointment.status]}>{labelOf(meta?.appointmentStatuses, appointment.status)}</Badge>
                   </td>
                 </tr>

@@ -1,6 +1,6 @@
 /*
- * PsiClinic - base: reset, tipografia y utilidades de layout.
- * Hecho por Salinas | github.com/stufonn-cell
+ * PsiClinic - base: reset, typography and layout utilities.
+ * Made by Salinas | github.com/stufonn-cell
  */
 
 *,
@@ -106,7 +106,7 @@ table {
   width: 100%;
 }
 
-/* --- Accesibilidad -------------------------------------------------- */
+/* --- Accessibility -------------------------------------------------- */
 
 .skip-link {
   position: absolute;
@@ -194,7 +194,7 @@ table {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
 }
 
-/* --- Texto ---------------------------------------------------------- */
+/* --- Text ----------------------------------------------------------- */
 
 .serif {
   font-family: var(--font-serif);
@@ -234,10 +234,10 @@ table {
   white-space: pre-line;
 }
 
-/* --- Movimiento ----------------------------------------------------- */
+/* --- Motion --------------------------------------------------------- */
 
-/* Aparicion suave al entrar en pantalla. Sin JS o con movimiento reducido
-   el contenido se ve directamente. */
+/* Soft fade-in when entering the screen. Without JS or with reduced motion
+   the content shows right away. */
 .reveal {
   opacity: 1;
   transform: none;
@@ -305,7 +305,7 @@ table {
   }
 }
 
-/* --- Impresion ------------------------------------------------------ */
+/* --- Print ---------------------------------------------------------- */
 
 @media print {
   :root {

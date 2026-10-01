@@ -1,9 +1,10 @@
 /**
- * Formato de fechas, dinero y nombres para es-CO. Las fechas llegan de MySQL
- * como "YYYY-MM-DD" o "YYYY-MM-DD HH:MM:SS" en hora local de la clinica.
+ * Date, money and name formatting. The interface uses en-US; documents printed
+ * in Spanish pass the es-CO locale. Dates arrive from MySQL as
+ * "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS" in the practice's local time.
  */
 
-const LOCALE = 'es-CO';
+const LOCALE = 'en-US';
 
 export function parseDate(value: string | null | undefined): Date | null {
   if (!value || value.startsWith('0000')) return null;
@@ -12,26 +13,26 @@ export function parseDate(value: string | null | undefined): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-export function formatDate(value: string | null | undefined, options?: Intl.DateTimeFormatOptions): string {
+export function formatDate(value: string | null | undefined, options?: Intl.DateTimeFormatOptions, locale = LOCALE): string {
   const date = parseDate(value);
   if (!date) return '—';
-  return date.toLocaleDateString(LOCALE, options ?? { day: 'numeric', month: 'short', year: 'numeric' });
+  return date.toLocaleDateString(locale, options ?? { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export function formatLongDate(value: string | null | undefined): string {
   return formatDate(value, { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
-export function formatTime(value: string | null | undefined): string {
+export function formatTime(value: string | null | undefined, locale = LOCALE): string {
   const date = parseDate(value);
   if (!date) return '—';
-  return date.toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' });
+  return date.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
 }
 
-export function formatDateTime(value: string | null | undefined): string {
+export function formatDateTime(value: string | null | undefined, locale = LOCALE): string {
   const date = parseDate(value);
   if (!date) return '—';
-  return `${formatDate(value)} · ${formatTime(value)}`;
+  return `${formatDate(value, undefined, locale)} · ${formatTime(value, locale)}`;
 }
 
 export function formatMonth(period: string): string {
@@ -47,22 +48,22 @@ export function relativeDay(value: string | null | undefined): string {
   const target = new Date(date);
   target.setHours(0, 0, 0, 0);
   const diff = Math.round((target.getTime() - today.getTime()) / 86_400_000);
-  if (diff === 0) return 'Hoy';
-  if (diff === 1) return 'Mañana';
-  if (diff === -1) return 'Ayer';
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Tomorrow';
+  if (diff === -1) return 'Yesterday';
   return formatDate(value, { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
-export function formatMoney(amount: number | string | null | undefined, currency = 'COP'): string {
+export function formatMoney(amount: number | string | null | undefined, currency = 'COP', locale = LOCALE): string {
   const value = Number(amount ?? 0);
   try {
-    return new Intl.NumberFormat(LOCALE, {
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency,
       maximumFractionDigits: currency === 'COP' ? 0 : 2,
     }).format(Number.isFinite(value) ? value : 0);
   } catch {
-    return value.toLocaleString(LOCALE);
+    return value.toLocaleString(locale);
   }
 }
 
@@ -103,39 +104,14 @@ export function toISODate(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-/** Saludo segun la hora: un detalle pequeno que hace la interfaz mas humana. */
+/** Greeting based on the time of day: a small touch that makes the interface feel more human. */
 export function greeting(date = new Date()): string {
   const hour = date.getHours();
-  if (hour < 12) return 'Buenos días';
-  if (hour < 19) return 'Buenas tardes';
-  return 'Buenas noches';
+  if (hour < 12) return 'Good morning';
+  if (hour < 19) return 'Good afternoon';
+  return 'Good evening';
 }
 
 export function pluralize(count: number, singular: string, plural = `${singular}s`): string {
   return `${count} ${count === 1 ? singular : plural}`;
-}
-
-/**
- * Las etiquetas de severidad e interpretacion se guardan sin tildes junto a
- * cada resultado (son datos historicos). Solo se corrigen al mostrarlas.
- */
-const ACCENTS: [RegExp, string][] = [
-  [/\bMinima\b/g, 'Mínima'],
-  [/\bminima\b/g, 'mínima'],
-  [/\bDepresion\b/g, 'Depresión'],
-  [/\bEstres\b/g, 'Estrés'],
-  [/\bSintomatologia\b/g, 'Sintomatología'],
-  [/\bsintomatologia\b/g, 'sintomatología'],
-  [/\bIntervencion\b/g, 'Intervención'],
-  [/\bintervencion\b/g, 'intervención'],
-  [/\bpsicoeducacion\b/g, 'psicoeducación'],
-  [/\bPsicoeducacion\b/g, 'Psicoeducación'],
-  [/\bterapeutico\b/g, 'terapéutico'],
-  [/\bevaluacion\b/g, 'evaluación'],
-  [/\bevolucion\b/g, 'evolución'],
-];
-
-export function pretty(text: string | null | undefined): string {
-  if (!text) return '';
-  return ACCENTS.reduce((value, [pattern, replacement]) => value.replace(pattern, replacement), text);
 }

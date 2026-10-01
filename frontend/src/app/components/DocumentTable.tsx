@@ -15,14 +15,14 @@ export function DocumentTable({ documents, showPatient = false }: { documents: D
   const remove = useAction((id: number) => del(`/api/documents/${id}`), { invalidate: [['documents'], ['patient']] });
 
   if (documents.length === 0) {
-    return <EmptyState icon="file" title="No hay documentos" text="Los informes, remisiones y soportes adjuntos aparecerán aquí." />;
+    return <EmptyState icon="file" title="No documents yet" text="Reports, referrals and supporting files you attach will show up here." />;
   }
 
   const onDelete = async (document: DocumentRow) => {
     const ok = await confirm({
-      title: 'Eliminar documento',
-      text: `“${document.title}” se eliminará de forma permanente. Esta acción no se puede deshacer.`,
-      confirmLabel: 'Eliminar',
+      title: 'Delete document',
+      text: `“${document.title}” will be permanently deleted. This can't be undone.`,
+      confirmLabel: 'Delete',
       danger: true,
     });
     if (ok) await remove.run(document.id).catch(() => undefined);
@@ -33,12 +33,12 @@ export function DocumentTable({ documents, showPatient = false }: { documents: D
       <table className="table table--stack">
         <thead>
           <tr>
-            <th scope="col">Documento</th>
-            {showPatient && <th scope="col">Paciente</th>}
-            <th scope="col">Categoría</th>
-            <th scope="col">Fecha</th>
+            <th scope="col">Document</th>
+            {showPatient && <th scope="col">Patient</th>}
+            <th scope="col">Category</th>
+            <th scope="col">Date</th>
             <th scope="col">
-              <span className="visually-hidden">Acciones</span>
+              <span className="visually-hidden">Actions</span>
             </th>
           </tr>
         </thead>
@@ -52,22 +52,22 @@ export function DocumentTable({ documents, showPatient = false }: { documents: D
                 </span>
               </td>
               {showPatient && (
-                <td data-label="Paciente">
-                  <Link to={`/app/pacientes/${document.patient_id}`}>{fullName(document)}</Link>
+                <td data-label="Patient">
+                  <Link to={`/app/patients/${document.patient_id}`}>{fullName(document)}</Link>
                 </td>
               )}
-              <td data-label="Categoría">{labelOf(meta?.documentCategories, document.category)}</td>
-              <td data-label="Fecha">
+              <td data-label="Category">{labelOf(meta?.documentCategories, document.category)}</td>
+              <td data-label="Date">
                 {formatDate(document.created_at)}
                 {document.uploaded_by_name && <span className="table__sub">{document.uploaded_by_name}</span>}
               </td>
               <td className="num">
                 <div className="cluster cluster--end cluster--nowrap">
-                  <a className="btn btn--sm btn--quiet" href={`/api/documents/${document.id}/download`} aria-label={`Descargar ${document.title}`}>
+                  <a className="btn btn--sm btn--quiet" href={`/api/documents/${document.id}/download`} aria-label={`Download ${document.title}`}>
                     <Icon name="download" size={15} />
-                    <span className="btn__label">Descargar</span>
+                    <span className="btn__label">Download</span>
                   </a>
-                  <Button size="sm" variant="quiet" iconOnly icon="trash" aria-label={`Eliminar ${document.title}`} onClick={() => onDelete(document)} />
+                  <Button size="sm" variant="quiet" iconOnly icon="trash" aria-label={`Delete ${document.title}`} onClick={() => onDelete(document)} />
                 </div>
               </td>
             </tr>

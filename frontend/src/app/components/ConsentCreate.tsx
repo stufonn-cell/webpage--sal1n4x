@@ -5,14 +5,17 @@ import { post } from '@/lib/api';
 import { useMeta } from '@/lib/meta';
 import { useAction } from '../useAction';
 
-/** Genera un consentimiento desde una plantilla y lo deja listo para firmar. */
+/** Creates an informed consent from a template, in English or Spanish, ready to be signed. */
 export function ConsentCreate({ patientId }: { patientId?: number }) {
   const { data: meta } = useMeta();
   const [patient, setPatient] = useState(patientId ? String(patientId) : '');
   const [template, setTemplate] = useState('');
+  const [chosenLanguage, setLanguage] = useState('');
+  // Until someone picks one, the practice default from Settings applies.
+  const language = chosenLanguage || meta?.settings.document_language || 'en';
 
   const create = useAction(
-    () => post('/api/consents', { patient_id: Number(patient), template_code: template }),
+    () => post('/api/consents', { patient_id: Number(patient), template_code: template, language }),
     {
       invalidate: [['consents'], ['patient', patient]],
       onSuccess: () => setTemplate(''),
@@ -23,21 +26,29 @@ export function ConsentCreate({ patientId }: { patientId?: number }) {
     <div className="inline-form">
       {!patientId && (
         <SelectField
-          label="Paciente"
+          label="Patient"
           id="consent-patient"
-          placeholder="Elige un paciente"
+          placeholder="Choose a patient"
           value={patient}
           onChange={(event) => setPatient(event.target.value)}
           options={(meta?.patients ?? []).map((item) => ({ value: String(item.id), label: item.label }))}
         />
       )}
       <SelectField
-        label="Plantilla"
+        label="Template"
         id="consent-template"
-        placeholder="Elige una plantilla"
+        placeholder="Choose a template"
         value={template}
         onChange={(event) => setTemplate(event.target.value)}
         options={meta?.consentTemplates ?? []}
+      />
+      <SelectField
+        label="Document language"
+        id="consent-language"
+        hint="The patient reads and signs the consent in this language."
+        value={language}
+        onChange={(event) => setLanguage(event.target.value)}
+        options={meta?.documentLanguages ?? [{ value: 'en', label: 'English' }]}
       />
       <div>
         <Button
@@ -47,10 +58,10 @@ export function ConsentCreate({ patientId }: { patientId?: number }) {
           loading={create.pending}
           onClick={() => create.run(undefined).catch(() => undefined)}
         >
-          Generar consentimiento
+          Create consent
         </Button>
       </div>
-      <p className="xsmall muted">El paciente podrá leerlo y firmarlo desde su portal, o puedes firmarlo con él en consulta.</p>
+      <p className="xsmall muted">The patient can read and sign it from their portal, or you can sign it together during the session.</p>
     </div>
   );
 }

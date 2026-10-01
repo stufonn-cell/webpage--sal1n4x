@@ -43,45 +43,46 @@ export function StaffLayout({ children }: { children: ReactNode }) {
 
   const groups: { title: string; items: NavItem[] }[] = [
     {
-      title: 'Consulta',
+      title: 'Practice',
       items: [
-        { to: '/app', label: 'Inicio', icon: 'home', end: true },
-        { to: '/app/solicitudes', label: 'Solicitudes', icon: 'inbox', badge: newRequests },
-        { to: '/app/agenda', label: 'Agenda', icon: 'calendar' },
-        { to: '/app/pacientes', label: 'Pacientes', icon: 'users' },
-        { to: '/app/notas', label: 'Notas de sesión', icon: 'note' },
-        { to: '/app/evaluaciones', label: 'Evaluaciones', icon: 'chart' },
+        { to: '/app', label: 'Home', icon: 'home', end: true },
+        { to: '/app/requests', label: 'Requests', icon: 'inbox', badge: newRequests },
+        { to: '/app/schedule', label: 'Schedule', icon: 'calendar' },
+        { to: '/app/patients', label: 'Patients', icon: 'users' },
+        { to: '/app/notes', label: 'Session notes', icon: 'note' },
+        { to: '/app/assessments', label: 'Assessments', icon: 'chart' },
       ],
     },
     {
-      title: 'Gestión',
+      title: 'Management',
       items: [
-        { to: '/app/consentimientos', label: 'Consentimientos', icon: 'clipboard' },
-        { to: '/app/documentos', label: 'Documentos', icon: 'file' },
-        { to: '/app/facturacion', label: 'Facturación', icon: 'receipt' },
+        { to: '/app/consents', label: 'Consents', icon: 'clipboard' },
+        { to: '/app/documents', label: 'Documents', icon: 'file' },
+        { to: '/app/billing', label: 'Billing', icon: 'receipt' },
+        ...(user?.role === 'admin' ? [{ to: '/app/rips', label: 'RIPS reports', icon: 'flag' as IconName }] : []),
       ],
     },
     {
-      title: 'Sistema',
+      title: 'System',
       items: [
-        { to: '/app/ajustes', label: 'Configuración', icon: 'settings', end: true },
-        { to: '/app/ajustes/usuarios', label: 'Usuarios', icon: 'user' },
-        { to: '/app/ajustes/auditoria', label: 'Auditoría', icon: 'shield' },
+        { to: '/app/settings', label: 'Settings', icon: 'settings', end: true },
+        { to: '/app/settings/users', label: 'Users', icon: 'user' },
+        { to: '/app/settings/audit', label: 'Audit log', icon: 'shield' },
       ],
     },
   ];
 
   const onLogout = async () => {
     await logout();
-    toast.info('Cerraste sesión. Hasta pronto.');
-    navigate('/ingresar', { replace: true });
+    toast.info('You signed out. See you soon.');
+    navigate('/login', { replace: true });
   };
 
   return (
     <div className={open ? 'shell is-nav-open' : 'shell'}>
-      <aside className="sidebar" id="navegacion" aria-label="Navegación principal">
+      <aside className="sidebar" id="main-navigation" aria-label="Main navigation">
         <div className="sidebar__brand">
-          <Logo name={clinicName} to="/app" tagline="Historia clínica" />
+          <Logo name={clinicName} to="/app" tagline="Clinical records" />
         </div>
 
         <nav className="sidebar__nav">
@@ -93,7 +94,7 @@ export function StaffLayout({ children }: { children: ReactNode }) {
                   <Icon name={item.icon} size={18} />
                   <span>{item.label}</span>
                   {item.badge ? (
-                    <span className="sidebar__badge" aria-label={`${item.badge} nuevas`}>
+                    <span className="sidebar__badge" aria-label={`${item.badge} new`}>
                       {item.badge}
                     </span>
                   ) : null}
@@ -104,7 +105,7 @@ export function StaffLayout({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="sidebar__footer">
-          <Link to="/app/perfil" className="sidebar__me">
+          <Link to="/app/profile" className="sidebar__me">
             <Avatar name={user?.full_name ?? ''} size="sm" />
             <span className="sidebar__me-text">
               <span className="sidebar__me-name">{user?.full_name}</span>
@@ -115,16 +116,16 @@ export function StaffLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <button className="shell__scrim" type="button" aria-label="Cerrar menú" tabIndex={-1} onClick={() => setOpen(false)} />
+      <button className="shell__scrim" type="button" aria-label="Close menu" tabIndex={-1} onClick={() => setOpen(false)} />
 
       <div className="shell__main">
         <header className="topbar">
           <button
             className="btn btn--quiet btn--icon topbar__menu"
             type="button"
-            aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
+            aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
-            aria-controls="navegacion"
+            aria-controls="main-navigation"
             onClick={() => setOpen((value) => !value)}
           >
             <Icon name={open ? 'close' : 'menu'} size={20} />
@@ -133,20 +134,20 @@ export function StaffLayout({ children }: { children: ReactNode }) {
           <CommandSearch />
 
           <div className="topbar__actions">
-            <ButtonLink to="/app/agenda/nueva" icon="calendar" size="sm" className="topbar__action">
-              Agendar
+            <ButtonLink to="/app/schedule/new" icon="calendar" size="sm" className="topbar__action">
+              Schedule
             </ButtonLink>
-            <ButtonLink to="/app/pacientes/nuevo" variant="primary" icon="plus" size="sm" className="topbar__action">
-              Paciente
+            <ButtonLink to="/app/patients/new" variant="primary" icon="plus" size="sm" className="topbar__action">
+              Patient
             </ButtonLink>
             <ThemeToggle />
-            <button className="btn btn--quiet btn--icon" type="button" onClick={onLogout} aria-label="Cerrar sesión" title="Cerrar sesión">
+            <button className="btn btn--quiet btn--icon" type="button" onClick={onLogout} aria-label="Sign out" title="Sign out">
               <Icon name="logout" size={18} />
             </button>
           </div>
         </header>
 
-        <main className="content" id="contenido" tabIndex={-1}>
+        <main className="content" id="main-content" tabIndex={-1}>
           {children}
         </main>
       </div>

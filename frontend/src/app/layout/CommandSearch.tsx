@@ -13,9 +13,9 @@ interface Result {
 }
 
 /**
- * Busqueda global (Ctrl/Cmd + K) con patron combobox: flechas para moverse,
- * Enter para abrir, Escape para cerrar. Los resultados se pintan como texto,
- * nunca como HTML.
+ * Global search (Ctrl/Cmd + K) using the combobox pattern: arrow keys to move,
+ * Enter to open, Escape to close. Results are rendered as text, never as
+ * HTML.
  */
 export function CommandSearch() {
   const navigate = useNavigate();
@@ -81,8 +81,8 @@ export function CommandSearch() {
         ref={inputRef}
         className="command__input"
         type="search"
-        placeholder="Buscar pacientes o notas…"
-        aria-label="Buscar pacientes o notas"
+        placeholder="Search patients or notes…"
+        aria-label="Search patients or notes"
         role="combobox"
         aria-expanded={showPanel}
         aria-controls={listId}
@@ -104,9 +104,9 @@ export function CommandSearch() {
       {showPanel && (
         <div className="command__panel">
           {data.length === 0 ? (
-            <p className="command__empty">{isFetching ? 'Buscando…' : `Nada coincide con “${debounced}”.`}</p>
+            <p className="command__empty">{isFetching ? 'Searching…' : `Nothing matches “${debounced}”.`}</p>
           ) : (
-            <ul id={listId} role="listbox" aria-label="Resultados">
+            <ul id={listId} role="listbox" aria-label="Results">
               {data.map((result, index) => (
                 <li key={`${result.url}-${index}`} role="presentation">
                   {(index === 0 || data[index - 1].group !== result.group) && (

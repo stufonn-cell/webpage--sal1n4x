@@ -59,10 +59,10 @@ function AppointmentForm({ appointment }: { appointment?: AppointmentDetail }) {
           notes: appointment.notes ?? '',
         }
       : {
-          patient_id: params.get('paciente') ?? '',
+          patient_id: params.get('patient') ?? '',
           psychologist_id: defaultPsychologist,
-          date: params.get('fecha') ?? toISODate(new Date()),
-          time: params.get('hora') ?? '09:00',
+          date: params.get('date') ?? toISODate(new Date()),
+          time: params.get('time') ?? '09:00',
           duration: String(meta?.settings.session_duration ?? 50),
           modality: 'in_person',
           status: 'scheduled',
@@ -74,20 +74,20 @@ function AppointmentForm({ appointment }: { appointment?: AppointmentDetail }) {
         },
     validate: (values) => {
       const errors: Record<string, string> = {};
-      if (!values.patient_id) errors.patient_id = 'Elige un paciente.';
-      if (!values.psychologist_id) errors.psychologist_id = 'Elige quién atiende.';
-      if (!values.date) errors.date = 'Elige la fecha.';
-      if (!values.time) errors.time = 'Elige la hora.';
-      if (values.meeting_url && !/^https?:\/\//i.test(values.meeting_url)) errors.meeting_url = 'El enlace debe empezar por https://';
+      if (!values.patient_id) errors.patient_id = 'Choose a patient.';
+      if (!values.psychologist_id) errors.psychologist_id = 'Choose who will see the patient.';
+      if (!values.date) errors.date = 'Choose a date.';
+      if (!values.time) errors.time = 'Choose a time.';
+      if (values.meeting_url && !/^https?:\/\//i.test(values.meeting_url)) errors.meeting_url = 'The link must start with https://';
       return errors;
     },
     onSubmit: async (values) => {
       const result = appointment
         ? await put<{ week: string }>(`/api/appointments/${appointment.id}`, values)
         : await post<{ week: string }>('/api/appointments', values);
-      toast.success(result.message ?? 'Cita guardada.');
+      toast.success(result.message ?? 'Appointment saved.');
       await invalidate(['agenda'], ['dashboard'], ['patient', values.patient_id]);
-      navigate(`/app/agenda?semana=${result.data.week}`);
+      navigate(`/app/schedule?week=${result.data.week}`);
     },
   });
 
@@ -98,14 +98,14 @@ function AppointmentForm({ appointment }: { appointment?: AppointmentDetail }) {
 
   const remove = useAction(() => del(`/api/appointments/${appointment?.id}`), {
     invalidate: [['agenda'], ['dashboard']],
-    onSuccess: () => navigate('/app/agenda'),
+    onSuccess: () => navigate('/app/schedule'),
   });
 
   const onDelete = async () => {
     const ok = await confirm({
-      title: 'Eliminar cita',
-      text: 'Si la cita no se realizó, puedes marcarla como cancelada para conservar el historial. ¿Quieres eliminarla igualmente?',
-      confirmLabel: 'Eliminar',
+      title: 'Delete appointment',
+      text: "If the appointment didn't happen, you can mark it as cancelled to keep the history. Do you still want to delete it?",
+      confirmLabel: 'Delete',
       danger: true,
     });
     if (ok) await remove.run(undefined).catch(() => undefined);
@@ -120,46 +120,46 @@ function AppointmentForm({ appointment }: { appointment?: AppointmentDetail }) {
           <FormAlert message={form.formError} />
           <div className="form-grid">
             <SelectField
-              label="Paciente"
-              placeholder="Elige un paciente"
+              label="Patient"
+              placeholder="Choose a patient"
               wrapperClassName="span-full"
               options={(meta?.patients ?? []).map((item) => ({ value: String(item.id), label: item.label }))}
               {...form.bind('patient_id')}
             />
             <SelectField
-              label="Profesional"
+              label="Professional"
               options={(meta?.psychologists ?? []).map((person) => ({ value: String(person.id), label: person.full_name }))}
               {...form.bind('psychologist_id')}
             />
-            <SelectField label="Modalidad" options={meta?.modalities ?? []} {...form.bind('modality')} />
-            <TextField label="Fecha" type="date" {...form.bind('date')} />
-            <TextField label="Hora" type="time" step={300} {...form.bind('time')} />
-            <TextField label="Duración (minutos)" type="number" min={15} max={480} step={5} {...form.bind('duration')} />
-            <TextField label="Tipo de sesión" optional placeholder="Primera consulta, seguimiento…" {...form.bind('session_type')} />
+            <SelectField label="Modality" options={meta?.modalities ?? []} {...form.bind('modality')} />
+            <TextField label="Date" type="date" {...form.bind('date')} />
+            <TextField label="Time" type="time" step={300} {...form.bind('time')} />
+            <TextField label="Duration (minutes)" type="number" min={15} max={480} step={5} {...form.bind('duration')} />
+            <TextField label="Session type" optional placeholder="First visit, follow-up…" {...form.bind('session_type')} />
             {isOnline ? (
               <TextField
-                label="Enlace de la videollamada"
+                label="Video call link"
                 optional
                 type="url"
                 placeholder="https://"
                 wrapperClassName="span-full"
-                hint="El paciente lo verá en su portal."
+                hint="The patient will see it in their portal."
                 {...form.bind('meeting_url')}
               />
             ) : (
-              <TextField label="Consultorio o sala" optional {...form.bind('location')} />
+              <TextField label="Office or room" optional {...form.bind('location')} />
             )}
-            <TextField label={`Valor (${meta?.settings.currency ?? 'COP'})`} type="number" min={0} step={1000} {...form.bind('fee')} />
-            {!appointment && <SelectField label="Estado" options={meta?.appointmentStatuses ?? []} {...form.bind('status')} />}
-            <TextAreaField label="Notas internas" optional rows={3} wrapperClassName="span-full" hint="No se muestran al paciente." {...form.bind('notes')} />
+            <TextField label={`Fee (${meta?.settings.currency ?? 'COP'})`} type="number" min={0} step={1000} {...form.bind('fee')} />
+            {!appointment && <SelectField label="Status" options={meta?.appointmentStatuses ?? []} {...form.bind('status')} />}
+            <TextAreaField label="Internal notes" optional rows={3} wrapperClassName="span-full" hint="Not shown to the patient." {...form.bind('notes')} />
           </div>
 
           <div className="form-actions">
-            <ButtonLink to="/app/agenda" variant="quiet">
-              Cancelar
+            <ButtonLink to="/app/schedule" variant="quiet">
+              Cancel
             </ButtonLink>
-            <Button type="submit" variant="primary" loading={form.submitting} loadingLabel="Guardando">
-              {appointment ? 'Guardar cambios' : 'Agendar cita'}
+            <Button type="submit" variant="primary" loading={form.submitting} loadingLabel="Saving">
+              {appointment ? 'Save changes' : 'Book appointment'}
             </Button>
           </div>
         </Panel>
@@ -167,7 +167,7 @@ function AppointmentForm({ appointment }: { appointment?: AppointmentDetail }) {
 
       {appointment && (
         <div className="section-gap">
-          <Panel title="Estado de la cita" titleId="estado">
+          <Panel title="Appointment status" titleId="status">
             <div className="stack">
               <div>
                 <Badge tone={APPOINTMENT_STATUS_TONE[form.values.status]}>{labelOf(meta?.appointmentStatuses, form.values.status)}</Badge>
@@ -183,16 +183,16 @@ function AppointmentForm({ appointment }: { appointment?: AppointmentDetail }) {
                   ))}
               </div>
               {form.values.status === 'completed' && (
-                <ButtonLink to={`/app/notas/nueva?paciente=${appointment.patient_id}&cita=${appointment.id}`} variant="primary" size="sm" icon="note">
-                  Escribir la nota de esta sesión
+                <ButtonLink to={`/app/notes/new?patient=${appointment.patient_id}&appointment=${appointment.id}`} variant="primary" size="sm" icon="note">
+                  Write the note for this session
                 </ButtonLink>
               )}
             </div>
           </Panel>
-          <Alert tone="info">Al guardar, revisamos que el profesional no tenga otra cita a la misma hora.</Alert>
+          <Alert tone="info">When you save, we check that the professional doesn't have another appointment at the same time.</Alert>
           <div>
             <Button variant="danger" size="sm" icon="trash" onClick={onDelete} loading={remove.pending}>
-              Eliminar cita
+              Delete appointment
             </Button>
           </div>
         </div>
@@ -204,7 +204,7 @@ function AppointmentForm({ appointment }: { appointment?: AppointmentDetail }) {
 export default function AppointmentFormPage() {
   const { id } = useParams();
   const { data: meta, isPending: metaPending } = useMeta();
-  useDocumentTitle(id ? 'Editar cita' : 'Agendar cita');
+  useDocumentTitle(id ? 'Edit appointment' : 'Book appointment');
 
   const query = useQuery({
     queryKey: ['appointment', id],
@@ -214,7 +214,7 @@ export default function AppointmentFormPage() {
 
   return (
     <>
-      <PageHeader back={{ to: '/app/agenda', label: 'Agenda' }} title={id ? 'Editar cita' : 'Agendar cita'} />
+      <PageHeader back={{ to: '/app/schedule', label: 'Schedule' }} title={id ? 'Edit appointment' : 'Book appointment'} />
       <QueryState isPending={metaPending || (Boolean(id) && query.isPending)} error={query.error} onRetry={query.refetch}>
         {meta && (!id || query.data) && <AppointmentForm appointment={query.data} />}
       </QueryState>

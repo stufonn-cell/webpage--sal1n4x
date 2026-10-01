@@ -22,42 +22,42 @@ function PortalAccess({ bundle }: { bundle: PatientBundle }) {
 
   const onCreate = async () => {
     const ok = await confirm({
-      title: 'Crear acceso al portal',
-      text: `Se creará una cuenta para ${patient.first_name} con una contraseña temporal. Te la mostraremos una sola vez para que se la entregues en persona.`,
-      confirmLabel: 'Crear acceso',
+      title: 'Create portal access',
+      text: `We'll create an account for ${patient.first_name} with a temporary password. We'll show it to you only once so you can hand it over in person.`,
+      confirmLabel: 'Create access',
     });
     if (ok) await create.run(undefined).catch(() => undefined);
   };
 
   return (
-    <Panel title="Portal del paciente" titleId="portal">
+    <Panel title="Patient portal" titleId="portal">
       {credentials ? (
         <div className="stack">
-          <Alert tone="success" title="Acceso creado">
-            Entrega estos datos en persona. Por seguridad no volverán a mostrarse.
+          <Alert tone="success" title="Access created">
+            Hand these details over in person. For security, they won't be shown again.
           </Alert>
           <div className="secret-box">
-            <span>Usuario: {credentials.username}</span>
-            <span>Contraseña temporal: {credentials.temporaryPassword}</span>
+            <span>Username: {credentials.username}</span>
+            <span>Temporary password: {credentials.temporaryPassword}</span>
           </div>
         </div>
       ) : portalAccount ? (
         <Facts
           items={[
-            ['Usuario', portalAccount.username],
-            ['Estado', portalAccount.is_active ? 'Activo' : 'Desactivado'],
-            ['Último ingreso', formatDateTime(portalAccount.last_login_at)],
+            ['Username', portalAccount.username],
+            ['Status', portalAccount.is_active ? 'Active' : 'Deactivated'],
+            ['Last sign-in', formatDateTime(portalAccount.last_login_at)],
           ]}
         />
       ) : (
         <div className="stack">
           <p className="small soft">
-            Con el portal, {patient.first_name} puede ver sus citas, responder cuestionarios y firmar consentimientos desde casa.
+            With the portal, {patient.first_name} can see their appointments, answer questionnaires and sign consents from home.
           </p>
-          {!patient.email && <p className="small muted">Primero registra un correo en la ficha.</p>}
+          {!patient.email && <p className="small muted">First, add an email address to their file.</p>}
           <div>
             <Button size="sm" icon="user" onClick={onCreate} disabled={!patient.email} loading={create.pending}>
-              Crear acceso
+              Create access
             </Button>
           </div>
         </div>
@@ -74,51 +74,59 @@ export function SummaryTab({ bundle }: { bundle: PatientBundle }) {
   return (
     <div className="layout-2">
       <div className="section-gap">
-        <Panel title="Ficha clínica" titleId="ficha">
+        <Panel title="Patient file" titleId="patient-file">
           <div className="section-gap">
             {patient.reason_for_consult && (
               <div className="prose-block">
-                <h3>Motivo de consulta</h3>
+                <h3>Reason for consultation</h3>
                 <p>{patient.reason_for_consult}</p>
               </div>
             )}
             {patient.relevant_history && (
               <div className="prose-block">
-                <h3>Antecedentes</h3>
+                <h3>Relevant history</h3>
                 <p>{patient.relevant_history}</p>
               </div>
             )}
             <Facts
               items={[
-                ['Edad', age !== null ? `${age} años` : null],
-                ['Nacimiento', formatDate(patient.birth_date)],
-                ['Género', labelOf(meta?.genders, patient.gender)],
-                ['Documento', patient.document_id ? `${patient.document_type ?? ''} ${patient.document_id}` : null],
-                ['Correo', patient.email],
-                ['Teléfono', patient.phone],
-                ['Ciudad', patient.city],
-                ['Ocupación', patient.occupation],
-                ['Medicación', patient.current_medication],
-                ['Remitido por', patient.referred_by],
-                ['Contacto de emergencia', patient.emergency_contact_name ? `${patient.emergency_contact_name} · ${patient.emergency_contact_phone ?? ''}` : null],
-                ['En la clínica desde', formatDate(patient.created_at)],
+                ['Age', age !== null ? `${age} years old` : null],
+                ['Date of birth', formatDate(patient.birth_date)],
+                ['Gender', labelOf(meta?.genders, patient.gender)],
+                ['ID document', patient.document_id ? `${patient.document_type ?? ''} ${patient.document_id}` : null],
+                ['Sex on ID', patient.biological_sex ? labelOf(meta?.rips.sexes, patient.biological_sex) : null],
+                ['Health coverage', labelOf(meta?.rips.userTypes, patient.rips_user_type)],
+                [
+                  'Residence (DIVIPOLA)',
+                  patient.residence_country === '170'
+                    ? patient.residence_municipality && `${patient.residence_municipality} · ${labelOf(meta?.rips.zones, patient.residence_zone)}`
+                    : `Country ${patient.residence_country}`,
+                ],
+                ['Email', patient.email],
+                ['Phone', patient.phone],
+                ['City', patient.city],
+                ['Occupation', patient.occupation],
+                ['Medication', patient.current_medication],
+                ['Referred by', patient.referred_by],
+                ['Emergency contact', patient.emergency_contact_name ? `${patient.emergency_contact_name} · ${patient.emergency_contact_phone ?? ''}` : null],
+                ['Patient since', formatDate(patient.created_at)],
               ]}
             />
           </div>
         </Panel>
 
-        <Panel title="Evolución en instrumentos" titleId="evolucion">
+        <Panel title="Scores over time" titleId="progress">
           {bundle.series.length === 0 ? (
-            <EmptyState icon="chart" title="Sin evaluaciones completadas" text="Cuando el paciente responda un cuestionario verás aquí su curva." />
+            <EmptyState icon="chart" title="No completed assessments" text="Once the patient answers a questionnaire, you'll see their trend here." />
           ) : (
             <div className="section-gap">
               {bundle.series.map((serie) => (
                 <div key={serie.code}>
                   <p className="small">
-                    <strong>{serie.code}</strong> <span className="muted">· máximo {serie.maxScore}</span>
+                    <strong>{serie.code}</strong> <span className="muted">· max {serie.maxScore}</span>
                   </p>
                   <LineChart
-                    label={`Evolución del ${serie.code}`}
+                    label={`${serie.code} over time`}
                     max={serie.maxScore}
                     height={150}
                     points={serie.points.map((point) => ({
@@ -134,9 +142,9 @@ export function SummaryTab({ bundle }: { bundle: PatientBundle }) {
         </Panel>
 
         {bundle.moodSeries.length > 0 && (
-          <Panel title="Ánimo reportado en sesión" subtitle="Escala de 0 a 10" titleId="animo">
+          <Panel title="Mood reported in session" subtitle="Scale from 0 to 10" titleId="mood">
             <LineChart
-              label="Estado de ánimo por sesión"
+              label="Mood by session"
               max={10}
               height={150}
               points={bundle.moodSeries.map((point) => ({
@@ -149,9 +157,9 @@ export function SummaryTab({ bundle }: { bundle: PatientBundle }) {
       </div>
 
       <div className="section-gap">
-        <Panel title="Línea de tiempo" titleId="linea">
+        <Panel title="Timeline" titleId="timeline">
           {bundle.timeline.length === 0 ? (
-            <EmptyState icon="clock" title="Todavía no hay actividad" />
+            <EmptyState icon="clock" title="No activity yet" />
           ) : (
             <ol className="timeline">
               {bundle.timeline.map((event, index) => (

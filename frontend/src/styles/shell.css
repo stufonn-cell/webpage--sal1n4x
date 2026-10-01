@@ -1,10 +1,17 @@
-/* Piezas compartidas por los tres espacios (sitio, app y portal). */
+/* Pieces shared by the three spaces (site, app and portal). */
 
+/*
+ * Logo lockup. The psi mark is drawn to sit with the Literata wordmark, so
+ * everything is sized in em: `font-size` on .logo scales the whole lockup.
+ * With a tagline it becomes a letterhead: mark, hairline, name over an
+ * italic line.
+ */
 .logo {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: 0.45em;
   color: var(--ink);
+  font-size: var(--text-lg);
   text-decoration: none;
   min-width: 0;
 }
@@ -15,11 +22,14 @@
 
 .logo-mark {
   flex-shrink: 0;
-  transition: transform var(--duration) var(--ease-out);
+  width: 1.75em;
+  height: 1.75em;
+  color: var(--primary);
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
 .logo:hover .logo-mark {
-  transform: rotate(-4deg);
+  color: var(--primary-hover);
 }
 
 .logo__text {
@@ -30,21 +40,39 @@
 
 .logo__name {
   font-family: var(--font-serif);
-  font-size: var(--text-lg);
+  font-size: 1em;
   font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: -0.01em;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .logo__tagline {
-  font-size: var(--text-xs);
+  margin-top: 0.1em;
+  font-family: var(--font-serif);
+  font-size: max(0.68em, 0.75rem);
+  font-style: italic;
+  line-height: 1.25;
   color: var(--ink-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.logo--tagline {
+  gap: 0.55em;
+}
+
+.logo--tagline .logo-mark {
+  width: 1.9em;
+  height: 1.9em;
+}
+
+.logo--tagline .logo__text {
+  padding-left: 0.55em;
+  border-left: 1px solid var(--line-strong);
 }
 
 .author-credit {
@@ -56,7 +84,7 @@
   color: inherit;
 }
 
-/* Paginas de una sola columna centrada (login, 404). */
+/* Single centered column pages (login, 404). */
 .solo {
   min-height: 100vh;
   display: grid;
@@ -111,7 +139,7 @@
   margin-bottom: var(--space-6);
 }
 
-/* --- Ingreso -------------------------------------------------------- */
+/* --- Login ---------------------------------------------------------- */
 
 .login {
   width: 100%;

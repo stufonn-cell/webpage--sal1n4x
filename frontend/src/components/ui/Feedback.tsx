@@ -13,7 +13,7 @@ import { Button } from './Button';
 import { EmptyState } from './Display';
 import { Icon } from './Icon';
 
-/* --- Avisos -------------------------------------------------------- */
+/* --- Toasts -------------------------------------------------------- */
 
 type ToastTone = 'success' | 'error' | 'info';
 
@@ -71,7 +71,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           >
             <Icon name={toast.tone === 'error' ? 'alert' : toast.tone === 'success' ? 'checkCircle' : 'info'} size={18} />
             <p className="toast__text">{toast.message}</p>
-            <button className="toast__close" type="button" onClick={() => dismiss(toast.id)} aria-label="Cerrar aviso">
+            <button className="toast__close" type="button" onClick={() => dismiss(toast.id)} aria-label="Dismiss notification">
               <Icon name="close" size={16} />
             </button>
           </div>
@@ -83,11 +83,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
 export function useToast(): ToastApi {
   const context = useContext(ToastContext);
-  if (!context) throw new Error('useToast debe usarse dentro de ToastProvider');
+  if (!context) throw new Error('useToast must be used inside ToastProvider');
   return context;
 }
 
-/* --- Confirmacion -------------------------------------------------- */
+/* --- Confirmation -------------------------------------------------- */
 
 interface ConfirmOptions {
   title: string;
@@ -102,8 +102,8 @@ type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>;
 const ConfirmContext = createContext<ConfirmFn | null>(null);
 
 /**
- * Dialogo de confirmacion basado en <dialog>: el navegador gestiona el foco
- * atrapado, Escape y el fondo inerte. Reemplaza a window.confirm.
+ * Confirmation dialog built on <dialog>: the browser handles the focus trap,
+ * Escape and the inert background. Replaces window.confirm.
  */
 export function ConfirmProvider({ children }: { children: ReactNode }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -150,10 +150,10 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
             </div>
             <div className="dialog__actions">
               <Button onClick={() => close(false)} autoFocus>
-                {options.cancelLabel ?? 'Cancelar'}
+                {options.cancelLabel ?? 'Cancel'}
               </Button>
               <Button variant={options.danger ? 'danger' : 'primary'} onClick={() => close(true)}>
-                {options.confirmLabel ?? 'Confirmar'}
+                {options.confirmLabel ?? 'Confirm'}
               </Button>
             </div>
           </>
@@ -165,13 +165,13 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
 
 export function useConfirm(): ConfirmFn {
   const context = useContext(ConfirmContext);
-  if (!context) throw new Error('useConfirm debe usarse dentro de ConfirmProvider');
+  if (!context) throw new Error('useConfirm must be used inside ConfirmProvider');
   return context;
 }
 
-/* --- Estados de carga ---------------------------------------------- */
+/* --- Loading states ------------------------------------------------ */
 
-export function LoadingLine({ label = 'Cargando' }: { label?: string }) {
+export function LoadingLine({ label = 'Loading' }: { label?: string }) {
   return (
     <div className="loading-line" role="status">
       <span className="spinner" aria-hidden="true" />
@@ -198,19 +198,19 @@ interface QueryStateProps {
   children: ReactNode;
 }
 
-/** Envoltorio comun para cualquier pantalla que depende de una consulta. */
+/** Shared wrapper for any screen that depends on a query. */
 export function QueryState({ isPending, error, onRetry, skeleton, children }: QueryStateProps) {
   if (isPending) return <>{skeleton ?? <SkeletonRows />}</>;
   if (error) {
     return (
       <EmptyState
         icon="alert"
-        title="No pudimos cargar esta información"
+        title="We couldn't load this information"
         text={errorMessage(error)}
         action={
           onRetry && (
             <Button size="sm" onClick={onRetry}>
-              Intentar de nuevo
+              Try again
             </Button>
           )
         }
@@ -230,16 +230,16 @@ interface PaginationProps {
 export function Pagination({ page, pages, total, onChange }: PaginationProps) {
   if (pages <= 1) return null;
   return (
-    <nav className="pagination" aria-label="Paginación">
+    <nav className="pagination" aria-label="Pagination">
       <span>
-        Página {page} de {pages} · {total} en total
+        Page {page} of {pages} · {total} total
       </span>
       <div className="cluster">
         <Button size="sm" icon="chevronLeft" disabled={page <= 1} onClick={() => onChange(page - 1)}>
-          Anterior
+          Previous
         </Button>
         <Button size="sm" iconRight="chevronRight" disabled={page >= pages} onClick={() => onChange(page + 1)}>
-          Siguiente
+          Next
         </Button>
       </div>
     </nav>

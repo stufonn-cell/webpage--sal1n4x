@@ -16,7 +16,7 @@ export default function InvoiceListPage() {
   const status = params.get('status') ?? '';
   const page = Number(params.get('page') ?? 1);
   const currency = meta?.settings.currency;
-  useDocumentTitle('Facturación');
+  useDocumentTitle('Billing');
 
   const query = useQuery({
     queryKey: ['invoices', status, page],
@@ -35,34 +35,34 @@ export default function InvoiceListPage() {
   return (
     <>
       <PageHeader
-        title="Facturación"
+        title="Billing"
         actions={
-          <ButtonLink to="/app/facturacion/nueva" variant="primary" icon="plus">
-            Nueva factura
+          <ButtonLink to="/app/billing/new" variant="primary" icon="plus">
+            New invoice
           </ButtonLink>
         }
       />
       <div className="toolbar">
-        <SelectField label="Estado" id="invoice-status" value={status} onChange={(event) => update('status', event.target.value)} options={meta?.invoiceStatuses ?? []} placeholder="Todas" />
+        <SelectField label="Status" id="invoice-status" value={status} onChange={(event) => update('status', event.target.value)} options={meta?.invoiceStatuses ?? []} placeholder="All" />
       </div>
       <Panel flush>
         <QueryState isPending={query.isPending} error={query.error} onRetry={query.refetch}>
           {query.data?.rows.length === 0 ? (
-            <EmptyState icon="receipt" title="No hay facturas" />
+            <EmptyState icon="receipt" title="No invoices yet" />
           ) : (
             <div className="table-wrap">
               <table className="table table--stack">
                 <thead>
                   <tr>
-                    <th scope="col">Factura</th>
-                    <th scope="col">Paciente</th>
+                    <th scope="col">Invoice</th>
+                    <th scope="col">Patient</th>
                     <th scope="col" className="num">
                       Total
                     </th>
                     <th scope="col" className="num">
-                      Saldo
+                      Balance
                     </th>
-                    <th scope="col">Estado</th>
+                    <th scope="col">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -71,19 +71,19 @@ export default function InvoiceListPage() {
                     return (
                       <tr key={invoice.id}>
                         <td>
-                          <Link className="table__link" to={`/app/facturacion/${invoice.id}`}>
+                          <Link className="table__link" to={`/app/billing/${invoice.id}`}>
                             {invoice.number}
                           </Link>
                           <span className="table__sub">{formatDate(invoice.issued_at)}</span>
                         </td>
-                        <td data-label="Paciente">{fullName(invoice)}</td>
+                        <td data-label="Patient">{fullName(invoice)}</td>
                         <td data-label="Total" className="num">
                           {formatMoney(invoice.total, currency)}
                         </td>
-                        <td data-label="Saldo" className="num">
+                        <td data-label="Balance" className="num">
                           {formatMoney(balance, currency)}
                         </td>
-                        <td data-label="Estado">
+                        <td data-label="Status">
                           <Badge tone={INVOICE_STATUS_TONE[invoice.status]}>{labelOf(meta?.invoiceStatuses, invoice.status)}</Badge>
                         </td>
                       </tr>

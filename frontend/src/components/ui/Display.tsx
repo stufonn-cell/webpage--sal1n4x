@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { initials } from '@/lib/format';
 import { Icon, type IconName } from './Icon';
 
-/** Piezas de presentacion pequenas y sin estado. */
+/** Small, stateless presentational pieces. */
 
 export type Tone = 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'primary';
 

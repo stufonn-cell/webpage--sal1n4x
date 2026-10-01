@@ -18,7 +18,7 @@ export default function PatientListPage() {
   const status = params.get('status') ?? '';
   const page = Number(params.get('page') ?? 1);
   const search = useDebounced(q, 300);
-  useDocumentTitle('Pacientes');
+  useDocumentTitle('Patients');
 
   const query = useQuery({
     queryKey: ['patients', search, status, page],
@@ -37,11 +37,11 @@ export default function PatientListPage() {
   return (
     <>
       <PageHeader
-        title="Pacientes"
-        subtitle={query.data ? `${query.data.total} historias clínicas` : undefined}
+        title="Patients"
+        subtitle={query.data ? `${query.data.total} ${query.data.total === 1 ? 'clinical record' : 'clinical records'}` : undefined}
         actions={
-          <ButtonLink to="/app/pacientes/nuevo" variant="primary" icon="plus">
-            Registrar paciente
+          <ButtonLink to="/app/patients/new" variant="primary" icon="plus">
+            Add patient
           </ButtonLink>
         }
       />
@@ -49,20 +49,20 @@ export default function PatientListPage() {
       <div className="toolbar" role="search">
         <TextField
           wrapperClassName="toolbar__search"
-          label="Buscar"
+          label="Search"
           id="patient-search"
           type="search"
-          placeholder="Nombre, historia o documento"
+          placeholder="Name, record number or ID"
           value={q}
           onChange={(event) => update('q', event.target.value)}
         />
         <SelectField
-          label="Estado"
+          label="Status"
           id="patient-status"
           value={status}
           onChange={(event) => update('status', event.target.value)}
           options={meta?.patientStatuses ?? []}
-          placeholder="Todos"
+          placeholder="All"
         />
       </div>
 
@@ -71,12 +71,12 @@ export default function PatientListPage() {
           {query.data?.rows.length === 0 ? (
             <EmptyState
               icon="users"
-              title={q || status ? 'Ningún paciente coincide con la búsqueda' : 'Aún no hay pacientes'}
-              text={q || status ? 'Prueba con otro nombre o quita los filtros.' : 'Registra la primera historia clínica para empezar.'}
+              title={q || status ? 'No patients match your search' : 'No patients yet'}
+              text={q || status ? 'Try another name or clear the filters.' : 'Add your first clinical record to get started.'}
               action={
                 !q && !status && (
-                  <ButtonLink to="/app/pacientes/nuevo" variant="primary" icon="plus" size="sm">
-                    Registrar paciente
+                  <ButtonLink to="/app/patients/new" variant="primary" icon="plus" size="sm">
+                    Add patient
                   </ButtonLink>
                 )
               }
@@ -86,11 +86,11 @@ export default function PatientListPage() {
               <table className="table table--stack">
                 <thead>
                   <tr>
-                    <th scope="col">Paciente</th>
-                    <th scope="col">Estado</th>
-                    <th scope="col">Riesgo</th>
-                    <th scope="col">Profesional</th>
-                    <th scope="col">Última sesión</th>
+                    <th scope="col">Patient</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Risk</th>
+                    <th scope="col">Professional</th>
+                    <th scope="col">Last session</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -102,28 +102,28 @@ export default function PatientListPage() {
                           <div className="cluster cluster--nowrap">
                             <Avatar name={fullName(patient)} size="sm" />
                             <div>
-                              <Link className="table__link" to={`/app/pacientes/${patient.id}`}>
+                              <Link className="table__link" to={`/app/patients/${patient.id}`}>
                                 {patient.last_name}, {patient.first_name}
                               </Link>
                               <span className="table__sub">
                                 {patient.record_number}
-                                {age !== null && ` · ${age} años`}
+                                {age !== null && ` · ${age} years old`}
                               </span>
                             </div>
                           </div>
                         </td>
-                        <td data-label="Estado">
+                        <td data-label="Status">
                           <Badge tone={PATIENT_STATUS_TONE[patient.status]}>{labelOf(meta?.patientStatuses, patient.status)}</Badge>
                         </td>
-                        <td data-label="Riesgo">
+                        <td data-label="Risk">
                           <Badge tone={RISK_TONE[patient.risk_level]}>{labelOf(meta?.riskLevels, patient.risk_level)}</Badge>
                         </td>
-                        <td data-label="Profesional" className="soft">
+                        <td data-label="Professional" className="soft">
                           {patient.psychologist_name ?? '—'}
                         </td>
-                        <td data-label="Última sesión">
+                        <td data-label="Last session">
                           {formatDate(patient.last_session)}
-                          <span className="table__sub">{patient.sessions_count} sesiones</span>
+                          <span className="table__sub">{patient.sessions_count === 1 ? '1 session' : `${patient.sessions_count} sessions`}</span>
                         </td>
                       </tr>
                     );

@@ -6,16 +6,16 @@ import { Icon } from './Icon';
 export function ThemeToggle() {
   const { theme, toggle } = useTheme();
   const { user } = useSession();
-  const next = theme === 'dark' ? 'claro' : 'oscuro';
+  const next = theme === 'dark' ? 'light' : 'dark';
 
   const onClick = () => {
     const value = toggle();
-    // Si hay sesion, la preferencia viaja con la cuenta a otros equipos.
+    // When signed in, the preference travels with the account to other devices.
     if (user) put('/api/profile/theme', { theme: value }).catch(() => undefined);
   };
 
   return (
-    <button className="btn btn--quiet btn--icon" type="button" onClick={onClick} aria-label={`Cambiar a modo ${next}`} title={`Modo ${next}`}>
+    <button className="btn btn--quiet btn--icon" type="button" onClick={onClick} aria-label={`Switch to ${next} mode`} title={next === 'light' ? 'Light mode' : 'Dark mode'}>
       <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={18} />
     </button>
   );

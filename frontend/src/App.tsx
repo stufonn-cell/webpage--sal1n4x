@@ -9,13 +9,14 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 import { RouteError } from '@/pages/RouteError';
 
 /*
- * Tres areas con su propio bundle: el sitio publico no descarga el codigo de
- * la historia clinica, y un paciente no descarga el panel del equipo.
+ * Three areas, each with its own bundle: the public site does not download the
+ * clinical record code, and a patient does not download the staff dashboard.
  */
 const SiteLayout = lazy(() => import('@/site/SiteLayout'));
 const HomePage = lazy(() => import('@/site/HomePage'));
 const RequestPage = lazy(() => import('@/site/RequestPage'));
 const PrivacyPage = lazy(() => import('@/site/PrivacyPage'));
+const TermsPage = lazy(() => import('@/site/TermsPage'));
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const StaffApp = lazy(() => import('@/app/StaffApp'));
 const PortalApp = lazy(() => import('@/portal/PortalApp'));
@@ -36,8 +37,8 @@ function Loader({ children }: { children: ReactNode }) {
 function Root() {
   return (
     <>
-      <a className="skip-link" href="#contenido">
-        Saltar al contenido
+      <a className="skip-link" href="#main-content">
+        Skip to content
       </a>
       <Loader>
         <Outlet />
@@ -47,13 +48,13 @@ function Root() {
   );
 }
 
-/** Protege un area segun el rol. Recuerda a donde queria ir la persona. */
+/** Guards an area by role. Remembers where the person was trying to go. */
 function Guard({ area, children }: { area: 'staff' | 'patient'; children: ReactNode }) {
   const { user, loading } = useSession();
   const location = useLocation();
 
-  if (loading) return <LoadingLine label="Preparando tu espacio" />;
-  if (!user) return <Navigate to="/ingresar" replace state={{ from: location.pathname, expired: true }} />;
+  if (loading) return <LoadingLine label="Getting your space ready" />;
+  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname, expired: true }} />;
 
   const allowed = area === 'staff' ? isStaff(user) : user.role === 'patient';
   if (!allowed) return <Navigate to={homeFor(user)} replace />;
@@ -70,13 +71,14 @@ const router = createBrowserRouter([
         element: <SiteLayout />,
         children: [
           { index: true, element: <HomePage /> },
-          { path: 'solicitar-cita', element: <RequestPage /> },
-          { path: 'privacidad', element: <PrivacyPage /> },
+          { path: 'request-appointment', element: <RequestPage /> },
+          { path: 'privacy', element: <PrivacyPage /> },
+          { path: 'terms', element: <TermsPage /> },
         ],
       },
-      { path: 'ingresar', element: <LoginPage /> },
+      { path: 'login', element: <LoginPage /> },
       {
-        // Cada area define sus propias rutas internas (descendant routes).
+        // Each area defines its own internal routes (descendant routes).
         path: 'app/*',
         element: (
           <Guard area="staff">

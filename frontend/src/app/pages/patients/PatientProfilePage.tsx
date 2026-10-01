@@ -23,15 +23,15 @@ export default function PatientProfilePage() {
   const { user } = useSession();
   const confirm = useConfirm();
   const navigate = useNavigate();
-  const tab = params.get('tab') ?? 'resumen';
+  const tab = params.get('tab') ?? 'summary';
 
   const query = useQuery({ queryKey: ['patient', id], queryFn: () => get<PatientBundle>(`/api/patients/${id}`) });
   const bundle = query.data;
-  useDocumentTitle(bundle ? fullName(bundle.patient) : 'Paciente');
+  useDocumentTitle(bundle ? fullName(bundle.patient) : 'Patient');
 
   const remove = useAction(() => del(`/api/patients/${id}`), {
     invalidate: [['patients'], ['dashboard'], ['meta']],
-    onSuccess: () => navigate('/app/pacientes', { replace: true }),
+    onSuccess: () => navigate('/app/patients', { replace: true }),
   });
 
   const setTab = (next: string) => {
@@ -43,9 +43,9 @@ export default function PatientProfilePage() {
   const onDelete = async () => {
     if (!bundle) return;
     const ok = await confirm({
-      title: `Eliminar la historia de ${bundle.patient.first_name}`,
-      text: 'Se eliminarán de forma permanente sus notas, evaluaciones, citas, documentos y facturas. Si el proceso terminó, considera marcarlo como “Alta” en lugar de eliminarlo.',
-      confirmLabel: 'Eliminar definitivamente',
+      title: `Delete ${bundle.patient.first_name}'s record`,
+      text: 'Their notes, assessments, appointments, documents and invoices will be permanently deleted. If treatment has ended, consider marking them as “Discharged” instead.',
+      confirmLabel: 'Delete permanently',
       danger: true,
     });
     if (ok) await remove.run(undefined).catch(() => undefined);
@@ -61,66 +61,66 @@ export default function PatientProfilePage() {
               <h1 className="page-header__title">{fullName(bundle.patient)}</h1>
               <div className="profile-head__meta">
                 <span>{bundle.patient.record_number}</span>
-                {ageFrom(bundle.patient.birth_date) !== null && <span>{ageFrom(bundle.patient.birth_date)} años</span>}
-                {bundle.patient.psychologist_name && <span>Con {bundle.patient.psychologist_name}</span>}
+                {ageFrom(bundle.patient.birth_date) !== null && <span>{ageFrom(bundle.patient.birth_date)} years old</span>}
+                {bundle.patient.psychologist_name && <span>With {bundle.patient.psychologist_name}</span>}
                 <Badge tone={PATIENT_STATUS_TONE[bundle.patient.status]}>{labelOf(meta?.patientStatuses, bundle.patient.status)}</Badge>
               </div>
             </div>
             <div className="page-header__actions">
-              <ButtonLink to={`/app/notas/nueva?paciente=${id}`} variant="primary" icon="note">
-                Nueva nota
+              <ButtonLink to={`/app/notes/new?patient=${id}`} variant="primary" icon="note">
+                New note
               </ButtonLink>
-              <ButtonLink to={`/app/pacientes/${id}/editar`} icon="edit">
-                Editar
+              <ButtonLink to={`/app/patients/${id}/edit`} icon="edit">
+                Edit
               </ButtonLink>
               {user?.role === 'admin' && (
-                <Button variant="quiet" iconOnly icon="trash" aria-label="Eliminar paciente" onClick={onDelete} />
+                <Button variant="quiet" iconOnly icon="trash" aria-label="Delete patient" onClick={onDelete} />
               )}
             </div>
           </div>
 
           {(bundle.patient.risk_level === 'moderate' || bundle.patient.risk_level === 'high') && (
             <div className="risk-banner">
-              <Alert tone={bundle.patient.risk_level === 'high' ? 'error' : 'warning'} title={`Riesgo ${labelOf(meta?.riskLevels, bundle.patient.risk_level).toLowerCase()}`}>
-                Nivel registrado en la ficha o en la última nota de sesión. El contacto de emergencia está en el resumen.
+              <Alert tone={bundle.patient.risk_level === 'high' ? 'error' : 'warning'} title={`${labelOf(meta?.riskLevels, bundle.patient.risk_level)} risk`}>
+                Level recorded on the patient file or in the latest session note. The emergency contact is in the summary.
               </Alert>
             </div>
           )}
 
           <Tabs
-            label="Secciones de la historia"
+            label="Record sections"
             active={tab}
             onChange={setTab}
             tabs={[
-              { id: 'resumen', label: 'Resumen' },
-              { id: 'notas', label: 'Notas', count: bundle.notes.length },
-              { id: 'evaluaciones', label: 'Evaluaciones', count: bundle.assessments.length },
-              { id: 'diagnosticos', label: 'Diagnósticos', count: bundle.diagnoses.length },
-              { id: 'citas', label: 'Citas', count: bundle.appointments.length },
-              { id: 'documentos', label: 'Documentos', count: bundle.documents.length },
-              { id: 'administrativo', label: 'Administrativo' },
+              { id: 'summary', label: 'Summary' },
+              { id: 'notes', label: 'Notes', count: bundle.notes.length },
+              { id: 'assessments', label: 'Assessments', count: bundle.assessments.length },
+              { id: 'diagnoses', label: 'Diagnoses', count: bundle.diagnoses.length },
+              { id: 'appointments', label: 'Appointments', count: bundle.appointments.length },
+              { id: 'documents', label: 'Documents', count: bundle.documents.length },
+              { id: 'admin', label: 'Administrative' },
             ]}
           />
 
-          <TabPanel id="resumen" active={tab}>
+          <TabPanel id="summary" active={tab}>
             <SummaryTab bundle={bundle} />
           </TabPanel>
-          <TabPanel id="notas" active={tab}>
+          <TabPanel id="notes" active={tab}>
             <NotesTab bundle={bundle} />
           </TabPanel>
-          <TabPanel id="evaluaciones" active={tab}>
+          <TabPanel id="assessments" active={tab}>
             <AssessmentsTab bundle={bundle} />
           </TabPanel>
-          <TabPanel id="diagnosticos" active={tab}>
+          <TabPanel id="diagnoses" active={tab}>
             <DiagnosesTab bundle={bundle} />
           </TabPanel>
-          <TabPanel id="citas" active={tab}>
+          <TabPanel id="appointments" active={tab}>
             <AppointmentsTab bundle={bundle} />
           </TabPanel>
-          <TabPanel id="documentos" active={tab}>
+          <TabPanel id="documents" active={tab}>
             <DocumentsTab bundle={bundle} />
           </TabPanel>
-          <TabPanel id="administrativo" active={tab}>
+          <TabPanel id="admin" active={tab}>
             <AdminTab bundle={bundle} />
           </TabPanel>
         </>

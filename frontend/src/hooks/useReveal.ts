@@ -1,8 +1,8 @@
 import { useEffect, type RefObject } from 'react';
 
 /**
- * Marca como visibles los elementos `.reveal` dentro de `root` cuando entran
- * en pantalla. Se anima una sola vez; con movimiento reducido no hace nada.
+ * Marks the `.reveal` elements inside `root` as visible when they enter the
+ * screen. Animates only once; does nothing when reduced motion is preferred.
  */
 export function useReveal(root: RefObject<HTMLElement | null>): void {
   useEffect(() => {

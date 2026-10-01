@@ -13,7 +13,7 @@ interface TabsProps {
   label: string;
 }
 
-/** Pestanas accesibles (patron WAI-ARIA): flechas, Inicio y Fin. */
+/** Accessible tabs (WAI-ARIA pattern): arrow keys, Home and End. */
 export function Tabs({ tabs, active, onChange, label }: TabsProps) {
   const baseId = useId();
   const refs = useRef<(HTMLButtonElement | null)[]>([]);

@@ -53,7 +53,7 @@ export function Button({
   block,
   iconOnly,
   loading = false,
-  loadingLabel = 'Procesando',
+  loadingLabel = 'Processing',
   className,
   children,
   type = 'button',

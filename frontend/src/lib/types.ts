@@ -1,11 +1,13 @@
 /**
- * Formas de los datos que devuelve la API. Los nombres de campo siguen las
- * columnas de la base (snake_case) para no duplicar un mapeo en cada modulo.
+ * Shapes of the data the API returns. Field names follow the database
+ * columns (snake_case) so no module needs its own mapping.
  */
 
 export type Role = 'admin' | 'psychologist' | 'assistant' | 'patient';
 export type RiskLevel = 'none' | 'low' | 'moderate' | 'high';
 export type Theme = 'light' | 'dark';
+/** Language of the documents handed to patients; the interface itself is English. */
+export type DocumentLanguage = 'en' | 'es';
 
 export interface Option {
   value: string;
@@ -17,6 +19,8 @@ export interface User {
   username: string;
   email: string;
   full_name: string;
+  document_type: string | null;
+  document_number: string | null;
   role: Role;
   license_number: string | null;
   specialty: string | null;
@@ -62,14 +66,27 @@ export interface Meta {
   invoiceStatuses: Option[];
   paymentMethods: Option[];
   diagnosisStatuses: Option[];
+  diagnosisSystems: Option[];
+  icd11Release: string;
   requestStatuses: Option[];
   requestModalities: Option[];
   requestAttendees: Option[];
   requestContact: Option[];
   requestTimes: Option[];
   consentTemplates: Option[];
+  documentLanguages: Option[];
   instruments: Option[];
   roles: Option[];
+  rips: {
+    documentTypes: Option[];
+    userTypes: Option[];
+    sexes: Option[];
+    zones: Option[];
+    purposes: Option[];
+    causes: Option[];
+    environments: Option[];
+    statuses: Option[];
+  };
   psychologists: { id: number; full_name: string }[];
   patients: { id: number; label: string }[];
   settings: {
@@ -79,6 +96,7 @@ export interface Meta {
     working_hours_start: string;
     working_hours_end: string;
     note_lock_hours: number;
+    document_language: DocumentLanguage;
   };
   nextRecordNumber: string;
   nextInvoiceNumber: string;
@@ -103,6 +121,12 @@ export interface Patient extends PatientSummary {
   gender: string;
   document_type: string | null;
   document_id: string | null;
+  biological_sex: 'F' | 'M' | 'I' | null;
+  rips_user_type: string;
+  residence_country: string;
+  residence_municipality: string | null;
+  residence_zone: string;
+  origin_country: string;
   address: string | null;
   city: string | null;
   country: string | null;
@@ -213,6 +237,7 @@ export interface Consent {
   id: number;
   patient_id: number;
   template_code: string;
+  language: DocumentLanguage;
   title: string;
   body?: string;
   status: 'pending' | 'signed' | 'revoked';
@@ -327,4 +352,85 @@ export interface PublicSite {
     contactPreferences: Option[];
     times: Option[];
   };
+}
+
+export interface Icd11Code {
+  code: string;
+  title: string;
+  chapter: string;
+  is_leaf: boolean;
+  icd10_code: string | null;
+}
+
+export type RipsStatus = 'generated' | 'validated' | 'rejected';
+
+export interface RipsReportSummary {
+  id: number;
+  note_number: string;
+  period_start: string;
+  period_end: string;
+  status: RipsStatus;
+  cuv: string | null;
+  users_count: number;
+  services_count: number;
+  created_at: string;
+  sent_at: string | null;
+  created_by_name: string | null;
+  sent_by_name: string | null;
+}
+
+export interface RipsOverview {
+  reports: RipsReportSummary[];
+  configIssues: string[];
+  nextNoteNumber: string;
+  environment: string;
+  validatorConfigured: boolean;
+}
+
+export interface RipsItem {
+  appointment_id: number;
+  patient_id: number;
+  patient_name: string;
+  record_number: string;
+  starts_at: string;
+  professional_name: string;
+  cups: string;
+  diagnosis: string | null;
+  value: number;
+  issues: string[];
+}
+
+export interface RipsPreview {
+  configIssues: string[];
+  items: RipsItem[];
+  readyCount: number;
+  usersCount: number;
+}
+
+export interface RipsValidationMessage {
+  class: string;
+  code: string;
+  description: string;
+  notes: string;
+  path: string;
+}
+
+export interface RipsValidation {
+  accepted: boolean;
+  cuv: string | null;
+  processId: string | number | null;
+  receivedAt: string | null;
+  results: RipsValidationMessage[];
+}
+
+export interface RipsReport extends RipsReportSummary {
+  validatorConfigured: boolean;
+  payload: {
+    numDocumentoIdObligado: string;
+    numFactura: null;
+    tipoNota: string;
+    numNota: string;
+    usuarios: Record<string, unknown>[];
+  };
+  validation_result: RipsValidation | null;
 }

@@ -5,9 +5,11 @@ import { Alert, Badge, PageHeader } from '@/components/ui/Display';
 import { QueryState, useConfirm } from '@/components/ui/Feedback';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { get, post } from '@/lib/api';
+import { documentText, translateInterventions } from '@/lib/documentText';
 import { ageFrom, formatDate, formatDateTime, fullName } from '@/lib/format';
-import { labelOf, RISK_TONE, useMeta } from '@/lib/meta';
+import { RISK_TONE } from '@/lib/meta';
 import type { Note } from '@/lib/types';
+import { DocumentLanguageSelect, useDocumentLanguage } from '../../components/DocumentLanguageSelect';
 import { useAction } from '../../useAction';
 
 interface NoteDetail {
@@ -17,37 +19,40 @@ interface NoteDetail {
   clinic: { name: string; address: string; phone: string };
 }
 
-const LABELS: Record<string, [string, keyof Note][]> = {
+type Section = keyof ReturnType<typeof documentText>['note']['sections'];
+
+const SECTIONS: Record<string, [Section, keyof Note][]> = {
   soap: [
-    ['Subjetivo', 'subjective'],
-    ['Objetivo', 'objective'],
-    ['Análisis', 'assessment'],
-    ['Plan', 'plan'],
+    ['subjective', 'subjective'],
+    ['objective', 'objective'],
+    ['assessment', 'assessment'],
+    ['plan', 'plan'],
   ],
   dap: [
-    ['Datos', 'subjective'],
-    ['Análisis', 'assessment'],
-    ['Plan', 'plan'],
+    ['data', 'subjective'],
+    ['assessment', 'assessment'],
+    ['plan', 'plan'],
   ],
-  free: [['Nota de sesión', 'subjective']],
+  free: [['free', 'subjective']],
 };
 
 export default function NoteViewPage() {
   const { id = '' } = useParams();
-  const { data: meta } = useMeta();
   const confirm = useConfirm();
+  const [language, setLanguage] = useDocumentLanguage();
+  const t = documentText(language);
   const query = useQuery({ queryKey: ['note', id], queryFn: () => get<NoteDetail>(`/api/notes/${id}`) });
   const detail = query.data;
   const note = detail?.note;
-  useDocumentTitle(note ? `Sesión ${note.session_number} · ${fullName(note)}` : 'Nota de sesión');
+  useDocumentTitle(note ? `Session ${note.session_number} · ${fullName(note)}` : 'Session note');
 
   const sign = useAction(() => post(`/api/notes/${id}/sign`), { invalidate: [['note', id], ['notes'], ['dashboard']] });
 
   const onSign = async () => {
     const ok = await confirm({
-      title: 'Firmar nota',
-      text: 'Al firmarla, la nota queda bloqueada de forma definitiva y ya no podrá editarse. Revisa que el contenido esté completo.',
-      confirmLabel: 'Firmar y bloquear',
+      title: 'Sign note',
+      text: "Once you sign it, the note is locked for good and can't be edited anymore. Make sure everything is complete.",
+      confirmLabel: 'Sign and lock',
     });
     if (ok) await sign.run(undefined).catch(() => undefined);
   };
@@ -57,22 +62,23 @@ export default function NoteViewPage() {
       {detail && note && (
         <>
           <PageHeader
-            back={{ to: `/app/pacientes/${note.patient_id}?tab=notas`, label: fullName(note) }}
-            title={`Sesión ${note.session_number}`}
+            back={{ to: `/app/patients/${note.patient_id}?tab=notes`, label: fullName(note) }}
+            title={`Session ${note.session_number}`}
             subtitle={`${formatDate(note.session_date, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · ${note.author_name}`}
             actions={
               <>
+                <DocumentLanguageSelect value={language} onChange={setLanguage} />
                 <Button icon="print" onClick={() => window.print()}>
-                  Imprimir
+                  Print
                 </Button>
                 {!note.is_locked && (
-                  <ButtonLink to={`/app/notas/${note.id}/editar`} icon="edit">
-                    Editar
+                  <ButtonLink to={`/app/notes/${note.id}/edit`} icon="edit">
+                    Edit
                   </ButtonLink>
                 )}
                 {detail.canSign && (
                   <Button variant="primary" icon="pen" onClick={onSign} loading={sign.pending}>
-                    Firmar nota
+                    Sign note
                   </Button>
                 )}
               </>
@@ -81,67 +87,68 @@ export default function NoteViewPage() {
 
           {!note.is_locked && (
             <div className="risk-banner no-print">
-              <Alert tone="warning" title="Borrador sin firmar">
-                Puede editarse hasta que la firmes. La política de la clínica sugiere firmar dentro de las {detail.lockHours} horas
-                siguientes a la sesión.
+              <Alert tone="warning" title="Unsigned draft">
+                You can edit it until you sign it. Clinic policy suggests signing within {detail.lockHours} hours
+                of the session.
               </Alert>
             </div>
           )}
 
-          <article className="document-sheet">
+          <article className="document-sheet" lang={language}>
             <header className="document-sheet__head">
               <div>
-                <p className="serif document-sheet__clinic">
-                  {detail.clinic.name}
-                </p>
-                <p className="xsmall muted">
-                  {[detail.clinic.address, detail.clinic.phone].filter(Boolean).join(' · ')}
+                <p className="serif document-sheet__clinic">{detail.clinic.name}</p>
+                <p className="xsmall muted">{[detail.clinic.address, detail.clinic.phone].filter(Boolean).join(' · ')}</p>
+                <p className="document-sheet__title">
+                  {t.note.title(note.session_number)} · {formatDate(note.session_date, { day: 'numeric', month: 'long', year: 'numeric' }, t.locale)}
                 </p>
               </div>
               <div className="cluster cluster--end">
-                <Badge>{labelOf(meta?.noteFormats, note.format).split(' (')[0]}</Badge>
-                <Badge tone={RISK_TONE[note.risk_level]}>Riesgo {labelOf(meta?.riskLevels, note.risk_level).toLowerCase()}</Badge>
-                {note.is_locked ? <Badge tone="success">Firmada</Badge> : <Badge tone="warning">Borrador</Badge>}
+                <Badge>{t.note.formats[note.format] ?? note.format}</Badge>
+                <Badge tone={RISK_TONE[note.risk_level]}>
+                  {t.note.risk}: {t.note.riskLevels[note.risk_level] ?? note.risk_level}
+                </Badge>
+                {note.is_locked ? <Badge tone="success">{t.note.signed}</Badge> : <Badge tone="warning">{t.note.draft}</Badge>}
               </div>
             </header>
 
             <dl className="facts document-sheet__facts">
               <div>
-                <dt>Paciente</dt>
+                <dt>{t.patient}</dt>
                 <dd>
-                  <Link to={`/app/pacientes/${note.patient_id}`}>{fullName(note)}</Link>
+                  <Link to={`/app/patients/${note.patient_id}`}>{fullName(note)}</Link>
                 </dd>
               </div>
               <div>
-                <dt>Historia</dt>
+                <dt>{t.recordNumber}</dt>
                 <dd>{note.record_number}</dd>
               </div>
               <div>
-                <dt>Edad</dt>
-                <dd>{ageFrom(note.birth_date) ?? '—'}</dd>
+                <dt>{t.age}</dt>
+                <dd>{ageFrom(note.birth_date) !== null ? t.yearsOld(ageFrom(note.birth_date) as number) : '—'}</dd>
               </div>
               <div>
-                <dt>Ánimo percibido</dt>
+                <dt>{t.note.mood}</dt>
                 <dd>{note.mood_score !== null ? `${note.mood_score} / 10` : '—'}</dd>
               </div>
             </dl>
 
-            {LABELS[note.format]?.map(([label, key]) => (
-              <section key={key} className="prose-block">
-                <h3>{label}</h3>
+            {SECTIONS[note.format]?.map(([section, key]) => (
+              <section key={section} className="prose-block">
+                <h3>{t.note.sections[section]}</h3>
                 <p>{(note[key] as string | null) || '—'}</p>
               </section>
             ))}
 
             {note.interventions && (
               <section className="prose-block">
-                <h3>Intervenciones</h3>
-                <p>{note.interventions}</p>
+                <h3>{t.note.interventions}</h3>
+                <p>{translateInterventions(note.interventions, language)}</p>
               </section>
             )}
             {note.homework && (
               <section className="prose-block">
-                <h3>Tareas acordadas</h3>
+                <h3>{t.note.homework}</h3>
                 <p>{note.homework}</p>
               </section>
             )}
@@ -150,8 +157,10 @@ export default function NoteViewPage() {
               <p>
                 <strong>{note.author_name}</strong>
               </p>
-              <p className="muted">Registro profesional {note.license_number || '—'}</p>
-              {note.is_locked && <p className="muted">Firmada electrónicamente el {formatDateTime(note.locked_at)}</p>}
+              <p className="muted">
+                {t.professionalLicense} {note.license_number || '—'}
+              </p>
+              {note.is_locked && <p className="muted">{t.note.signedOn(formatDateTime(note.locked_at, t.locale))}</p>}
             </footer>
           </article>
         </>

@@ -8,19 +8,19 @@ import { DocumentTable } from '../components/DocumentTable';
 import { DocumentUpload } from '../components/DocumentUpload';
 
 export default function DocumentsPage() {
-  useDocumentTitle('Documentos');
+  useDocumentTitle('Documents');
   const query = useQuery({ queryKey: ['documents'], queryFn: () => get<DocumentRow[]>('/api/documents') });
 
   return (
     <>
-      <PageHeader title="Documentos" subtitle="Repositorio de informes, remisiones y soportes. Cada descarga queda registrada en la auditoría." />
+      <PageHeader title="Documents" subtitle="Your library of reports, referrals and supporting files. Every download is recorded in the audit log." />
       <div className="layout-aside">
-        <Panel flush title="Repositorio" titleId="repositorio">
+        <Panel flush title="Library" titleId="library">
           <QueryState isPending={query.isPending} error={query.error} onRetry={query.refetch}>
             <DocumentTable documents={query.data ?? []} showPatient />
           </QueryState>
         </Panel>
-        <Panel title="Subir documento" titleId="subir">
+        <Panel title="Upload a document" titleId="upload">
           <DocumentUpload />
         </Panel>
       </div>

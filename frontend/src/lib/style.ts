@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 
-/** Variables CSS tipadas para escalonar entradas y transiciones. */
+/** Typed CSS variables for staggering entrances and transitions. */
 export function cssVars(vars: Record<`--${string}`, string | number>): CSSProperties {
   return vars as CSSProperties;
 }

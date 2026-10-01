@@ -3,16 +3,16 @@ import { useToast } from '@/components/ui/Feedback';
 import type { MutationResult } from '@/lib/api';
 
 interface Options<TResult> {
-  /** Consultas que deben refrescarse tras la accion. */
+  /** Queries to refresh after the action. */
   invalidate?: QueryKey[];
-  /** Mensaje si el backend no devuelve uno propio. */
+  /** Message used when the backend does not return its own. */
   success?: string;
   onSuccess?: (result: MutationResult<TResult>) => void;
 }
 
 /**
- * Accion puntual (firmar, cambiar estado, eliminar...) con aviso de exito o
- * error y refresco de las consultas afectadas.
+ * One-off action (sign, change status, delete...) with a success or error
+ * toast and a refresh of the affected queries.
  */
 export function useAction<TVars, TResult = unknown>(
   action: (vars: TVars) => Promise<MutationResult<TResult>>,
@@ -24,7 +24,7 @@ export function useAction<TVars, TResult = unknown>(
   const mutation = useMutation({
     mutationFn: action,
     onSuccess: async (result) => {
-      toast.success(result.message ?? success ?? 'Listo.');
+      toast.success(result.message ?? success ?? 'Done.');
       await Promise.all(invalidate.map((queryKey) => queryClient.invalidateQueries({ queryKey })));
       onSuccess?.(result);
     },
@@ -34,7 +34,7 @@ export function useAction<TVars, TResult = unknown>(
   return { run: mutation.mutateAsync, pending: mutation.isPending };
 }
 
-/** Refresca consultas tras guardar un formulario (los formularios gestionan sus errores). */
+/** Refreshes queries after a form is saved (forms handle their own errors). */
 export function useInvalidate() {
   const queryClient = useQueryClient();
   return (...keys: QueryKey[]) => Promise.all(keys.map((queryKey) => queryClient.invalidateQueries({ queryKey })));

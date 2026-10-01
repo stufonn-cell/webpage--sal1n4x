@@ -25,18 +25,18 @@ export default function InvoiceFormPage() {
   const toast = useToast();
   const invalidate = useInvalidate();
   const currency = meta?.settings.currency ?? 'COP';
-  useDocumentTitle('Nueva factura');
+  useDocumentTitle('New invoice');
 
   const [lines, setLines] = useState<Line[]>([
-    { key: 1, description: 'Sesión de psicoterapia', quantity: '1', unit_price: String(meta?.settings.default_fee ?? '') },
+    { key: 1, description: 'Psychotherapy session', quantity: '1', unit_price: String(meta?.settings.default_fee ?? '') },
   ]);
 
   const form = useForm({
-    initial: { patient_id: params.get('paciente') ?? '', issued_at: toISODate(new Date()), due_at: '', tax_rate: '0', notes: '' },
+    initial: { patient_id: params.get('patient') ?? '', issued_at: toISODate(new Date()), due_at: '', tax_rate: '0', notes: '' },
     validate: (values) => {
       const errors: Record<string, string> = {};
-      if (!values.patient_id) errors.patient_id = 'Elige a quién se factura.';
-      if (!lines.some((line) => line.description.trim())) errors.items = 'Agrega al menos un concepto.';
+      if (!values.patient_id) errors.patient_id = 'Choose who the invoice is for.';
+      if (!lines.some((line) => line.description.trim())) errors.items = 'Add at least one item.';
       return errors;
     },
     onSubmit: async (values) => {
@@ -44,9 +44,9 @@ export default function InvoiceFormPage() {
         ...values,
         items: lines.map(({ description, quantity, unit_price }) => ({ description, quantity, unit_price })),
       });
-      toast.success(result.message ?? 'Factura generada.');
+      toast.success(result.message ?? 'Invoice created.');
       await invalidate(['invoices'], ['dashboard'], ['meta'], ['patient', values.patient_id]);
-      navigate(`/app/facturacion/${result.data.id}`);
+      navigate(`/app/billing/${result.data.id}`);
     },
   });
 
@@ -58,25 +58,25 @@ export default function InvoiceFormPage() {
 
   return (
     <>
-      <PageHeader back={{ to: '/app/facturacion', label: 'Facturación' }} title="Nueva factura" subtitle={meta ? `Se emitirá como ${meta.nextInvoiceNumber}` : undefined} />
+      <PageHeader back={{ to: '/app/billing', label: 'Billing' }} title="New invoice" subtitle={meta ? `It will be issued as ${meta.nextInvoiceNumber}` : undefined} />
       <form onSubmit={form.handleSubmit} noValidate>
         <Panel>
           <FormAlert message={form.formError} />
           <div className="form-grid">
             <SelectField
-              label="Paciente"
-              placeholder="Elige un paciente"
+              label="Patient"
+              placeholder="Choose a patient"
               wrapperClassName="span-full"
               options={(meta?.patients ?? []).map((item) => ({ value: String(item.id), label: item.label }))}
               {...form.bind('patient_id')}
             />
-            <TextField label="Fecha de emisión" type="date" {...form.bind('issued_at')} />
-            <TextField label="Vence" type="date" optional {...form.bind('due_at')} />
-            <TextField label="Impuesto (%)" type="number" min={0} max={100} step={0.5} {...form.bind('tax_rate')} />
+            <TextField label="Issue date" type="date" {...form.bind('issued_at')} />
+            <TextField label="Due date" type="date" optional {...form.bind('due_at')} />
+            <TextField label="Tax (%)" type="number" min={0} max={100} step={0.5} {...form.bind('tax_rate')} />
           </div>
 
           <div className="form-section">
-            <h2 className="form-section__title">Conceptos</h2>
+            <h2 className="form-section__title">Items</h2>
             {form.errors.items && (
               <p className="field__error" role="alert" id="items">
                 {form.errors.items}
@@ -86,14 +86,14 @@ export default function InvoiceFormPage() {
               <table className="table invoice-lines">
                 <thead>
                   <tr>
-                    <th scope="col">Descripción</th>
-                    <th scope="col">Cantidad</th>
-                    <th scope="col">Valor unitario</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Unit price</th>
                     <th scope="col" className="num">
-                      Importe
+                      Amount
                     </th>
                     <th scope="col">
-                      <span className="visually-hidden">Quitar</span>
+                      <span className="visually-hidden">Remove</span>
                     </th>
                   </tr>
                 </thead>
@@ -103,7 +103,7 @@ export default function InvoiceFormPage() {
                       <td>
                         <input
                           className="input"
-                          aria-label={`Descripción del concepto ${index + 1}`}
+                          aria-label={`Description for item ${index + 1}`}
                           value={line.description}
                           onChange={(event) => updateLine(line.key, 'description', event.target.value)}
                         />
@@ -114,7 +114,7 @@ export default function InvoiceFormPage() {
                           type="number"
                           min={0}
                           step={1}
-                          aria-label={`Cantidad del concepto ${index + 1}`}
+                          aria-label={`Quantity for item ${index + 1}`}
                           value={line.quantity}
                           onChange={(event) => updateLine(line.key, 'quantity', event.target.value)}
                         />
@@ -125,7 +125,7 @@ export default function InvoiceFormPage() {
                           type="number"
                           min={0}
                           step={1000}
-                          aria-label={`Valor unitario del concepto ${index + 1}`}
+                          aria-label={`Unit price for item ${index + 1}`}
                           value={line.unit_price}
                           onChange={(event) => updateLine(line.key, 'unit_price', event.target.value)}
                         />
@@ -137,7 +137,7 @@ export default function InvoiceFormPage() {
                           variant="quiet"
                           iconOnly
                           icon="trash"
-                          aria-label={`Quitar el concepto ${index + 1}`}
+                          aria-label={`Remove item ${index + 1}`}
                           disabled={lines.length === 1}
                           onClick={() => setLines((current) => current.filter((item) => item.key !== line.key))}
                         />
@@ -153,7 +153,7 @@ export default function InvoiceFormPage() {
               variant="quiet"
               onClick={() => setLines((current) => [...current, { key: Date.now(), description: '', quantity: '1', unit_price: '' }])}
             >
-              Agregar concepto
+              Add item
             </Button>
 
             <div className="totals">
@@ -162,7 +162,7 @@ export default function InvoiceFormPage() {
                 <span className="tabular">{formatMoney(subtotal, currency)}</span>
               </div>
               <div>
-                <span>Impuesto</span>
+                <span>Tax</span>
                 <span className="tabular">{formatMoney(tax, currency)}</span>
               </div>
               <div className="totals__grand">
@@ -173,15 +173,15 @@ export default function InvoiceFormPage() {
           </div>
 
           <div className="form-section">
-            <TextAreaField label="Observaciones" optional rows={2} {...form.bind('notes')} />
+            <TextAreaField label="Notes" optional rows={2} {...form.bind('notes')} />
           </div>
 
           <div className="form-actions">
-            <ButtonLink to="/app/facturacion" variant="quiet">
-              Cancelar
+            <ButtonLink to="/app/billing" variant="quiet">
+              Cancel
             </ButtonLink>
-            <Button type="submit" variant="primary" loading={form.submitting} loadingLabel="Generando">
-              Generar factura
+            <Button type="submit" variant="primary" loading={form.submitting} loadingLabel="Creating">
+              Create invoice
             </Button>
           </div>
         </Panel>

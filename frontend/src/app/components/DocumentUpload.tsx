@@ -11,7 +11,7 @@ import { useInvalidate } from '../useAction';
 const ACCEPT = '.pdf,.png,.jpg,.jpeg,.txt,.doc,.docx';
 const MAX_BYTES = 10 * 1024 * 1024;
 
-/** Carga de documentos con arrastrar y soltar. Si hay paciente fijo no se pide. */
+/** Drag-and-drop document upload. When the patient is fixed, it isn't asked for. */
 export function DocumentUpload({ patientId }: { patientId?: number }) {
   const { data: meta } = useMeta();
   const toast = useToast();
@@ -29,7 +29,7 @@ export function DocumentUpload({ patientId }: { patientId?: number }) {
   const pick = (selected: File | undefined) => {
     if (!selected) return;
     if (selected.size > MAX_BYTES) {
-      setErrors({ document: `El archivo pesa ${formatBytes(selected.size)}. El máximo es 10 MB.` });
+      setErrors({ document: `This file is ${formatBytes(selected.size)}. The maximum is 10 MB.` });
       return;
     }
     setErrors({});
@@ -45,8 +45,8 @@ export function DocumentUpload({ patientId }: { patientId?: number }) {
 
   const submit = async () => {
     const nextErrors: Record<string, string> = {};
-    if (!patient) nextErrors.patient_id = 'Elige un paciente.';
-    if (!file) nextErrors.document = 'Elige un archivo.';
+    if (!patient) nextErrors.patient_id = 'Choose a patient.';
+    if (!file) nextErrors.document = 'Choose a file.';
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0 || !file) return;
 
@@ -60,7 +60,7 @@ export function DocumentUpload({ patientId }: { patientId?: number }) {
     setFormError('');
     try {
       const result = await request<{ message?: string }>('/api/documents', { method: 'POST', body });
-      toast.success(result.message ?? 'Documento adjuntado.');
+      toast.success(result.message ?? 'Document attached.');
       setFile(null);
       setTitle('');
       if (inputRef.current) inputRef.current.value = '';
@@ -80,9 +80,9 @@ export function DocumentUpload({ patientId }: { patientId?: number }) {
       <FormAlert message={formError} />
       {!patientId && (
         <SelectField
-          label="Paciente"
+          label="Patient"
           id="patient_id"
-          placeholder="Elige un paciente"
+          placeholder="Choose a patient"
           value={patient}
           onChange={(event) => setPatient(event.target.value)}
           options={(meta?.patients ?? []).map((item) => ({ value: String(item.id), label: item.label }))}
@@ -105,10 +105,10 @@ export function DocumentUpload({ patientId }: { patientId?: number }) {
             <strong>{file.name}</strong> <span className="muted">· {formatBytes(file.size)}</span>
           </p>
         ) : (
-          <p>Arrastra un archivo aquí o</p>
+          <p>Drag a file here or</p>
         )}
         <label className="btn btn--sm" htmlFor="document">
-          {file ? 'Cambiar archivo' : 'Elegir archivo'}
+          {file ? 'Change file' : 'Choose file'}
         </label>
         <input
           ref={inputRef}
@@ -118,7 +118,7 @@ export function DocumentUpload({ patientId }: { patientId?: number }) {
           accept={ACCEPT}
           onChange={(event) => pick(event.target.files?.[0])}
         />
-        <span className="field__hint">PDF, imagen, texto o Word. Máximo 10 MB.</span>
+        <span className="field__hint">PDF, image, text or Word. 10 MB max.</span>
         {errors.document && (
           <span className="field__error" role="alert">
             {errors.document}
@@ -126,17 +126,17 @@ export function DocumentUpload({ patientId }: { patientId?: number }) {
         )}
       </div>
 
-      <TextField label="Título" id="doc-title" value={title} onChange={(event) => setTitle(event.target.value)} />
+      <TextField label="Title" id="doc-title" value={title} onChange={(event) => setTitle(event.target.value)} />
       <SelectField
-        label="Categoría"
+        label="Category"
         id="doc-category"
         value={category}
         onChange={(event) => setCategory(event.target.value)}
         options={meta?.documentCategories ?? []}
       />
       <div>
-        <Button variant="primary" icon="upload" onClick={submit} loading={sending} loadingLabel="Subiendo">
-          Adjuntar documento
+        <Button variant="primary" icon="upload" onClick={submit} loading={sending} loadingLabel="Uploading">
+          Attach document
         </Button>
       </div>
     </div>

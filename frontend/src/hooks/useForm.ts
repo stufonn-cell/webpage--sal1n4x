@@ -10,8 +10,8 @@ interface Options<T extends Values> {
 }
 
 /**
- * Estado de formulario sin dependencias: valores, errores por campo (los del
- * cliente y los que devuelve la API con 422) y estado de envio.
+ * Dependency-free form state: values, per-field errors (from the client and
+ * those the API returns with 422) and submitting state.
  */
 export function useForm<T extends Values>({ initial, validate, onSubmit }: Options<T>) {
   const [values, setValues] = useState<T>(initial);
@@ -62,7 +62,7 @@ export function useForm<T extends Values>({ initial, validate, onSubmit }: Optio
           setFormError(error.message);
           focusFirstError(error.fields);
         } else {
-          setFormError('Algo salió mal de nuestro lado. Intenta de nuevo en unos minutos.');
+          setFormError('Something went wrong on our side. Please try again in a few minutes.');
         }
       } finally {
         setSubmitting(false);

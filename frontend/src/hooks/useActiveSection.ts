@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-/** Devuelve el id de la seccion que ocupa la franja central de la pantalla. */
+/** Returns the id of the section that fills the middle band of the screen. */
 export function useActiveSection(ids: string[]): string {
   const [active, setActive] = useState('');
   const key = ids.join('|');

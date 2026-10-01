@@ -1,6 +1,6 @@
 /**
- * Iconos de trazo fino, dibujados en linea para no depender de una libreria.
- * Se usan con moderacion: acompanan texto, casi nunca lo reemplazan.
+ * Thin-stroke icons, drawn inline so we don't depend on a library.
+ * Used sparingly: they accompany text and almost never replace it.
  */
 
 const PATHS = {

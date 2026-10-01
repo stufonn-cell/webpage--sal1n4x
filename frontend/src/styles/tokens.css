@@ -1,16 +1,16 @@
 /*
- * PsiClinic - tokens del sistema de diseno.
- * Hecho por Salinas | github.com/stufonn-cell
+ * PsiClinic - design system tokens.
+ * Made by Salinas | github.com/stufonn-cell
  *
- * Unica fuente de colores, tipografia, espaciado, radios, sombras y
- * movimiento. Ningun componente debe usar valores sueltos.
+ * Single source for colors, typography, spacing, radii, shadows and
+ * motion. No component should use one-off values.
  *
- * Breakpoints (las media queries no aceptan variables, se usan literales):
+ * Breakpoints (media queries do not accept variables, so literals are used):
  *   sm 640px  · md 900px  · lg 1200px
  */
 
 :root {
-  /* Papel calido en lugar de blanco clinico; tinta verde muy oscura. */
+  /* Warm paper instead of clinical white; very dark green ink. */
   --paper: #f6f4ef;
   --surface: #fffdf9;
   --surface-sunk: #efece5;
@@ -21,14 +21,14 @@
   --line: #e2ddd3;
   --line-strong: #cbc4b6;
 
-  /* Salvia profunda: calma y seriedad sin el azul "tecnologico". */
+  /* Deep sage: calm and serious without the "tech" blue. */
   --primary: #2f5d54;
   --primary-hover: #254b44;
   --primary-soft: #e2ebe7;
   --primary-softer: #eef3f0;
   --on-primary: #ffffff;
 
-  /* Arcilla: solo para detalles, nunca para superficies grandes. */
+  /* Clay: only for details, never for large surfaces. */
   --accent: #9c4f33;
   --accent-soft: #f4e5dd;
 
@@ -43,8 +43,9 @@
 
   --focus-ring: 0 0 0 3px color-mix(in srgb, var(--primary) 35%, transparent);
 
-  --font-sans: 'Source Sans 3 Variable', 'Source Sans 3', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --font-serif: 'Newsreader Variable', 'Newsreader', Georgia, 'Times New Roman', serif;
+  /* Text: Atkinson Hyperlegible Next. Headings: Literata (see fonts.css). */
+  --font-sans: 'Atkinson Hyperlegible Next Variable', 'Atkinson Hyperlegible Next', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Literata Variable', 'Literata', Georgia, 'Times New Roman', serif;
 
   --text-xs: 0.8125rem;
   --text-sm: 0.875rem;

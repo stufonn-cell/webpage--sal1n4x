@@ -7,13 +7,13 @@ interface QuestionnaireProps {
   answers: Record<number, number>;
   onAnswer: (index: number, value: number) => void;
   highlightMissing?: boolean;
-  /** Version para pacientes: lenguaje mas cercano y sin marcar items criticos. */
+  /** Patient version: friendlier language and no critical item markers. */
   audience?: 'clinician' | 'patient';
 }
 
 /**
- * Escala tipo Likert accesible: cada item es un grupo de radios con su
- * leyenda. En movil las opciones se apilan como botones amplios.
+ * Accessible Likert-style scale: each item is a radio group with its own
+ * legend. On mobile the options stack as large buttons.
  */
 export function Questionnaire({ instrument, answers, onAnswer, highlightMissing, audience = 'clinician' }: QuestionnaireProps) {
   const answered = Object.keys(answers).length;
@@ -24,11 +24,11 @@ export function Questionnaire({ instrument, answers, onAnswer, highlightMissing,
       <div className="questionnaire__progress" aria-live="polite">
         <div className="split">
           <span className="small soft">
-            {answered === total ? 'Todas las preguntas respondidas' : `${answered} de ${total} respondidas`}
+            {answered === total ? 'All questions answered' : `${answered} of ${total} answered`}
           </span>
           <span className="xsmall muted">{instrument.window}</span>
         </div>
-        <Progress value={answered} max={total} label="Progreso del cuestionario" />
+        <Progress value={answered} max={total} label="Questionnaire progress" />
       </div>
 
       <ol className="questionnaire__items">
@@ -46,10 +46,10 @@ export function Questionnaire({ instrument, answers, onAnswer, highlightMissing,
                   <span className="likert__number">{index + 1}</span>
                   <span>
                     {item}
-                    {critical && <span className="likert__critical"> · ítem crítico</span>}
+                    {critical && <span className="likert__critical"> · critical item</span>}
                   </span>
                 </legend>
-                {missing && <p className="field__error">Falta responder esta pregunta.</p>}
+                {missing && <p className="field__error">This question still needs an answer.</p>}
                 <div className="likert__options">
                   {instrument.scale.map((option) => (
                     <label key={option.value} className="likert__option">

@@ -9,33 +9,36 @@ import { formatDateTime } from '@/lib/format';
 import type { AuditEntry } from '@/lib/types';
 
 const ACTIONS: Record<string, string> = {
-  login: 'Inició sesión',
-  logout: 'Cerró sesión',
-  view: 'Consultó',
-  create: 'Creó',
-  update: 'Modificó',
-  delete: 'Eliminó',
-  sign: 'Firmó',
-  upload: 'Subió',
-  download: 'Descargó',
-  payment: 'Registró un pago en',
-  assign: 'Asignó',
-  submit: 'Respondió',
-  toggle: 'Cambió el estado de',
+  login: 'Signed in as',
+  logout: 'Signed out as',
+  view: 'Viewed',
+  create: 'Created',
+  update: 'Updated',
+  delete: 'Deleted',
+  sign: 'Signed',
+  upload: 'Uploaded',
+  download: 'Downloaded',
+  payment: 'Recorded a payment on',
+  assign: 'Assigned',
+  submit: 'Submitted',
+  toggle: 'Changed the status of',
+  status: 'Changed the status of',
+  send: 'Sent',
 };
 
 const ENTITIES: Record<string, string> = {
-  user: 'usuario',
-  patient: 'paciente',
-  appointment: 'cita',
-  clinical_note: 'nota clínica',
-  assessment: 'evaluación',
-  consent: 'consentimiento',
-  document: 'documento',
-  invoice: 'factura',
-  settings: 'configuración',
-  diagnosis: 'diagnóstico',
-  appointment_request: 'solicitud de cita',
+  user: 'user',
+  patient: 'patient',
+  appointment: 'appointment',
+  clinical_note: 'session note',
+  assessment: 'assessment',
+  consent: 'consent',
+  document: 'document',
+  invoice: 'invoice',
+  settings: 'settings',
+  diagnosis: 'diagnosis',
+  appointment_request: 'appointment request',
+  rips_report: 'RIPS report',
 };
 
 function describe(entry: AuditEntry): string {
@@ -47,7 +50,7 @@ function describe(entry: AuditEntry): string {
 }
 
 export default function AuditPage() {
-  useDocumentTitle('Auditoría');
+  useDocumentTitle('Audit log');
   const [filter, setFilter] = useState('');
   const query = useQuery({ queryKey: ['audit'], queryFn: () => get<AuditEntry[]>('/api/audit') });
 
@@ -59,9 +62,9 @@ export default function AuditPage() {
 
   return (
     <>
-      <PageHeader title="Registro de auditoría" subtitle="Las últimas 150 acciones sobre la historia clínica. Este registro no se puede modificar desde la aplicación." />
+      <PageHeader title="Audit log" subtitle="The latest 150 actions on clinical records. This log can't be changed from the app." />
       <div className="toolbar" role="search">
-        <TextField wrapperClassName="toolbar__search" label="Filtrar" id="audit-filter" type="search" placeholder="Persona o acción" value={filter} onChange={(event) => setFilter(event.target.value)} />
+        <TextField wrapperClassName="toolbar__search" label="Filter" id="audit-filter" type="search" placeholder="Person or action" value={filter} onChange={(event) => setFilter(event.target.value)} />
       </div>
       <Panel flush>
         <QueryState isPending={query.isPending} error={query.error} onRetry={query.refetch}>
@@ -69,9 +72,9 @@ export default function AuditPage() {
             <table className="table table--stack">
               <thead>
                 <tr>
-                  <th scope="col">Fecha</th>
-                  <th scope="col">Persona</th>
-                  <th scope="col">Acción</th>
+                  <th scope="col">Date</th>
+                  <th scope="col">Person</th>
+                  <th scope="col">Action</th>
                   <th scope="col">IP</th>
                 </tr>
               </thead>
@@ -79,8 +82,8 @@ export default function AuditPage() {
                 {rows.map((entry) => (
                   <tr key={entry.id}>
                     <td className="tabular">{formatDateTime(entry.created_at)}</td>
-                    <td data-label="Persona">{entry.full_name ?? 'Visitante del sitio'}</td>
-                    <td data-label="Acción">{describe(entry)}</td>
+                    <td data-label="Person">{entry.full_name ?? 'Website visitor'}</td>
+                    <td data-label="Action">{describe(entry)}</td>
                     <td data-label="IP" className="muted tabular">
                       {entry.ip_address ?? '—'}
                     </td>

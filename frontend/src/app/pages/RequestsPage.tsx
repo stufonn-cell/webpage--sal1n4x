@@ -12,12 +12,12 @@ import { labelOf, REQUEST_STATUS_TONE, useMeta } from '@/lib/meta';
 import type { AppointmentRequest, Page } from '@/lib/types';
 import { useAction } from '../useAction';
 
-/** Solicitudes que llegan desde el formulario publico del sitio. */
+/** Requests that come in from the public website form. */
 export default function RequestsPage() {
   const { data: meta } = useMeta();
   const [status, setStatus] = useState('new');
   const [page, setPage] = useState(1);
-  useDocumentTitle('Solicitudes de cita');
+  useDocumentTitle('Appointment requests');
 
   const query = useQuery({
     queryKey: ['requests', status, page],
@@ -36,18 +36,18 @@ export default function RequestsPage() {
           .split(',')
           .map((time) => labelOf(meta?.requestTimes, time))
           .join(', ')
-      : 'Sin preferencia';
+      : 'No preference';
 
   return (
     <>
       <PageHeader
-        title="Solicitudes de cita"
-        subtitle="Personas que escribieron desde el sitio. Contáctalas por el medio que eligieron y, si corresponde, crea su ficha y agenda la cita."
+        title="Appointment requests"
+        subtitle="People who reached out through the website. Contact them the way they chose and, when it makes sense, create their file and book the appointment."
       />
 
       <div className="toolbar">
         <SelectField
-          label="Estado"
+          label="Status"
           id="status-filter"
           value={status}
           onChange={(event) => {
@@ -55,7 +55,7 @@ export default function RequestsPage() {
             setPage(1);
           }}
           options={meta?.requestStatuses ?? []}
-          placeholder="Todas"
+          placeholder="All"
         />
       </div>
 
@@ -64,8 +64,8 @@ export default function RequestsPage() {
           {query.data && query.data.rows.length === 0 ? (
             <EmptyState
               icon="inbox"
-              title={status === 'new' ? 'No hay solicitudes nuevas' : 'No hay solicitudes con este estado'}
-              text="Cuando alguien pida una cita desde el sitio aparecerá aquí."
+              title={status === 'new' ? 'No new requests' : 'No requests with this status'}
+              text="When someone asks for an appointment through the website, it will show up here."
             />
           ) : (
             <ul className="list">
@@ -81,7 +81,7 @@ export default function RequestsPage() {
                       <span>{labelOf(meta?.requestAttendees, row.attendee)}</span>
                       <span>· {labelOf(meta?.requestModalities, row.modality)}</span>
                       <span>· {times(row.preferred_times)}</span>
-                      {row.professional_name && <span>· Prefiere a {row.professional_name}</span>}
+                      {row.professional_name && <span>· Prefers {row.professional_name}</span>}
                     </div>
                     {row.message && <p className="small prewrap">“{row.message}”</p>}
                     <div className="cluster small">
@@ -93,39 +93,39 @@ export default function RequestsPage() {
                           <Icon name="phone" size={14} /> {row.phone}
                         </a>
                       )}
-                      <span className="muted">Prefiere: {labelOf(meta?.requestContact, row.contact_preference)}</span>
+                      <span className="muted">Prefers: {labelOf(meta?.requestContact, row.contact_preference)}</span>
                     </div>
                     {row.handled_by_name && (
                       <span className="xsmall muted">
-                        Gestionada por {row.handled_by_name} · {formatDateTime(row.handled_at)}
+                        Handled by {row.handled_by_name} · {formatDateTime(row.handled_at)}
                       </span>
                     )}
                   </div>
                   <div className="cluster request-row__actions">
                     {row.status === 'new' && (
                       <Button size="sm" onClick={() => update.run({ id: row.id, next: 'contacted' })} disabled={update.pending}>
-                        Marcar contactada
+                        Mark as contacted
                       </Button>
                     )}
                     {row.status !== 'scheduled' && row.status !== 'dismissed' && (
                       <ButtonLink
                         size="sm"
                         variant="primary"
-                        to="/app/pacientes/nuevo"
-                        // Los datos viajan en el estado del router, nunca en la URL.
+                        to="/app/patients/new"
+                        // The details travel in router state, never in the URL.
                         state={{ prefill: { full_name: row.full_name, email: row.email, phone: row.phone ?? '' }, requestId: row.id }}
                       >
-                        Crear ficha
+                        Create patient file
                       </ButtonLink>
                     )}
                     {row.status !== 'scheduled' && (
                       <Button size="sm" variant="quiet" onClick={() => update.run({ id: row.id, next: 'scheduled' })} disabled={update.pending}>
-                        Cita agendada
+                        Appointment booked
                       </Button>
                     )}
                     {row.status !== 'dismissed' && (
                       <Button size="sm" variant="quiet" onClick={() => update.run({ id: row.id, next: 'dismissed' })} disabled={update.pending}>
-                        Descartar
+                        Dismiss
                       </Button>
                     )}
                   </div>

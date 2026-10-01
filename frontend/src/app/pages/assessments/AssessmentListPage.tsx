@@ -6,22 +6,22 @@ import { SelectField } from '@/components/ui/Field';
 import { Pagination, QueryState } from '@/components/ui/Feedback';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { get } from '@/lib/api';
-import { formatDate, fullName, pretty } from '@/lib/format';
+import { formatDate, fullName } from '@/lib/format';
 import { severityTone, useMeta } from '@/lib/meta';
 import type { Assessment, Page } from '@/lib/types';
 
 const STATUS_OPTIONS = [
-  { value: 'completed', label: 'Respondidas' },
-  { value: 'pending', label: 'Pendientes' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'pending', label: 'Pending' },
 ];
 
 export default function AssessmentListPage() {
   const { data: meta } = useMeta();
   const [params, setParams] = useSearchParams();
-  const instrument = params.get('instrumento') ?? '';
+  const instrument = params.get('instrument') ?? '';
   const status = params.get('status') ?? '';
   const page = Number(params.get('page') ?? 1);
-  useDocumentTitle('Evaluaciones');
+  useDocumentTitle('Assessments');
 
   const query = useQuery({
     queryKey: ['assessments', instrument, status, page],
@@ -40,67 +40,67 @@ export default function AssessmentListPage() {
   return (
     <>
       <PageHeader
-        title="Evaluaciones psicométricas"
-        subtitle="Corrección automática con bandas de severidad. Los puntajes orientan y no sustituyen el juicio clínico."
+        title="Psychometric assessments"
+        subtitle="Automatic scoring with severity bands. Scores guide you; they don't replace clinical judgment."
         actions={
           <>
-            <ButtonLink to="/app/evaluaciones/catalogo" icon="clipboard">
-              Catálogo
+            <ButtonLink to="/app/assessments/catalog" icon="clipboard">
+              Catalog
             </ButtonLink>
-            <ButtonLink to="/app/evaluaciones/nueva" variant="primary" icon="plus">
-              Aplicar instrumento
+            <ButtonLink to="/app/assessments/new" variant="primary" icon="plus">
+              Administer instrument
             </ButtonLink>
           </>
         }
       />
       <div className="toolbar">
         <SelectField
-          label="Instrumento"
+          label="Instrument"
           id="filter-instrument"
           value={instrument}
-          onChange={(event) => update('instrumento', event.target.value)}
+          onChange={(event) => update('instrument', event.target.value)}
           options={meta?.instruments ?? []}
-          placeholder="Todos"
+          placeholder="All"
         />
-        <SelectField label="Estado" id="filter-status" value={status} onChange={(event) => update('status', event.target.value)} options={STATUS_OPTIONS} placeholder="Todas" />
+        <SelectField label="Status" id="filter-status" value={status} onChange={(event) => update('status', event.target.value)} options={STATUS_OPTIONS} placeholder="All" />
       </div>
       <Panel flush>
         <QueryState isPending={query.isPending} error={query.error} onRetry={query.refetch}>
           {query.data?.rows.length === 0 ? (
-            <EmptyState icon="chart" title="No hay evaluaciones con estos filtros" />
+            <EmptyState icon="chart" title="No assessments match these filters" />
           ) : (
             <div className="table-wrap">
               <table className="table table--stack">
                 <thead>
                   <tr>
-                    <th scope="col">Paciente</th>
-                    <th scope="col">Instrumento</th>
-                    <th scope="col">Fecha</th>
+                    <th scope="col">Patient</th>
+                    <th scope="col">Instrument</th>
+                    <th scope="col">Date</th>
                     <th scope="col" className="num">
-                      Puntaje
+                      Score
                     </th>
-                    <th scope="col">Resultado</th>
+                    <th scope="col">Result</th>
                   </tr>
                 </thead>
                 <tbody>
                   {query.data?.rows.map((row) => (
                     <tr key={row.id}>
                       <td>
-                        <Link className="table__link" to={row.status === 'completed' ? `/app/evaluaciones/${row.id}` : `/app/pacientes/${row.patient_id}?tab=evaluaciones`}>
+                        <Link className="table__link" to={row.status === 'completed' ? `/app/assessments/${row.id}` : `/app/patients/${row.patient_id}?tab=assessments`}>
                           {fullName(row)}
                         </Link>
                         <span className="table__sub">{row.record_number}</span>
                       </td>
-                      <td data-label="Instrumento">{row.instrument_code}</td>
-                      <td data-label="Fecha">{formatDate(row.administered_at ?? row.created_at)}</td>
-                      <td data-label="Puntaje" className="num">
+                      <td data-label="Instrument">{row.instrument_code}</td>
+                      <td data-label="Date">{formatDate(row.administered_at ?? row.created_at)}</td>
+                      <td data-label="Score" className="num">
                         {row.total_score ?? '—'}
                       </td>
-                      <td data-label="Resultado">
+                      <td data-label="Result">
                         {row.status === 'completed' ? (
-                          <Badge tone={severityTone(row.severity)}>{pretty(row.severity)}</Badge>
+                          <Badge tone={severityTone(row.severity)}>{row.severity}</Badge>
                         ) : (
-                          <Badge tone="warning">Pendiente</Badge>
+                          <Badge tone="warning">Pending</Badge>
                         )}
                       </td>
                     </tr>

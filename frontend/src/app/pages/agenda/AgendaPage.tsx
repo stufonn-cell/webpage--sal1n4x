@@ -21,10 +21,10 @@ interface Week {
 export default function AgendaPage() {
   const { data: meta } = useMeta();
   const [params, setParams] = useSearchParams();
-  const week = params.get('semana') ?? '';
-  const psychologist = params.get('profesional') ?? '';
+  const week = params.get('week') ?? '';
+  const psychologist = params.get('professional') ?? '';
   const today = toISODate(new Date());
-  useDocumentTitle('Agenda');
+  useDocumentTitle('Schedule');
 
   const query = useQuery({
     queryKey: ['agenda', week, psychologist],
@@ -36,7 +36,7 @@ export default function AgendaPage() {
     const next = new URLSearchParams(params);
     if (value) next.set(key, value);
     else next.delete(key);
-    setParams(next, { replace: key === 'profesional' });
+    setParams(next, { replace: key === 'professional' });
   };
 
   const data = query.data;
@@ -46,27 +46,27 @@ export default function AgendaPage() {
   return (
     <>
       <PageHeader
-        title="Agenda semanal"
-        subtitle={data ? `${range} · ${total === 1 ? '1 cita' : `${total} citas`}` : undefined}
+        title="Weekly schedule"
+        subtitle={data ? `${range} · ${total === 1 ? '1 appointment' : `${total} appointments`}` : undefined}
         actions={
-          <ButtonLink to="/app/agenda/nueva" variant="primary" icon="plus">
-            Agendar cita
+          <ButtonLink to="/app/schedule/new" variant="primary" icon="plus">
+            Book appointment
           </ButtonLink>
         }
       />
 
       <div className="toolbar">
         <div className="cluster">
-          <Button icon="chevronLeft" iconOnly aria-label="Semana anterior" onClick={() => data && go('semana', data.previous)} />
-          <Button onClick={() => go('semana', '')}>Esta semana</Button>
-          <Button icon="chevronRight" iconOnly aria-label="Semana siguiente" onClick={() => data && go('semana', data.next)} />
+          <Button icon="chevronLeft" iconOnly aria-label="Previous week" onClick={() => data && go('week', data.previous)} />
+          <Button onClick={() => go('week', '')}>This week</Button>
+          <Button icon="chevronRight" iconOnly aria-label="Next week" onClick={() => data && go('week', data.next)} />
         </div>
         <SelectField
-          label="Profesional"
+          label="Professional"
           id="agenda-psychologist"
           value={psychologist}
-          onChange={(event) => go('profesional', event.target.value)}
-          placeholder="Todo el equipo"
+          onChange={(event) => go('professional', event.target.value)}
+          placeholder="Whole team"
           options={(meta?.psychologists ?? []).map((person) => ({ value: String(person.id), label: person.full_name }))}
         />
       </div>
@@ -80,14 +80,14 @@ export default function AgendaPage() {
               return (
                 <section key={day.date} className={isToday ? 'week__day is-today' : 'week__day'} aria-label={formatDate(day.date, { weekday: 'long', day: 'numeric', month: 'long' })}>
                   <header className="week__head">
-                    <span className="week__dayname">{date?.toLocaleDateString('es-CO', { weekday: 'short' })}</span>
+                    <span className="week__dayname">{date?.toLocaleDateString('en-US', { weekday: 'short' })}</span>
                     <span className="week__date">{date?.getDate()}</span>
                   </header>
                   {day.appointments.length > 0 && (
                     <ul className="week__list">
                       {day.appointments.map((appointment) => (
                         <li key={appointment.id}>
-                          <Link className={`slot slot--${appointment.status}`} to={`/app/agenda/${appointment.id}/editar`}>
+                          <Link className={`slot slot--${appointment.status}`} to={`/app/schedule/${appointment.id}/edit`}>
                             <span className="slot__time">{formatTime(appointment.starts_at)}</span>{' '}
                             <span className="slot__meta">· {labelOf(meta?.modalities, appointment.modality)}</span>
                             <span className="slot__name">{fullName(appointment)}</span>
@@ -97,8 +97,8 @@ export default function AgendaPage() {
                       ))}
                     </ul>
                   )}
-                  <ButtonLink to={`/app/agenda/nueva?fecha=${day.date}`} size="sm" variant="quiet" icon="plus" className="week__add">
-                    Agendar
+                  <ButtonLink to={`/app/schedule/new?date=${day.date}`} size="sm" variant="quiet" icon="plus" className="week__add">
+                    Book
                   </ButtonLink>
                 </section>
               );

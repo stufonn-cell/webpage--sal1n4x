@@ -22,54 +22,70 @@ import PatientFormPage from './pages/patients/PatientFormPage';
 import PatientListPage from './pages/patients/PatientListPage';
 import PatientProfilePage from './pages/patients/PatientProfilePage';
 import RequestsPage from './pages/RequestsPage';
+import RipsListPage from './pages/rips/RipsListPage';
+import RipsReportPage from './pages/rips/RipsReportPage';
 import AuditPage from './pages/settings/AuditPage';
 import ClinicSettingsPage from './pages/settings/ClinicSettingsPage';
 import UsersPage from './pages/settings/UsersPage';
 import './app.css';
 
-/** Rutas del equipo clinico. Todas viven bajo /app y exigen sesion de staff. */
+/** Clinical team routes. They all live under /app and require a staff session. */
 export default function StaffApp() {
   return (
     <StaffLayout>
       <Routes>
         <Route index element={<DashboardPage />} />
-        <Route path="solicitudes" element={<RequestsPage />} />
+        <Route path="requests" element={<RequestsPage />} />
 
-        <Route path="pacientes" element={<PatientListPage />} />
-        <Route path="pacientes/nuevo" element={<PatientFormPage />} />
-        <Route path="pacientes/:id" element={<PatientProfilePage />} />
-        <Route path="pacientes/:id/editar" element={<PatientFormPage />} />
+        <Route path="patients" element={<PatientListPage />} />
+        <Route path="patients/new" element={<PatientFormPage />} />
+        <Route path="patients/:id" element={<PatientProfilePage />} />
+        <Route path="patients/:id/edit" element={<PatientFormPage />} />
 
-        <Route path="agenda" element={<AgendaPage />} />
-        <Route path="agenda/nueva" element={<AppointmentFormPage />} />
-        <Route path="agenda/:id/editar" element={<AppointmentFormPage />} />
+        <Route path="schedule" element={<AgendaPage />} />
+        <Route path="schedule/new" element={<AppointmentFormPage />} />
+        <Route path="schedule/:id/edit" element={<AppointmentFormPage />} />
 
-        <Route path="notas" element={<NoteListPage />} />
-        <Route path="notas/nueva" element={<NoteFormPage />} />
-        <Route path="notas/:id" element={<NoteViewPage />} />
-        <Route path="notas/:id/editar" element={<NoteFormPage />} />
+        <Route path="notes" element={<NoteListPage />} />
+        <Route path="notes/new" element={<NoteFormPage />} />
+        <Route path="notes/:id" element={<NoteViewPage />} />
+        <Route path="notes/:id/edit" element={<NoteFormPage />} />
 
-        <Route path="evaluaciones" element={<AssessmentListPage />} />
-        <Route path="evaluaciones/catalogo" element={<CatalogPage />} />
-        <Route path="evaluaciones/nueva" element={<AssessmentFormPage />} />
-        <Route path="evaluaciones/:id" element={<AssessmentViewPage />} />
+        <Route path="assessments" element={<AssessmentListPage />} />
+        <Route path="assessments/catalog" element={<CatalogPage />} />
+        <Route path="assessments/new" element={<AssessmentFormPage />} />
+        <Route path="assessments/:id" element={<AssessmentViewPage />} />
 
-        <Route path="consentimientos" element={<ConsentListPage />} />
-        <Route path="consentimientos/:id" element={<ConsentViewPage />} />
-        <Route path="documentos" element={<DocumentsPage />} />
+        <Route path="consents" element={<ConsentListPage />} />
+        <Route path="consents/:id" element={<ConsentViewPage />} />
+        <Route path="documents" element={<DocumentsPage />} />
 
-        <Route path="facturacion" element={<InvoiceListPage />} />
-        <Route path="facturacion/nueva" element={<InvoiceFormPage />} />
-        <Route path="facturacion/:id" element={<InvoiceViewPage />} />
+        <Route path="billing" element={<InvoiceListPage />} />
+        <Route path="billing/new" element={<InvoiceFormPage />} />
+        <Route path="billing/:id" element={<InvoiceViewPage />} />
 
-        <Route path="ajustes" element={<ClinicSettingsPage />} />
-        <Route path="ajustes/usuarios" element={<UsersPage />} />
-        <Route path="ajustes/auditoria" element={<AuditPage />} />
-        <Route path="perfil" element={<ProfilePage />} />
+        <Route path="rips" element={<RipsListPage />} />
+        <Route path="rips/:id" element={<RipsReportPage />} />
+
+        <Route path="settings" element={<ClinicSettingsPage />} />
+        <Route path="settings/users" element={<UsersPage />} />
+        <Route path="settings/audit" element={<AuditPage />} />
+        <Route path="profile" element={<ProfilePage />} />
 
         <Route
           path="*"
-          element={<EmptyState icon="alert" title="Esta sección no existe" text="Puede que el enlace haya cambiado." action={<ButtonLink to="/app" size="sm">Volver al inicio</ButtonLink>} />}
+          element={
+            <EmptyState
+              icon="alert"
+              title="This section doesn't exist"
+              text="The link may have changed."
+              action={
+                <ButtonLink to="/app" size="sm">
+                  Back to home
+                </ButtonLink>
+              }
+            />
+          }
         />
       </Routes>
     </StaffLayout>

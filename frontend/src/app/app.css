@@ -1,6 +1,6 @@
 /*
- * PsiClinic - aplicacion clinica (equipo).
- * Densa pero respirable: la informacion clinica manda, la interfaz se retira.
+ * PsiClinic - clinical team application.
+ * Dense but breathable: clinical information leads, the interface steps back.
  */
 
 .shell {
@@ -9,7 +9,7 @@
   min-height: 100vh;
 }
 
-/* --- Barra lateral -------------------------------------------------- */
+/* --- Sidebar -------------------------------------------------------- */
 
 .sidebar {
   position: sticky;
@@ -153,7 +153,7 @@
   display: none;
 }
 
-/* --- Barra superior ------------------------------------------------- */
+/* --- Top bar -------------------------------------------------------- */
 
 .shell__main {
   min-width: 0;
@@ -197,7 +197,7 @@
   outline: none;
 }
 
-/* --- Busqueda global ----------------------------------------------- */
+/* --- Global search -------------------------------------------------- */
 
 .command {
   position: relative;
@@ -369,7 +369,7 @@
   }
 }
 
-/* --- Rejillas de pantallas ----------------------------------------- */
+/* --- Screen grids --------------------------------------------------- */
 
 .layout-2 {
   display: grid;
@@ -433,7 +433,7 @@
   min-width: min(100%, 16rem);
 }
 
-/* --- Agenda --------------------------------------------------------- */
+/* --- Schedule ------------------------------------------------------- */
 
 .week {
   display: grid;
@@ -586,7 +586,7 @@
   }
 }
 
-/* --- Ficha del paciente -------------------------------------------- */
+/* --- Patient record ------------------------------------------------- */
 
 .profile-head {
   display: flex;
@@ -700,7 +700,7 @@ a.timeline__title:hover {
   margin-bottom: var(--space-5);
 }
 
-/* --- Nota imprimible ----------------------------------------------- */
+/* --- Printable note ------------------------------------------------- */
 
 .document-sheet {
   max-width: 50rem;
@@ -756,7 +756,7 @@ a.timeline__title:hover {
   }
 }
 
-/* --- Factura -------------------------------------------------------- */
+/* --- Invoice -------------------------------------------------------- */
 
 .invoice-lines td,
 .invoice-lines th {
@@ -788,7 +788,7 @@ a.timeline__title:hover {
   font-weight: 700;
 }
 
-/* --- Varios --------------------------------------------------------- */
+/* --- Miscellaneous -------------------------------------------------- */
 
 .section-gap {
   display: grid;
@@ -826,7 +826,7 @@ a.timeline__title:hover {
   font-size: var(--text-sm);
 }
 
-/* --- Carga de archivos --------------------------------------------- */
+/* --- File upload ---------------------------------------------------- */
 
 .dropzone {
   display: flex;
@@ -897,4 +897,229 @@ a.timeline__title:hover {
 
 .invoice-lines__price {
   width: 10rem;
+}
+
+/* --- Diagnoses and ICD-11 picker ------------------------------------ */
+
+.diagnosis {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.diagnosis__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.diagnosis__warning {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--warning);
+}
+
+.diagnosis__warning .icon {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  color: currentColor;
+}
+
+.diagnosis-editor {
+  padding: var(--space-4);
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+}
+
+.picker__box {
+  position: relative;
+}
+
+.picker__icon {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-muted);
+  pointer-events: none;
+}
+
+.picker__input {
+  padding-left: 2.25rem;
+}
+
+.picker__panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + var(--space-1));
+  left: 0;
+  right: 0;
+  max-height: 20rem;
+  overflow-y: auto;
+  padding: var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  animation: fade-up var(--duration-fast) var(--ease-out);
+}
+
+.picker__panel ul {
+  list-style: none;
+}
+
+.picker__option {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: 0 var(--space-3);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-size: var(--text-sm);
+  text-align: left;
+}
+
+.picker__option[aria-selected='true'] {
+  background: var(--primary-softer);
+  color: var(--primary-hover);
+}
+
+.picker__option .picker__meta {
+  grid-column: 2;
+}
+
+.picker__code {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.picker__meta {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+
+.picker__empty {
+  padding: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.picker__chosen {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+}
+
+.picker__chosen .picker__title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+}
+
+/* --- RIPS ------------------------------------------------------------ */
+
+.rips-summary {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.issue-list {
+  margin: var(--space-2) 0;
+  padding-left: 1.1rem;
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+  color: var(--ink-soft);
+}
+
+.rips-cuv,
+.rips-path {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+
+.rips-note {
+  padding: var(--space-3) var(--space-5);
+}
+
+.rips-json summary {
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--primary);
+}
+
+.rips-json pre {
+  max-height: 28rem;
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  overflow: auto;
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+@media (max-width: 720px) {
+  .diagnosis__row {
+    flex-wrap: wrap;
+  }
+
+  .picker__option {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .picker__option .picker__meta {
+    grid-column: 1;
+  }
+}
+
+/* --- Document language -------------------------------------------- */
+
+.doc-language {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.doc-language__label {
+  white-space: nowrap;
+}
+
+.select--sm {
+  width: auto;
+  min-height: 2.125rem;
+  padding-block: 0.25rem;
+  font-size: var(--text-sm);
+}
+
+.document-sheet__title {
+  margin-top: var(--space-3);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 720px) {
+  .doc-language__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
 }

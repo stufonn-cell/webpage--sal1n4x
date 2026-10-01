@@ -5,14 +5,15 @@ import { Alert, Badge, Panel } from '@/components/ui/Display';
 import { FormAlert, TextField } from '@/components/ui/Field';
 import { QueryState, useToast } from '@/components/ui/Feedback';
 import { ApiError, get, post } from '@/lib/api';
+import { documentText } from '@/lib/documentText';
 import { formatDateTime, fullName } from '@/lib/format';
 import type { Consent } from '@/lib/types';
 import { SignaturePad, type Stroke } from './SignaturePad';
 
-/** La firma se muestra como imagen: un <img> nunca ejecuta codigo del SVG. */
-function SignatureImage({ svg }: { svg: string }) {
+/** The signature is shown as an image: an <img> never runs code from the SVG. */
+function SignatureImage({ svg, alt }: { svg: string; alt: string }) {
   if (!svg) return null;
-  return <img className="signature-image" src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`} alt="Firma registrada" />;
+  return <img className="signature-image" src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`} alt={alt} />;
 }
 
 interface ConsentDocumentProps {
@@ -26,6 +27,9 @@ export function ConsentDocument({ id, audience, onSigned }: ConsentDocumentProps
   const toast = useToast();
   const query = useQuery({ queryKey: ['consent', id], queryFn: () => get<Consent & { body: string }>(`/api/consents/${id}`) });
   const consent = query.data;
+  // The whole document, signature block included, follows the language it was created in.
+  const t = documentText(consent?.language).consent;
+  const locale = documentText(consent?.language).locale;
 
   const [name, setName] = useState('');
   const [strokes, setStrokes] = useState<Stroke[]>([]);
@@ -37,8 +41,8 @@ export function ConsentDocument({ id, audience, onSigned }: ConsentDocumentProps
 
   const sign = async () => {
     const nextErrors: Record<string, string> = {};
-    if (!signedName.trim()) nextErrors.signed_name = 'Escribe el nombre completo.';
-    if (strokes.length === 0) nextErrors.strokes = 'Dibuja la firma en el recuadro.';
+    if (!signedName.trim()) nextErrors.signed_name = t.enterName;
+    if (strokes.length === 0) nextErrors.strokes = t.drawSignature;
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -46,7 +50,7 @@ export function ConsentDocument({ id, audience, onSigned }: ConsentDocumentProps
     setFormError('');
     try {
       const result = await post(`/api/consents/${id}/sign`, { signed_name: signedName.trim(), strokes });
-      toast.success(result.message ?? 'Consentimiento firmado.');
+      toast.success(consent?.language === 'es' ? t.done : (result.message ?? t.done));
       await queryClient.invalidateQueries({ queryKey: ['consent', id] });
       await queryClient.invalidateQueries({ queryKey: ['consents'] });
       await queryClient.invalidateQueries({ queryKey: ['portal'] });
@@ -64,12 +68,12 @@ export function ConsentDocument({ id, audience, onSigned }: ConsentDocumentProps
   return (
     <QueryState isPending={query.isPending} error={query.error} onRetry={query.refetch}>
       {consent && (
-        <div className="section-gap consent">
+        <div className="section-gap consent" lang={consent.language}>
           <div className="split">
             <p className="soft small">
               {fullName(consent)} · {consent.record_number}
             </p>
-            <Badge tone={consent.status === 'signed' ? 'success' : 'warning'}>{consent.status === 'signed' ? 'Firmado' : 'Pendiente de firma'}</Badge>
+            <Badge tone={consent.status === 'signed' ? 'success' : 'warning'}>{consent.status === 'signed' ? t.signed : t.pending}</Badge>
           </div>
 
           <Panel>
@@ -81,27 +85,27 @@ export function ConsentDocument({ id, audience, onSigned }: ConsentDocumentProps
           </Panel>
 
           {consent.status === 'signed' ? (
-            <Panel title="Firma registrada" titleId="firma">
+            <Panel title={t.recordedSignature} titleId="signature-record">
               <div className="stack">
                 <p>
                   <strong>{consent.signed_name}</strong>
                 </p>
                 <p className="xsmall muted">
-                  Firmado el {formatDateTime(consent.signed_at)}
-                  {audience === 'staff' && consent.signed_ip && ` · desde ${consent.signed_ip}`}
+                  {t.signedOn(formatDateTime(consent.signed_at, locale))}
+                  {audience === 'staff' && consent.signed_ip && ` · ${t.from(consent.signed_ip)}`}
                 </p>
-                <SignatureImage svg={consent.signature_svg} />
+                <SignatureImage svg={consent.signature_svg} alt={t.recordedSignature} />
               </div>
             </Panel>
           ) : (
-            <Panel title={audience === 'patient' ? 'Tu firma' : 'Firmar con el paciente'} titleId="firmar">
+            <Panel title={audience === 'patient' ? t.yourSignature : t.signWithPatient} titleId="sign-consent">
               <div className="inline-form">
                 {audience === 'patient' && (
-                  <Alert tone="info">Tómate el tiempo que necesites para leerlo. Si algo no está claro, pregúntale a tu profesional antes de firmar.</Alert>
+                  <Alert tone="info">{t.readCalmly}</Alert>
                 )}
                 <FormAlert message={formError} />
                 <TextField
-                  label="Nombre completo"
+                  label={t.fullName}
                   id="signed_name"
                   value={signedName}
                   onChange={(event) => setName(event.target.value)}
@@ -109,12 +113,12 @@ export function ConsentDocument({ id, audience, onSigned }: ConsentDocumentProps
                   autoComplete="name"
                 />
                 <div className="field">
-                  <span className="field__label">Firma</span>
-                  <SignaturePad onChange={setStrokes} error={errors.strokes} />
+                  <span className="field__label">{t.signature}</span>
+                  <SignaturePad onChange={setStrokes} error={errors.strokes} language={consent.language} />
                 </div>
                 <div>
-                  <Button variant="primary" icon="pen" onClick={sign} loading={signing} loadingLabel="Registrando la firma">
-                    Firmar consentimiento
+                  <Button variant="primary" icon="pen" onClick={sign} loading={signing} loadingLabel={t.signing}>
+                    {t.sign}
                   </Button>
                 </div>
               </div>

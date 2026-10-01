@@ -2,9 +2,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { Theme } from '@/lib/types';
 
 /**
- * Tema claro/oscuro. La preferencia del sistema manda hasta que la persona
- * elige uno; en la app clinica la eleccion tambien se guarda en su cuenta.
- * localStorage solo guarda "light" o "dark": no es informacion personal.
+ * Light/dark theme. The system preference wins until the person picks one; in
+ * the clinical app the choice is also saved to their account.
+ * localStorage only stores "light" or "dark": it is not personal information.
  */
 
 interface ThemeValue {
@@ -21,7 +21,7 @@ function initialTheme(): Theme {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (stored === 'light' || stored === 'dark') return stored;
   } catch {
-    // Almacenamiento bloqueado: se usa la preferencia del sistema.
+    // Storage is blocked: fall back to the system preference.
   }
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
@@ -39,7 +39,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     try {
       window.localStorage.setItem(STORAGE_KEY, next);
     } catch {
-      // Sin almacenamiento el tema dura lo que la pestana.
+      // Without storage the theme lasts as long as the tab.
     }
   }, []);
 
@@ -56,6 +56,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
 export function useTheme(): ThemeValue {
   const context = useContext(ThemeContext);
-  if (!context) throw new Error('useTheme debe usarse dentro de ThemeProvider');
+  if (!context) throw new Error('useTheme must be used inside ThemeProvider');
   return context;
 }

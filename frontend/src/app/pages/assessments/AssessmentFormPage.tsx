@@ -18,15 +18,15 @@ export default function AssessmentFormPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const invalidate = useInvalidate();
-  const code = params.get('instrumento') ?? 'PHQ-9';
-  const [patientId, setPatientId] = useState(params.get('paciente') ?? '');
+  const code = params.get('instrument') ?? 'PHQ-9';
+  const [patientId, setPatientId] = useState(params.get('patient') ?? '');
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   const [patientError, setPatientError] = useState('');
   const [showMissing, setShowMissing] = useState(false);
   const [saving, setSaving] = useState(false);
-  useDocumentTitle('Aplicar instrumento');
+  useDocumentTitle('Administer instrument');
 
   const query = useQuery({
     queryKey: ['instrument', code],
@@ -37,7 +37,7 @@ export default function AssessmentFormPage() {
 
   const changeInstrument = (next: string) => {
     const nextParams = new URLSearchParams(params);
-    nextParams.set('instrumento', next);
+    nextParams.set('instrument', next);
     setParams(nextParams, { replace: true });
     setAnswers({});
     setShowMissing(false);
@@ -47,14 +47,14 @@ export default function AssessmentFormPage() {
     if (!instrument) return;
     setError('');
     if (!patientId) {
-      setPatientError('Elige a quién se le aplica.');
+      setPatientError('Choose who is taking it.');
       document.getElementById('assessment-patient')?.focus();
       return;
     }
     const missing = instrument.items.findIndex((_, index) => answers[index] === undefined);
     if (missing >= 0) {
       setShowMissing(true);
-      setError('Faltan ítems por responder. Están marcados en rojo.');
+      setError('Some items still need an answer. They are marked in red.');
       document.getElementById(`item-${missing}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
@@ -67,11 +67,11 @@ export default function AssessmentFormPage() {
         answers: instrument.items.map((_, index) => answers[index]),
         clinician_notes: notes,
       });
-      toast.success(result.message ?? 'Evaluación registrada.');
+      toast.success(result.message ?? 'Assessment saved.');
       await invalidate(['assessments'], ['patient', patientId], ['dashboard']);
-      navigate(`/app/evaluaciones/${result.data.id}`);
+      navigate(`/app/assessments/${result.data.id}`);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'No pudimos guardar la evaluación.');
+      setError(caught instanceof ApiError ? caught.message : "We couldn't save the assessment.");
     } finally {
       setSaving(false);
     }
@@ -79,7 +79,7 @@ export default function AssessmentFormPage() {
 
   return (
     <>
-      <PageHeader back={{ to: '/app/evaluaciones', label: 'Evaluaciones' }} title="Aplicar instrumento" subtitle={instrument?.name} />
+      <PageHeader back={{ to: '/app/assessments', label: 'Assessments' }} title="Administer instrument" subtitle={instrument?.name} />
       <div className="layout-aside">
         <QueryState isPending={query.isPending} error={query.error} onRetry={query.refetch}>
           {instrument && (
@@ -97,9 +97,9 @@ export default function AssessmentFormPage() {
             <div className="inline-form">
               <FormAlert message={error} />
               <SelectField
-                label="Paciente"
+                label="Patient"
                 id="assessment-patient"
-                placeholder="Elige un paciente"
+                placeholder="Choose a patient"
                 value={patientId}
                 error={patientError}
                 onChange={(event) => {
@@ -108,10 +108,10 @@ export default function AssessmentFormPage() {
                 }}
                 options={(meta?.patients ?? []).map((item) => ({ value: String(item.id), label: item.label }))}
               />
-              <SelectField label="Instrumento" id="assessment-code" value={code} onChange={(event) => changeInstrument(event.target.value)} options={meta?.instruments ?? []} />
-              <TextAreaField label="Observaciones" id="assessment-notes" optional rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} />
-              <Button variant="primary" block onClick={submit} loading={saving} loadingLabel="Corrigiendo">
-                Corregir y guardar
+              <SelectField label="Instrument" id="assessment-code" value={code} onChange={(event) => changeInstrument(event.target.value)} options={meta?.instruments ?? []} />
+              <TextAreaField label="Clinician notes" id="assessment-notes" optional rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} />
+              <Button variant="primary" block onClick={submit} loading={saving} loadingLabel="Scoring">
+                Score and save
               </Button>
               {instrument && <p className="xsmall muted">{instrument.description}</p>}
             </div>

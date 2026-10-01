@@ -7,9 +7,11 @@ import { QueryState, useToast } from '@/components/ui/Feedback';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useForm } from '@/hooks/useForm';
 import { get, post } from '@/lib/api';
+import { documentText } from '@/lib/documentText';
 import { formatDate, formatMoney, fullName, toISODate } from '@/lib/format';
 import { INVOICE_STATUS_TONE, labelOf, useMeta } from '@/lib/meta';
 import type { Invoice } from '@/lib/types';
+import { DocumentLanguageSelect, useDocumentLanguage } from '../../components/DocumentLanguageSelect';
 import { useInvalidate } from '../../useAction';
 
 interface InvoiceDetail {
@@ -27,10 +29,10 @@ function PaymentForm({ invoiceId, balance, currency }: { invoiceId: number; bala
   const invalidate = useInvalidate();
   const form = useForm({
     initial: { amount: balance > 0 ? String(balance) : '', paid_at: toISODate(new Date()), method: 'transfer', reference: '' },
-    validate: (values): Record<string, string> => (Number(values.amount) > 0 ? {} : { amount: 'Escribe un monto mayor que cero.' }),
+    validate: (values): Record<string, string> => (Number(values.amount) > 0 ? {} : { amount: 'Enter an amount greater than zero.' }),
     onSubmit: async (values) => {
       const result = await post<{ balance: number }>(`/api/invoices/${invoiceId}/payments`, values);
-      toast.success(result.message ?? 'Pago registrado.');
+      toast.success(result.message ?? 'Payment recorded.');
       form.setValues({ ...values, amount: result.data.balance > 0 ? String(result.data.balance) : '', reference: '' });
       await invalidate(['invoice', String(invoiceId)], ['invoices'], ['dashboard']);
     },
@@ -42,19 +44,19 @@ function PaymentForm({ invoiceId, balance, currency }: { invoiceId: number; bala
     <form className="inline-form" onSubmit={form.handleSubmit} noValidate>
       <FormAlert message={form.formError} />
       <TextField
-        label={`Monto (${currency})`}
+        label={`Amount (${currency})`}
         type="number"
         min={0}
         step={1000}
-        hint={overpaying ? `Supera el saldo de ${formatMoney(balance, currency)}.` : undefined}
+        hint={overpaying ? `This is more than the ${formatMoney(balance, currency)} balance.` : undefined}
         {...form.bind('amount')}
       />
-      <TextField label="Fecha" type="date" {...form.bind('paid_at')} />
-      <SelectField label="Medio de pago" options={meta?.paymentMethods ?? []} {...form.bind('method')} />
-      <TextField label="Referencia" optional {...form.bind('reference')} />
+      <TextField label="Date" type="date" {...form.bind('paid_at')} />
+      <SelectField label="Payment method" options={meta?.paymentMethods ?? []} {...form.bind('method')} />
+      <TextField label="Reference" optional {...form.bind('reference')} />
       <div>
         <Button type="submit" variant="primary" loading={form.submitting}>
-          Registrar pago
+          Record payment
         </Button>
       </div>
     </form>
@@ -66,60 +68,77 @@ export default function InvoiceViewPage() {
   const { data: meta } = useMeta();
   const query = useQuery({ queryKey: ['invoice', id], queryFn: () => get<InvoiceDetail>(`/api/invoices/${id}`) });
   const detail = query.data;
-  useDocumentTitle(detail?.invoice.number ?? 'Factura');
+  const [language, setLanguage] = useDocumentLanguage();
+  const t = documentText(language);
+  const money = (amount: number | string) => formatMoney(amount, detail?.currency, t.locale);
+  useDocumentTitle(detail?.invoice.number ?? 'Invoice');
 
   return (
     <QueryState isPending={query.isPending} error={query.error} onRetry={query.refetch}>
       {detail && (
         <>
           <PageHeader
-            back={{ to: '/app/facturacion', label: 'Facturación' }}
-            title={`Factura ${detail.invoice.number}`}
-            subtitle={`Emitida el ${formatDate(detail.invoice.issued_at)}${detail.invoice.due_at ? ` · vence el ${formatDate(detail.invoice.due_at)}` : ''}`}
+            back={{ to: '/app/billing', label: 'Billing' }}
+            title={`Invoice ${detail.invoice.number}`}
+            subtitle={`Issued on ${formatDate(detail.invoice.issued_at)}${detail.invoice.due_at ? ` · due on ${formatDate(detail.invoice.due_at)}` : ''}`}
             actions={
-              <Button icon="print" onClick={() => window.print()}>
-                Imprimir
-              </Button>
+              <>
+                <DocumentLanguageSelect value={language} onChange={setLanguage} />
+                <Button icon="print" onClick={() => window.print()}>
+                  Print
+                </Button>
+              </>
             }
           />
           <div className="layout-aside">
-            <article className="document-sheet">
+            <article className="document-sheet" lang={language}>
               <header className="document-sheet__head">
                 <div>
                   <p className="serif document-sheet__clinic">{detail.clinic.name}</p>
                   <p className="xsmall muted">{[detail.clinic.address, detail.clinic.phone, detail.clinic.email].filter(Boolean).join(' · ')}</p>
+                  <p className="document-sheet__title">{t.invoice.title(detail.invoice.number)}</p>
                 </div>
-                <Badge tone={INVOICE_STATUS_TONE[detail.invoice.status]}>{labelOf(meta?.invoiceStatuses, detail.invoice.status)}</Badge>
+                <Badge tone={INVOICE_STATUS_TONE[detail.invoice.status]}>{t.invoice.statuses[detail.invoice.status] ?? detail.invoice.status}</Badge>
               </header>
               <dl className="facts document-sheet__facts">
                 <div>
-                  <dt>Paciente</dt>
+                  <dt>{t.patient}</dt>
                   <dd>
-                    <Link to={`/app/pacientes/${detail.invoice.patient_id}`}>{fullName(detail.invoice)}</Link>
+                    <Link to={`/app/patients/${detail.invoice.patient_id}`}>{fullName(detail.invoice)}</Link>
                   </dd>
                 </div>
                 <div>
-                  <dt>Documento</dt>
+                  <dt>{t.idDocument}</dt>
                   <dd>{detail.invoice.document_id || '—'}</dd>
                 </div>
                 <div>
-                  <dt>Historia</dt>
+                  <dt>{t.recordNumber}</dt>
                   <dd>{detail.invoice.record_number}</dd>
                 </div>
+                <div>
+                  <dt>{t.invoice.issuedOn}</dt>
+                  <dd>{formatDate(detail.invoice.issued_at, undefined, t.locale)}</dd>
+                </div>
+                {detail.invoice.due_at && (
+                  <div>
+                    <dt>{t.invoice.dueOn}</dt>
+                    <dd>{formatDate(detail.invoice.due_at, undefined, t.locale)}</dd>
+                  </div>
+                )}
               </dl>
               <div className="table-wrap">
                 <table className="table">
                   <thead>
                     <tr>
-                      <th scope="col">Concepto</th>
+                      <th scope="col">{t.invoice.item}</th>
                       <th scope="col" className="num">
-                        Cant.
+                        {t.invoice.quantity}
                       </th>
                       <th scope="col" className="num">
-                        Valor
+                        {t.invoice.price}
                       </th>
                       <th scope="col" className="num">
-                        Importe
+                        {t.invoice.amount}
                       </th>
                     </tr>
                   </thead>
@@ -128,8 +147,8 @@ export default function InvoiceViewPage() {
                       <tr key={item.id}>
                         <td>{item.description}</td>
                         <td className="num">{Number(item.quantity)}</td>
-                        <td className="num">{formatMoney(item.unit_price, detail.currency)}</td>
-                        <td className="num">{formatMoney(item.amount, detail.currency)}</td>
+                        <td className="num">{money(item.unit_price)}</td>
+                        <td className="num">{money(item.amount)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -137,20 +156,20 @@ export default function InvoiceViewPage() {
               </div>
               <div className="totals document-sheet__signature">
                 <div>
-                  <span>Subtotal</span>
-                  <span className="tabular">{formatMoney(detail.invoice.subtotal, detail.currency)}</span>
+                  <span>{t.invoice.subtotal}</span>
+                  <span className="tabular">{money(detail.invoice.subtotal)}</span>
                 </div>
                 <div>
-                  <span>Impuesto</span>
-                  <span className="tabular">{formatMoney(detail.invoice.tax, detail.currency)}</span>
+                  <span>{t.invoice.tax}</span>
+                  <span className="tabular">{money(detail.invoice.tax)}</span>
                 </div>
                 <div className="totals__grand">
-                  <span>Total</span>
-                  <span className="tabular">{formatMoney(detail.invoice.total, detail.currency)}</span>
+                  <span>{t.invoice.total}</span>
+                  <span className="tabular">{money(detail.invoice.total)}</span>
                 </div>
                 <div>
-                  <span>Saldo pendiente</span>
-                  <strong className="tabular">{formatMoney(detail.balance, detail.currency)}</strong>
+                  <span>{t.invoice.balance}</span>
+                  <strong className="tabular">{money(detail.balance)}</strong>
                 </div>
               </div>
               {detail.invoice.notes && <p className="small soft">{detail.invoice.notes}</p>}
@@ -158,13 +177,13 @@ export default function InvoiceViewPage() {
 
             <div className="section-gap no-print">
               {detail.balance > 0 && detail.invoice.status !== 'void' && (
-                <Panel title="Registrar pago" titleId="pago">
+                <Panel title="Record a payment" titleId="payment">
                   <PaymentForm invoiceId={detail.invoice.id} balance={detail.balance} currency={detail.currency} />
                 </Panel>
               )}
-              <Panel title="Pagos recibidos" titleId="pagos" flush>
+              <Panel title="Payments received" titleId="payments" flush>
                 {detail.payments.length === 0 ? (
-                  <EmptyState icon="receipt" title="Sin pagos registrados" />
+                  <EmptyState icon="receipt" title="No payments recorded" />
                 ) : (
                   <ul className="list">
                     {detail.payments.map((payment) => (

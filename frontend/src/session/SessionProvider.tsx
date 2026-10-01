@@ -34,7 +34,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (data?.user?.theme) setTheme(data.user.theme, false);
   }, [data, setTheme]);
 
-  // Un 401 en cualquier pantalla significa que la sesion expiro en el servidor.
+  // A 401 on any screen means the session expired on the server.
   useEffect(
     () =>
       onUnauthorized(() => {
@@ -56,7 +56,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (identifier: string, password: string) => {
       const { data: session } = await post<SessionData>('/api/auth/login', { identifier, password });
-      // Nada de la sesion anterior debe sobrevivir en cache.
+      // Nothing from the previous session may survive in the cache.
       queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== 'session' });
       applySession(session);
       return session.user as User;
@@ -71,8 +71,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       token = result.csrfToken;
       setCsrfToken(token);
     } finally {
-      // Primero se borra el usuario de la cache (sin esperar a un refetch) para
-      // que ninguna pantalla siga mostrando datos de la sesion cerrada.
+      // Clear the user from the cache first (without waiting for a refetch) so
+      // no screen keeps showing data from the closed session.
       queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== 'session' });
       queryClient.setQueryData<SessionData | undefined>(SESSION_KEY, (current) =>
         current ? { ...current, user: null, csrfToken: token || current.csrfToken } : current,
@@ -104,7 +104,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
 export function useSession(): SessionValue {
   const context = useContext(SessionContext);
-  if (!context) throw new Error('useSession debe usarse dentro de SessionProvider');
+  if (!context) throw new Error('useSession must be used inside SessionProvider');
   return context;
 }
 
@@ -113,6 +113,6 @@ export function isStaff(user: User | null): boolean {
 }
 
 export function homeFor(user: User | null): string {
-  if (!user) return '/ingresar';
+  if (!user) return '/login';
   return user.role === 'patient' ? '/portal' : '/app';
 }

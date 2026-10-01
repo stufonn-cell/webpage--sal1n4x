@@ -17,7 +17,7 @@ export default function NoteListPage() {
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const search = useDebounced(q, 300);
-  useDocumentTitle('Notas de sesión');
+  useDocumentTitle('Session notes');
 
   const query = useQuery({
     queryKey: ['notes', search, page],
@@ -28,21 +28,21 @@ export default function NoteListPage() {
   return (
     <>
       <PageHeader
-        title="Notas clínicas"
-        subtitle="Las notas firmadas quedan bloqueadas y no admiten cambios."
+        title="Session notes"
+        subtitle="Signed notes are locked and can't be changed."
         actions={
-          <ButtonLink to="/app/notas/nueva" variant="primary" icon="plus">
-            Nueva nota
+          <ButtonLink to="/app/notes/new" variant="primary" icon="plus">
+            New note
           </ButtonLink>
         }
       />
       <div className="toolbar" role="search">
         <TextField
           wrapperClassName="toolbar__search"
-          label="Buscar en las notas"
+          label="Search notes"
           id="note-search"
           type="search"
-          placeholder="Paciente o contenido"
+          placeholder="Patient or content"
           value={q}
           onChange={(event) => {
             setQ(event.target.value);
@@ -53,37 +53,37 @@ export default function NoteListPage() {
       <Panel flush>
         <QueryState isPending={query.isPending} error={query.error} onRetry={query.refetch}>
           {query.data?.rows.length === 0 ? (
-            <EmptyState icon="note" title={q ? 'Ninguna nota coincide' : 'Aún no hay notas'} />
+            <EmptyState icon="note" title={q ? 'No notes match your search' : 'No notes yet'} />
           ) : (
             <div className="table-wrap">
               <table className="table table--stack">
                 <thead>
                   <tr>
-                    <th scope="col">Paciente</th>
-                    <th scope="col">Sesión</th>
-                    <th scope="col">Formato</th>
-                    <th scope="col">Riesgo</th>
-                    <th scope="col">Estado</th>
+                    <th scope="col">Patient</th>
+                    <th scope="col">Session</th>
+                    <th scope="col">Format</th>
+                    <th scope="col">Risk</th>
+                    <th scope="col">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {query.data?.rows.map((note) => (
                     <tr key={note.id}>
                       <td>
-                        <Link className="table__link" to={`/app/notas/${note.id}`}>
+                        <Link className="table__link" to={`/app/notes/${note.id}`}>
                           {fullName(note)}
                         </Link>
                         <span className="table__sub">{note.author_name}</span>
                       </td>
-                      <td data-label="Sesión">
+                      <td data-label="Session">
                         #{note.session_number} · {formatDate(note.session_date)}
                       </td>
-                      <td data-label="Formato">{note.format.toUpperCase()}</td>
-                      <td data-label="Riesgo">
+                      <td data-label="Format">{note.format.toUpperCase()}</td>
+                      <td data-label="Risk">
                         <Badge tone={RISK_TONE[note.risk_level]}>{labelOf(meta?.riskLevels, note.risk_level)}</Badge>
                       </td>
-                      <td data-label="Estado">
-                        {note.is_locked ? <Badge tone="success">Firmada</Badge> : <Badge tone="warning">Borrador</Badge>}
+                      <td data-label="Status">
+                        {note.is_locked ? <Badge tone="success">Signed</Badge> : <Badge tone="warning">Draft</Badge>}
                       </td>
                     </tr>
                   ))}

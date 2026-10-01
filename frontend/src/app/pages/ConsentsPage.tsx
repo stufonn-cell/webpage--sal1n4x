@@ -10,29 +10,29 @@ import type { Consent } from '@/lib/types';
 import { ConsentCreate } from '../components/ConsentCreate';
 
 export function ConsentListPage() {
-  useDocumentTitle('Consentimientos');
+  useDocumentTitle('Consents');
   const query = useQuery({ queryKey: ['consents'], queryFn: () => get<Consent[]>('/api/consents') });
 
   return (
     <>
-      <PageHeader title="Consentimientos informados" subtitle="Generados desde las plantillas de la clínica y firmados con trazo." />
+      <PageHeader title="Informed consents" subtitle="Created from your clinic's templates and signed by hand." />
       <div className="layout-aside">
-        <Panel flush title="Documentos generados" titleId="generados">
+        <Panel flush title="Created consents" titleId="created">
           <QueryState isPending={query.isPending} error={query.error} onRetry={query.refetch}>
             {query.data?.length === 0 ? (
-              <EmptyState icon="clipboard" title="Aún no hay consentimientos" />
+              <EmptyState icon="clipboard" title="No consents yet" />
             ) : (
               <ul className="list">
                 {query.data?.map((consent) => (
                   <li key={consent.id}>
-                    <Link className="list__item" to={`/app/consentimientos/${consent.id}`}>
+                    <Link className="list__item" to={`/app/consents/${consent.id}`}>
                       <span className="list__main">
                         <span className="list__title">{consent.title}</span>
                         <span className="list__meta">
-                          {fullName(consent)} · {consent.status === 'signed' ? `firmado el ${formatDate(consent.signed_at)}` : `generado el ${formatDate(consent.created_at)}`}
+                          {fullName(consent)} · {consent.language === 'es' ? 'Spanish' : 'English'} · {consent.status === 'signed' ? `signed on ${formatDate(consent.signed_at)}` : `created on ${formatDate(consent.created_at)}`}
                         </span>
                       </span>
-                      <Badge tone={consent.status === 'signed' ? 'success' : 'warning'}>{consent.status === 'signed' ? 'Firmado' : 'Pendiente'}</Badge>
+                      <Badge tone={consent.status === 'signed' ? 'success' : 'warning'}>{consent.status === 'signed' ? 'Signed' : 'Pending'}</Badge>
                     </Link>
                   </li>
                 ))}
@@ -40,7 +40,7 @@ export function ConsentListPage() {
             )}
           </QueryState>
         </Panel>
-        <Panel title="Generar consentimiento" titleId="nuevo">
+        <Panel title="Create a consent" titleId="new">
           <ConsentCreate />
         </Panel>
       </div>
@@ -51,13 +51,13 @@ export function ConsentListPage() {
 export function ConsentViewPage() {
   const { id = '' } = useParams();
   const query = useQuery({ queryKey: ['consent', id], queryFn: () => get<Consent>(`/api/consents/${id}`) });
-  useDocumentTitle(query.data?.title ?? 'Consentimiento');
+  useDocumentTitle(query.data?.title ?? 'Consent');
 
   return (
     <>
       <PageHeader
-        back={query.data ? { to: `/app/pacientes/${query.data.patient_id}?tab=administrativo`, label: fullName(query.data) } : { to: '/app/consentimientos', label: 'Consentimientos' }}
-        title={query.data?.title ?? 'Consentimiento'}
+        back={query.data ? { to: `/app/patients/${query.data.patient_id}?tab=admin`, label: fullName(query.data) } : { to: '/app/consents', label: 'Consents' }}
+        title={query.data?.title ?? 'Consent'}
       />
       <div className="container--narrow">
         <ConsentDocument id={id} audience="staff" />

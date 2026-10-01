@@ -3,12 +3,13 @@ import type { Tone } from '@/components/ui/Display';
 import { get } from './api';
 import type { Meta, Option } from './types';
 
-/** Catalogos del backend (etiquetas de estados, listas de pacientes, etc.). */
-export function useMeta() {
+/** Backend catalogs (status labels, patient lists, etc.). Staff only: pass enabled=false elsewhere. */
+export function useMeta({ enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ['meta'],
     queryFn: () => get<Meta>('/api/meta'),
     staleTime: 60_000,
+    enabled,
   });
 }
 
@@ -52,12 +53,17 @@ export const REQUEST_STATUS_TONE: Record<string, Tone> = {
   dismissed: 'neutral',
 };
 
-/** Tono segun la severidad textual que devuelve la correccion automatica. */
+/**
+ * Tone for the severity label returned by automatic scoring, in English or in
+ * Spanish (reports can be printed in either). Checked in order, so
+ * "Moderately severe" / "Moderadamente severa" is danger because the severe
+ * check comes first.
+ */
 export function severityTone(severity: string | null | undefined): Tone {
   const value = (severity ?? '').toLowerCase();
-  if (/sever|grave|alto|alta|extrem/.test(value)) return 'danger';
-  if (/moderad/.test(value)) return 'warning';
-  if (/leve|bajo|baja|medio/.test(value)) return 'info';
-  if (/minim|normal|adecuad|sin|bienestar/.test(value)) return 'success';
+  if (/\b(?:severe|extreme|high|sever|extrem|alt[oa]\b)/.test(value)) return 'danger';
+  if (/\b(?:moderate|moderad)/.test(value)) return 'warning';
+  if (/\b(?:mild|low|leve|baj[oa]\b)/.test(value)) return 'info';
+  if (/\b(?:minimal|normal|none|adequate|well-?being|m[ií]nima|adecuad)/.test(value)) return 'success';
   return 'neutral';
 }

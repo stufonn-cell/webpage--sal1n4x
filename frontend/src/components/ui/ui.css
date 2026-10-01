@@ -1,13 +1,13 @@
 /*
- * PsiClinic - componentes base. Cada bloque corresponde a un componente de
- * src/components/ui. Los valores salen siempre de tokens.css.
+ * PsiClinic - base components. Each block maps to a component in
+ * src/components/ui. Values always come from tokens.css.
  */
 
 .icon {
   flex-shrink: 0;
 }
 
-/* --- Boton ---------------------------------------------------------- */
+/* --- Button --------------------------------------------------------- */
 
 .btn {
   --btn-bg: var(--surface);
@@ -127,7 +127,7 @@
   }
 }
 
-/* --- Spinner y esqueletos ------------------------------------------ */
+/* --- Spinner and skeletons ----------------------------------------- */
 
 .spinner {
   width: 1.1em;
@@ -164,7 +164,7 @@
   justify-content: center;
 }
 
-/* --- Campos de formulario ----------------------------------------- */
+/* --- Form fields -------------------------------------------------- */
 
 .field {
   display: flex;
@@ -323,7 +323,7 @@
   }
 }
 
-/* Casillas y radios con tarjeta: area de toque amplia. */
+/* Card-style checkboxes and radios: a large touch area. */
 .check {
   display: flex;
   align-items: flex-start;
@@ -381,16 +381,19 @@
 }
 
 .choice__title {
+  display: block;
   font-weight: 600;
   font-size: var(--text-sm);
 }
 
 .choice__hint {
+  display: block;
+  margin-top: 0.125rem;
   font-size: var(--text-xs);
   color: var(--ink-muted);
 }
 
-/* Chips seleccionables (intervenciones, franjas horarias). */
+/* Selectable chips (interventions, time slots). */
 .chip-set {
   display: flex;
   flex-wrap: wrap;
@@ -428,7 +431,7 @@
   box-shadow: var(--focus-ring);
 }
 
-/* --- Alertas ------------------------------------------------------- */
+/* --- Alerts -------------------------------------------------------- */
 
 .alert {
   display: flex;
@@ -577,7 +580,7 @@
   border-style: dashed;
 }
 
-/* --- Encabezado de pagina ------------------------------------------ */
+/* --- Page header --------------------------------------------------- */
 
 .page-header {
   display: flex;
@@ -637,7 +640,7 @@
   }
 }
 
-/* --- Tabla ---------------------------------------------------------- */
+/* --- Table ---------------------------------------------------------- */
 
 .table-wrap {
   overflow-x: auto;
@@ -699,7 +702,7 @@
   color: var(--ink-muted);
 }
 
-/* En movil las tablas se convierten en lista de fichas. */
+/* On mobile, tables turn into a list of cards. */
 @media (max-width: 640px) {
   .table--stack thead {
     display: none;
@@ -734,7 +737,7 @@
   }
 }
 
-/* --- Lista simple -------------------------------------------------- */
+/* --- Simple list --------------------------------------------------- */
 
 .list {
   list-style: none;
@@ -783,7 +786,7 @@ a.list__item:hover {
   color: var(--ink-muted);
 }
 
-/* --- Datos clave/valor --------------------------------------------- */
+/* --- Key/value facts ----------------------------------------------- */
 
 .facts {
   display: grid;
@@ -802,7 +805,7 @@ a.list__item:hover {
   overflow-wrap: anywhere;
 }
 
-/* --- Vacio ---------------------------------------------------------- */
+/* --- Empty state ---------------------------------------------------- */
 
 .empty {
   display: flex;
@@ -839,7 +842,7 @@ a.list__item:hover {
   margin-top: var(--space-3);
 }
 
-/* --- Pestanas ------------------------------------------------------- */
+/* --- Tabs ----------------------------------------------------------- */
 
 .tabs {
   display: flex;
@@ -905,7 +908,7 @@ a.list__item:hover {
   outline-offset: 6px;
 }
 
-/* --- Paginacion ---------------------------------------------------- */
+/* --- Pagination ---------------------------------------------------- */
 
 .pagination {
   display: flex;
@@ -951,7 +954,7 @@ a.list__item:hover {
   font-family: var(--font-serif);
 }
 
-/* --- Dialogo -------------------------------------------------------- */
+/* --- Dialog --------------------------------------------------------- */
 
 .dialog {
   width: min(32rem, calc(100vw - 2 * var(--space-4)));
@@ -1001,7 +1004,7 @@ a.list__item:hover {
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
-/* --- Avisos (toasts) ------------------------------------------------ */
+/* --- Notifications (toasts) ----------------------------------------- */
 
 .toasts {
   position: fixed;
@@ -1072,7 +1075,7 @@ a.list__item:hover {
   }
 }
 
-/* --- Metricas ------------------------------------------------------- */
+/* --- Metrics -------------------------------------------------------- */
 
 .stat {
   display: flex;
@@ -1111,7 +1114,7 @@ a.stat:hover {
   background: var(--surface-hover);
 }
 
-/* --- Barra de progreso -------------------------------------------- */
+/* --- Progress bar ------------------------------------------------- */
 
 .progress {
   height: 6px;

@@ -35,7 +35,7 @@ interface Dashboard {
 function AppointmentRow({ appointment, statuses }: { appointment: Appointment; statuses?: { value: string; label: string }[] }) {
   return (
     <li>
-      <Link className="list__item" to={`/app/agenda/${appointment.id}/editar`}>
+      <Link className="list__item" to={`/app/schedule/${appointment.id}/edit`}>
         <span className="list__time">
           {formatTime(appointment.starts_at)}
         </span>
@@ -55,7 +55,7 @@ export default function DashboardPage() {
   const query = useQuery({ queryKey: ['dashboard'], queryFn: () => get<Dashboard>('/api/dashboard') });
   const data = query.data;
   const firstName = user?.full_name.split(' ')[0] ?? '';
-  useDocumentTitle('Inicio');
+  useDocumentTitle('Home');
 
   const metrics = data?.metrics;
   const todayCount = data?.today.length ?? 0;
@@ -63,22 +63,22 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader
-        eyebrow={new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
+        eyebrow={new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
         title={`${greeting()}, ${firstName}`}
         subtitle={
           data
             ? todayCount === 0
-              ? 'Hoy no hay citas en la agenda.'
-              : `Hoy tienes ${pluralize(todayCount, 'cita')} en la agenda.`
-            : 'Preparando tu resumen del día…'
+              ? 'There are no appointments on the schedule today.'
+              : `You have ${pluralize(todayCount, 'appointment')} on the schedule today.`
+            : 'Getting your day ready…'
         }
         actions={
           <>
-            <ButtonLink to="/app/notas/nueva" icon="note">
-              Nueva nota
+            <ButtonLink to="/app/notes/new" icon="note">
+              New note
             </ButtonLink>
-            <ButtonLink to="/app/agenda/nueva" variant="primary" icon="calendar">
-              Agendar cita
+            <ButtonLink to="/app/schedule/new" variant="primary" icon="calendar">
+              Book appointment
             </ButtonLink>
           </>
         }
@@ -88,48 +88,48 @@ export default function DashboardPage() {
         {data && metrics && (
           <div className="section-gap">
             {metrics.new_requests > 0 && (
-              <Alert tone="info" icon="inbox" title={`${pluralize(metrics.new_requests, 'solicitud nueva', 'solicitudes nuevas')} desde el sitio`}>
-                <Link to="/app/solicitudes">Revisarlas y contactar a cada persona</Link>
+              <Alert tone="info" icon="inbox" title={`${pluralize(metrics.new_requests, 'new request')} from the website`}>
+                <Link to="/app/requests">Review them and reach out to each person</Link>
               </Alert>
             )}
 
             <div className="panel stats">
-              <Link className="stat" to="/app/pacientes?status=active">
-                <span className="stat__label">Pacientes en tratamiento</span>
+              <Link className="stat" to="/app/patients?status=active">
+                <span className="stat__label">Patients in treatment</span>
                 <span className="stat__value">{metrics.active_patients}</span>
-                <span className="stat__hint">de {metrics.total_patients} registrados</span>
+                <span className="stat__hint">of {metrics.total_patients} registered</span>
               </Link>
-              <Link className="stat" to="/app/notas">
-                <span className="stat__label">Sesiones este mes</span>
+              <Link className="stat" to="/app/notes">
+                <span className="stat__label">Sessions this month</span>
                 <span className="stat__value">{metrics.sessions_this_month}</span>
-                <span className="stat__hint">notas registradas</span>
+                <span className="stat__hint">notes recorded</span>
               </Link>
-              <Link className="stat" to="/app/evaluaciones?status=pending">
-                <span className="stat__label">Cuestionarios pendientes</span>
+              <Link className="stat" to="/app/assessments?status=pending">
+                <span className="stat__label">Pending questionnaires</span>
                 <span className="stat__value">{metrics.pending_assessments}</span>
-                <span className="stat__hint">asignados sin responder</span>
+                <span className="stat__hint">assigned, not yet answered</span>
               </Link>
-              <Link className="stat" to="/app/facturacion?status=issued">
-                <span className="stat__label">Saldo por cobrar</span>
+              <Link className="stat" to="/app/billing?status=issued">
+                <span className="stat__label">Balance to collect</span>
                 <span className="stat__value">{formatMoney(metrics.outstanding_balance, meta?.settings.currency)}</span>
-                <span className="stat__hint">facturas emitidas</span>
+                <span className="stat__hint">issued invoices</span>
               </Link>
             </div>
 
             <div className="layout-2">
               <div className="section-gap">
                 <Panel
-                  title="Agenda de hoy"
-                  titleId="hoy"
+                  title="Today's schedule"
+                  titleId="today"
                   flush
                   actions={
-                    <ButtonLink to="/app/agenda" size="sm" variant="quiet" iconRight="chevronRight">
-                      Ver semana
+                    <ButtonLink to="/app/schedule" size="sm" variant="quiet" iconRight="chevronRight">
+                      See the week
                     </ButtonLink>
                   }
                 >
                   {data.today.length === 0 ? (
-                    <EmptyState icon="calendar" title="Un día sin citas" text="Buen momento para ponerse al día con las notas pendientes." />
+                    <EmptyState icon="calendar" title="A day with no appointments" text="A good moment to catch up on pending notes." />
                   ) : (
                     <ul className="list">
                       {data.today.map((appointment) => (
@@ -139,14 +139,14 @@ export default function DashboardPage() {
                   )}
                 </Panel>
 
-                <Panel title="Próximas citas" titleId="proximas" flush>
+                <Panel title="Upcoming appointments" titleId="upcoming" flush>
                   {data.upcoming.length === 0 ? (
-                    <EmptyState icon="calendar" title="No hay citas próximas" />
+                    <EmptyState icon="calendar" title="No upcoming appointments" />
                   ) : (
                     <ul className="list">
                       {data.upcoming.map((appointment) => (
                         <li key={appointment.id}>
-                          <Link className="list__item" to={`/app/agenda/${appointment.id}/editar`}>
+                          <Link className="list__item" to={`/app/schedule/${appointment.id}/edit`}>
                             <span className="list__main">
                               <span className="list__title">{fullName(appointment)}</span>
                               <span className="list__meta">
@@ -163,23 +163,23 @@ export default function DashboardPage() {
                   )}
                 </Panel>
 
-                <Panel title="Sesiones por mes" subtitle="Últimos seis meses" titleId="sesiones">
+                <Panel title="Sessions per month" subtitle="Last six months" titleId="sessions">
                   <BarChart
-                    label="Sesiones registradas por mes"
+                    label="Sessions recorded per month"
                     points={Object.entries(data.sessionsSeries).map(([period, value]) => ({ label: formatMonth(period), value }))}
                   />
                 </Panel>
               </div>
 
               <div className="section-gap">
-                <Panel title="Requieren atención" subtitle="Riesgo moderado o alto" titleId="riesgo" flush>
+                <Panel title="Needs attention" subtitle="Moderate or high risk" titleId="risk" flush>
                   {data.riskPatients.length === 0 ? (
-                    <EmptyState icon="shield" title="Sin alertas de riesgo" text="Ningún paciente activo tiene riesgo moderado o alto." />
+                    <EmptyState icon="shield" title="No risk alerts" text="No active patient has moderate or high risk." />
                   ) : (
                     <ul className="list">
                       {data.riskPatients.map((patient) => (
                         <li key={patient.id}>
-                          <Link className="list__item" to={`/app/pacientes/${patient.id}`}>
+                          <Link className="list__item" to={`/app/patients/${patient.id}`}>
                             <span className="list__main">
                               <span className="list__title">{fullName(patient)}</span>
                               <span className="list__meta">{patient.record_number}</span>
@@ -192,17 +192,17 @@ export default function DashboardPage() {
                   )}
                 </Panel>
 
-                <Panel title="Cuestionarios por responder" titleId="pendientes" flush>
+                <Panel title="Questionnaires awaiting answers" titleId="pending" flush>
                   {data.pendingAssessments.length === 0 ? (
-                    <EmptyState icon="clipboard" title="Nada pendiente" />
+                    <EmptyState icon="clipboard" title="Nothing pending" />
                   ) : (
                     <ul className="list">
                       {data.pendingAssessments.map((item) => (
                         <li key={item.id}>
-                          <Link className="list__item" to={`/app/pacientes/${item.patient_id}`}>
+                          <Link className="list__item" to={`/app/patients/${item.patient_id}`}>
                             <span className="list__main">
                               <span className="list__title">{fullName(item)}</span>
-                              <span className="list__meta">Asignado el {formatDate(item.created_at)}</span>
+                              <span className="list__meta">Assigned on {formatDate(item.created_at)}</span>
                             </span>
                             <Badge plain>{item.instrument_code}</Badge>
                           </Link>
@@ -212,9 +212,9 @@ export default function DashboardPage() {
                   )}
                 </Panel>
 
-                <Panel title="Asistencia" subtitle="Últimos 90 días" titleId="asistencia">
+                <Panel title="Attendance" subtitle="Last 90 days" titleId="attendance">
                   <Distribution
-                    label="Distribución de estados de las citas"
+                    label="Appointment status breakdown"
                     segments={Object.entries(data.attendance).map(([status, value]) => ({
                       label: labelOf(meta?.appointmentStatuses, status),
                       value,
@@ -223,18 +223,18 @@ export default function DashboardPage() {
                   />
                 </Panel>
 
-                <Panel title="Notas recientes" titleId="notas" flush>
+                <Panel title="Recent notes" titleId="recent-notes" flush>
                   <ul className="list">
                     {data.recentNotes.map((note) => (
                       <li key={note.id}>
-                        <Link className="list__item" to={`/app/notas/${note.id}`}>
+                        <Link className="list__item" to={`/app/notes/${note.id}`}>
                           <span className="list__main">
                             <span className="list__title">{fullName(note)}</span>
                             <span className="list__meta">
-                              Sesión {note.session_number} · {formatDate(note.session_date)}
+                              Session {note.session_number} · {formatDate(note.session_date)}
                             </span>
                           </span>
-                          {note.is_locked ? <Badge tone="success">Firmada</Badge> : <Badge tone="warning">Borrador</Badge>}
+                          {note.is_locked ? <Badge tone="success">Signed</Badge> : <Badge tone="warning">Draft</Badge>}
                         </Link>
                       </li>
                     ))}

@@ -1,11 +1,11 @@
 /**
- * Cliente de la API. Todas las peticiones pasan por aqui:
- *  - envia la cookie de sesion (mismo origen) y el token CSRF en cabecera,
- *  - convierte cualquier fallo en un ApiError con un mensaje legible,
- *  - si el token CSRF expiro (419) lo renueva y reintenta una sola vez.
+ * API client. Every request goes through here:
+ *  - sends the session cookie (same origin) and the CSRF token in a header,
+ *  - turns any failure into an ApiError with a readable message,
+ *  - if the CSRF token expired (419), refreshes it and retries exactly once.
  *
- * Nunca se muestran al usuario detalles tecnicos: el backend ya responde con
- * mensajes pensados para personas.
+ * Technical details are never shown to the user: the backend already replies
+ * with messages written for people.
  */
 
 export type FieldErrors = Record<string, string>;
@@ -22,14 +22,14 @@ export class ApiError extends Error {
 }
 
 const FALLBACK_MESSAGES: Record<number, string> = {
-  0: 'No pudimos conectar. Revisa tu conexión e inténtalo de nuevo.',
-  401: 'Tu sesión terminó. Vuelve a ingresar para continuar.',
-  403: 'No tienes permiso para ver esto.',
-  404: 'No encontramos lo que buscas.',
-  413: 'El archivo es demasiado grande.',
-  419: 'Tu sesión de seguridad expiró. Recarga la página.',
-  429: 'Hiciste varios intentos seguidos. Espera un momento.',
-  500: 'Algo salió mal de nuestro lado. Intenta de nuevo en unos minutos.',
+  0: "We couldn't connect. Check your connection and try again.",
+  401: 'Your session ended. Please sign in again to continue.',
+  403: "You don't have permission to see this.",
+  404: "We couldn't find what you're looking for.",
+  413: 'The file is too large.',
+  419: 'Your security session expired. Please reload the page.',
+  429: "You've made several attempts in a row. Please wait a moment.",
+  500: 'Something went wrong on our side. Please try again in a few minutes.',
 };
 
 let csrfToken = '';
@@ -39,7 +39,7 @@ export function setCsrfToken(token: string): void {
   csrfToken = token;
 }
 
-/** Permite a la sesion reaccionar cuando el backend responde 401. */
+/** Lets the session react when the backend responds with 401. */
 export function onUnauthorized(listener: () => void): () => void {
   unauthorizedListeners.add(listener);
   return () => unauthorizedListeners.delete(listener);
@@ -125,16 +125,16 @@ async function refreshCsrf(): Promise<void> {
     const payload = (await response.json()) as { data?: { csrfToken?: string } };
     if (payload.data?.csrfToken) setCsrfToken(payload.data.csrfToken);
   } catch {
-    // Si falla, el reintento devolvera el error original.
+    // If this fails, the retry will return the original error.
   }
 }
 
-/** Peticion que devuelve la respuesta completa ({ data, message }). */
+/** Request that returns the full response ({ data, message }). */
 export function request<T = unknown>(path: string, options: RequestOptions = {}): Promise<T> {
   return send(path, options, false) as Promise<T>;
 }
 
-/** Atajo para lecturas: devuelve solo `data`. */
+/** Shortcut for reads: returns only `data`. */
 export async function get<T>(path: string, query?: Query, signal?: AbortSignal): Promise<T> {
   const payload = await request<{ data: T }>(path, { query, signal });
   return payload.data;

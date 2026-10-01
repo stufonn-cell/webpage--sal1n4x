@@ -9,7 +9,7 @@ export function useDocumentTitle(title: string | undefined, clinicName = SUFFIX)
   }, [title, clinicName]);
 }
 
-/** Actualiza la descripcion y el canonical para las paginas publicas. */
+/** Updates the description and canonical link for public pages. */
 export function useMetaDescription(description: string): void {
   useEffect(() => {
     document.querySelector('meta[name="description"]')?.setAttribute('content', description);

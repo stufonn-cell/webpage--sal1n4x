@@ -1,5 +1,7 @@
 import { useRef, useState, type PointerEvent } from 'react';
 import { Button } from '@/components/ui/Button';
+import { documentText } from '@/lib/documentText';
+import type { DocumentLanguage } from '@/lib/types';
 import './forms.css';
 
 export type Stroke = [number, number][];
@@ -11,19 +13,22 @@ interface SignaturePadProps {
   onChange: (strokes: Stroke[]) => void;
   error?: string;
   id?: string;
+  /** Language of the document being signed. */
+  language?: DocumentLanguage;
 }
 
 /**
- * Lienzo de firma con Pointer Events (raton, lapiz y dedo). Solo envia
- * coordenadas: el SVG final lo construye el servidor.
+ * Signature canvas using Pointer Events (mouse, pen and finger). It only sends
+ * coordinates: the server builds the final SVG.
  */
-export function SignaturePad({ onChange, error, id = 'strokes' }: SignaturePadProps) {
+export function SignaturePad({ onChange, error, id = 'strokes', language = 'en' }: SignaturePadProps) {
+  const t = documentText(language).signaturePad;
   const svgRef = useRef<SVGSVGElement>(null);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const latest = useRef<Stroke[]>([]);
   const drawing = useRef(false);
 
-  // El ref guarda la ultima version para notificar sin efectos en el updater.
+  // The ref keeps the latest version so we can notify without side effects in the updater.
   const update = (fn: (current: Stroke[]) => Stroke[]) =>
     setStrokes((current) => {
       const next = fn(current);
@@ -43,7 +48,7 @@ export function SignaturePad({ onChange, error, id = 'strokes' }: SignaturePadPr
     try {
       event.currentTarget.setPointerCapture(event.pointerId);
     } catch {
-      // Algunos navegadores rechazan la captura; el trazo funciona igual.
+      // Some browsers reject the capture; drawing still works.
     }
     drawing.current = true;
     const first = point(event);
@@ -81,7 +86,7 @@ export function SignaturePad({ onChange, error, id = 'strokes' }: SignaturePadPr
         className="signature__pad"
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         role="img"
-        aria-label={hasInk ? 'Firma dibujada' : 'Recuadro para firmar'}
+        aria-label={hasInk ? t.drawn : t.box}
         tabIndex={0}
         onPointerDown={start}
         onPointerMove={move}
@@ -97,14 +102,14 @@ export function SignaturePad({ onChange, error, id = 'strokes' }: SignaturePadPr
           ))}
         {!hasInk && (
           <text className="signature__placeholder" x="300" y="110" textAnchor="middle">
-            Firma aquí con el dedo o el ratón
+            {t.placeholder}
           </text>
         )}
       </svg>
       <div className="split">
-        <span className="field__hint">Tu firma se guarda como trazo, junto con la fecha y la hora.</span>
+        <span className="field__hint">{t.hint}</span>
         <Button size="sm" variant="quiet" icon="close" onClick={clear} disabled={!hasInk}>
-          Borrar y repetir
+          {t.clear}
         </Button>
       </div>
       {error && (
