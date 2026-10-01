@@ -1,0 +1,74 @@
+import type { Instrument } from '@/lib/types';
+import { Progress } from '@/components/ui/Display';
+import './forms.css';
+
+interface QuestionnaireProps {
+  instrument: Instrument;
+  answers: Record<number, number>;
+  onAnswer: (index: number, value: number) => void;
+  highlightMissing?: boolean;
+  /** Version para pacientes: lenguaje mas cercano y sin marcar items criticos. */
+  audience?: 'clinician' | 'patient';
+}
+
+/**
+ * Escala tipo Likert accesible: cada item es un grupo de radios con su
+ * leyenda. En movil las opciones se apilan como botones amplios.
+ */
+export function Questionnaire({ instrument, answers, onAnswer, highlightMissing, audience = 'clinician' }: QuestionnaireProps) {
+  const answered = Object.keys(answers).length;
+  const total = instrument.items.length;
+
+  return (
+    <div className="questionnaire">
+      <div className="questionnaire__progress" aria-live="polite">
+        <div className="split">
+          <span className="small soft">
+            {answered === total ? 'Todas las preguntas respondidas' : `${answered} de ${total} respondidas`}
+          </span>
+          <span className="xsmall muted">{instrument.window}</span>
+        </div>
+        <Progress value={answered} max={total} label="Progreso del cuestionario" />
+      </div>
+
+      <ol className="questionnaire__items">
+        {instrument.items.map((item, index) => {
+          const missing = highlightMissing && answers[index] === undefined;
+          const critical = audience === 'clinician' && instrument.criticalItems.includes(index);
+          return (
+            <li
+              key={index}
+              id={`item-${index}`}
+              className={['likert', answers[index] !== undefined && 'is-answered', missing && 'is-missing'].filter(Boolean).join(' ')}
+            >
+              <fieldset>
+                <legend className="likert__question">
+                  <span className="likert__number">{index + 1}</span>
+                  <span>
+                    {item}
+                    {critical && <span className="likert__critical"> · ítem crítico</span>}
+                  </span>
+                </legend>
+                {missing && <p className="field__error">Falta responder esta pregunta.</p>}
+                <div className="likert__options">
+                  {instrument.scale.map((option) => (
+                    <label key={option.value} className="likert__option">
+                      <input
+                        type="radio"
+                        name={`answer-${index}`}
+                        value={option.value}
+                        checked={answers[index] === option.value}
+                        onChange={() => onAnswer(index, option.value)}
+                      />
+                      <span>{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}

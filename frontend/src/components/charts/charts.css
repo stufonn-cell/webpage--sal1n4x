@@ -1,0 +1,173 @@
+.chart {
+  margin: 0;
+  color: var(--primary);
+}
+
+.chart svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.chart-empty {
+  padding: var(--space-6) 0;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+.chart__grid {
+  stroke: var(--line);
+  stroke-dasharray: 3 4;
+}
+
+.chart__line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.chart__dot {
+  fill: var(--surface);
+  stroke: currentColor;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  transition: r var(--duration-fast) var(--ease-out);
+}
+
+.chart__dot:hover {
+  r: 6;
+}
+
+.chart__label,
+.chart__value {
+  fill: var(--ink-muted);
+  font-size: 12px;
+  font-family: var(--font-sans);
+}
+
+.chart__value {
+  fill: var(--ink-soft);
+  font-weight: 600;
+}
+
+.chart__band {
+  opacity: 0.5;
+}
+
+.chart__band--success {
+  fill: var(--success-soft);
+}
+
+.chart__band--info {
+  fill: var(--info-soft);
+}
+
+.chart__band--warning {
+  fill: var(--warning-soft);
+}
+
+.chart__band--danger {
+  fill: var(--danger-soft);
+}
+
+.chart__bar {
+  fill: var(--primary);
+  opacity: 0.85;
+  transition: opacity var(--duration-fast);
+  transform-box: fill-box;
+  transform-origin: bottom;
+}
+
+.chart__bar:hover {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .chart__bar {
+    animation: grow-bar var(--duration-slow) var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 50ms);
+  }
+}
+
+@keyframes grow-bar {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.distribution {
+  margin: 0;
+}
+
+.distribution__bar {
+  display: flex;
+  gap: 3px;
+  height: 0.75rem;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--surface-sunk);
+}
+
+.distribution__segment {
+  display: block;
+  min-width: 6px;
+}
+
+.distribution__empty {
+  flex: 1;
+}
+
+.distribution__segment--neutral {
+  background: var(--line-strong);
+}
+
+.distribution__segment--success {
+  background: var(--success);
+}
+
+.distribution__segment--info {
+  background: var(--info);
+}
+
+.distribution__segment--warning {
+  background: var(--warning);
+}
+
+.distribution__segment--danger {
+  background: var(--danger);
+}
+
+.distribution__segment--primary {
+  background: var(--primary);
+}
+
+.distribution__legend {
+  list-style: none;
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.distribution__legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.distribution__legend strong {
+  margin-left: auto;
+}
+
+.distribution__swatch {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 3px;
+}

@@ -1,0 +1,184 @@
+/*
+ * PsiClinic - portal del paciente. Mas aire y un tono mas calido que la app
+ * clinica: aqui la persona no trabaja, viene a ocuparse de si misma.
+ */
+
+.portal {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--paper) 90%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.portal-nav__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  height: 4rem;
+}
+
+.portal-nav__links {
+  display: flex;
+  gap: var(--space-1);
+  margin-left: auto;
+}
+
+.portal-nav__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background-color var(--duration-fast),
+    color var(--duration-fast);
+}
+
+.portal-nav__link:hover {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.portal-nav__link.active {
+  background: var(--primary-softer);
+  color: var(--primary-hover);
+  font-weight: 600;
+}
+
+:root[data-theme='dark'] .portal-nav__link.active {
+  color: var(--primary);
+}
+
+.portal-nav__actions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.portal__main {
+  flex: 1;
+  max-width: 60rem;
+  padding-top: var(--space-10);
+  padding-bottom: var(--space-16);
+}
+
+.portal__main:focus {
+  outline: none;
+}
+
+.portal__footer {
+  max-width: 60rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-6);
+  border-top: 1px solid var(--line);
+}
+
+.portal-hello h1 {
+  font-size: var(--text-3xl);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: var(--leading-tight);
+}
+
+.portal-hello p {
+  margin-top: var(--space-3);
+  max-width: 38rem;
+  font-size: var(--text-md);
+  line-height: var(--leading-relaxed);
+}
+
+.next-session {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  background: var(--primary-softer);
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line));
+}
+
+:root[data-theme='dark'] .next-session {
+  background: var(--primary-soft);
+}
+
+.next-session__date {
+  font-size: var(--text-2xl);
+  line-height: var(--leading-tight);
+}
+
+.next-session .btn {
+  margin-top: var(--space-3);
+}
+
+.inline-icon {
+  display: inline-block;
+  vertical-align: -2px;
+}
+
+/* En movil la navegacion pasa a una barra inferior al alcance del pulgar. */
+@media (max-width: 760px) {
+  /* backdrop-filter crea un bloque contenedor: anularia el position: fixed
+     de la barra inferior. */
+  .portal-nav {
+    backdrop-filter: none;
+    background: var(--paper);
+  }
+
+  .portal-nav__links {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 30;
+    justify-content: space-around;
+    margin: 0;
+    padding: var(--space-2) var(--space-2) calc(var(--space-2) + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  .portal-nav__link {
+    flex-direction: column;
+    gap: 2px;
+    min-width: 4.5rem;
+    padding: var(--space-2);
+    font-size: 0.6875rem;
+  }
+
+  .portal-nav__actions {
+    margin-left: auto;
+  }
+
+  .portal__main {
+    padding-top: var(--space-6);
+    padding-bottom: calc(var(--space-20) + env(safe-area-inset-bottom));
+  }
+
+  .portal__footer {
+    padding-bottom: calc(var(--space-20) + env(safe-area-inset-bottom));
+  }
+
+  .portal-hello h1 {
+    font-size: var(--text-2xl);
+  }
+
+  .next-session {
+    padding: var(--space-6);
+  }
+
+  .next-session .btn {
+    width: 100%;
+  }
+}

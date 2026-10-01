@@ -1,0 +1,197 @@
+/* --- Firma ---------------------------------------------------------- */
+
+.signature {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.signature__pad {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 1;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  touch-action: none;
+  cursor: crosshair;
+  transition: border-color var(--duration-fast);
+}
+
+.signature__pad:hover,
+.signature__pad:focus-visible {
+  border-color: var(--primary);
+}
+
+.signature.has-error .signature__pad {
+  border-color: var(--danger);
+}
+
+.signature__baseline {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+
+.signature__ink {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.signature__placeholder {
+  fill: var(--ink-muted);
+  font-size: 18px;
+  font-family: var(--font-sans);
+  pointer-events: none;
+}
+
+.signature-image {
+  max-width: 22rem;
+  padding: var(--space-2);
+  border-radius: var(--radius);
+  background: #fffdf9;
+}
+
+/* --- Cuestionario -------------------------------------------------- */
+
+.questionnaire__progress {
+  position: sticky;
+  top: calc(var(--topbar-height) + var(--space-2));
+  z-index: 5;
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.questionnaire__items {
+  list-style: none;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.likert {
+  padding: var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  transition:
+    border-color var(--duration) var(--ease-out),
+    background-color var(--duration) var(--ease-out);
+}
+
+.likert.is-answered {
+  border-color: color-mix(in srgb, var(--primary) 30%, var(--line));
+}
+
+.likert.is-missing {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger-soft) 40%, var(--surface));
+}
+
+.likert fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.likert__question {
+  display: flex;
+  gap: var(--space-3);
+  padding: 0;
+  margin-bottom: var(--space-4);
+  font-size: var(--text-md);
+  font-weight: 500;
+  line-height: var(--leading-snug);
+}
+
+.likert__number {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--surface-sunk);
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  transition: all var(--duration) var(--ease-out);
+}
+
+.likert.is-answered .likert__number {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.likert__critical {
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.likert__options {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+}
+
+.likert__option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.likert__option:hover {
+  border-color: var(--ink-muted);
+}
+
+.likert__option input {
+  accent-color: var(--primary);
+  flex-shrink: 0;
+}
+
+.likert__option:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--primary-softer);
+  font-weight: 600;
+}
+
+.likert__option:has(input:focus-visible) {
+  box-shadow: var(--focus-ring);
+}
+
+@media (max-width: 640px) {
+  .likert {
+    padding: var(--space-4);
+  }
+
+  .likert__options {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Consentimiento ------------------------------------------------- */
+
+.consent__body {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 42rem;
+  font-family: var(--font-serif);
+  font-size: var(--text-md);
+  line-height: var(--leading-relaxed);
+}
