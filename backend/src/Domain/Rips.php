@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -13,90 +13,99 @@ namespace PsiClinic\Domain;
 use PsiClinic\Core\Database;
 
 /**
- * Generacion del RIPS en JSON (Resolucion 2275 de 2023, Anexo Tecnico 1, y
- * Lineamientos de generacion, validacion y envio v3.2 de mayo de 2025).
+ * RIPS JSON generation for Colombia (Resolution 2275 of 2023, Technical
+ * Annex 1, and the Ministry of Health guidelines for generating, validating
+ * and sending RIPS, v3.2 of May 2025).
  *
- * Caso cubierto: profesional independiente que atiende a particulares y no
- * esta obligado a expedir factura electronica en salud. Reporta "RIPS sin
- * factura": numFactura null, tipoNota "RS" y numNota consecutivo propio.
+ * Covered case: an independent professional who sees private patients and is
+ * not required to issue an electronic health invoice. They report "RIPS
+ * without invoice": numFactura null, tipoNota "RS" and their own consecutive
+ * numNota.
  *
- * Solo se reportan consultas (objeto "consultas", campos C01 a C21) de citas
- * en estado "Realizada" que no hayan sido incluidas en un reporte anterior.
+ * Only consultations are reported (the "consultas" object, fields C01-C21),
+ * for appointments in "completed" status that were not included in a previous
+ * report. JSON keys and code values are fixed by the Ministry and stay as the
+ * standard defines them; only the labels shown in the app are in English.
  */
 final class Rips
 {
-    /** CUPS de consulta por psicologia (citados en los lineamientos v3.2). */
+    /** CUPS codes for psychology consultations (quoted in the v3.2 guidelines). */
     public const CUPS_FIRST = '890208';
     public const CUPS_FOLLOW_UP = '890308';
 
-    /** Tabla ModalidadAtencion: 01 intramural, 06 telemedicina interactiva. */
+    /** ModalidadAtencion table: 01 on-site, 06 interactive telemedicine. */
     private const MODALITY = ['in_person' => '01', 'online' => '06', 'phone' => '06'];
 
-    /** Tipos de documento admitidos en U01 y C15 (tabla TipoIdPISIS). */
+    /** Document types accepted in U01 and C15 (TipoIdPISIS table). */
     public const DOCUMENT_TYPES = [
-        'CC' => 'Cédula de ciudadanía',
-        'TI' => 'Tarjeta de identidad',
-        'RC' => 'Registro civil',
-        'CE' => 'Cédula de extranjería',
-        'PA' => 'Pasaporte',
-        'PT' => 'Permiso por protección temporal',
-        'CD' => 'Carné diplomático',
-        'SC' => 'Salvoconducto',
-        'PE' => 'Permiso especial de permanencia',
-        'CN' => 'Certificado de nacido vivo',
-        'AS' => 'Adulto sin identificación',
-        'MS' => 'Menor sin identificación',
+        'CC' => 'CC · Citizenship card',
+        'TI' => 'TI · Identity card (minors)',
+        'RC' => 'RC · Civil registry',
+        'CE' => 'CE · Foreigner ID card',
+        'PA' => 'PA · Passport',
+        'PT' => 'PT · Temporary protection permit',
+        'CD' => 'CD · Diplomatic card',
+        'SC' => 'SC · Safe-conduct',
+        'PE' => 'PE · Special stay permit',
+        'CN' => 'CN · Live birth certificate',
+        'AS' => 'AS · Adult without ID',
+        'MS' => 'MS · Minor without ID',
     ];
 
-    /** Tabla RIPSTipoUsuarioVersion2. */
+    /** RIPSTipoUsuarioVersion2 table. */
     public const USER_TYPES = [
-        '12' => 'Particular',
-        '01' => 'Contributivo cotizante',
-        '02' => 'Contributivo beneficiario',
-        '03' => 'Contributivo adicional',
-        '04' => 'Subsidiado',
-        '05' => 'No afiliado',
-        '06' => 'Especial o excepción cotizante',
-        '07' => 'Especial o excepción beneficiario',
-        '11' => 'Tomador o amparado de planes voluntarios de salud',
+        '12' => 'Private (self-pay)',
+        '01' => 'Contributory scheme, contributor',
+        '02' => 'Contributory scheme, beneficiary',
+        '03' => 'Contributory scheme, additional',
+        '04' => 'Subsidized scheme',
+        '05' => 'Not insured',
+        '06' => 'Special or exception scheme, contributor',
+        '07' => 'Special or exception scheme, beneficiary',
+        '11' => 'Voluntary health plan holder',
     ];
 
-    /** Tabla Sexo, columna Extra_III: segun el documento de identidad. */
-    public const SEXES = ['F' => 'Femenino', 'M' => 'Masculino', 'I' => 'Indeterminado o intersexual'];
+    /** Sexo table: as stated on the identity document. */
+    public const SEXES = ['F' => 'Female', 'M' => 'Male', 'I' => 'Indeterminate or intersex'];
 
-    /** Tabla ZonaVersion2. */
-    public const ZONES = ['01' => 'Urbana', '02' => 'Rural'];
+    /** ZonaVersion2 table. */
+    public const ZONES = ['01' => 'Urban', '02' => 'Rural'];
 
-    /** Tabla RIPSFinalidadConsultaVersion2 (subconjunto util en psicologia). */
+    /** RIPSFinalidadConsultaVersion2 table (subset useful in psychology). */
     public const PURPOSES = [
-        '15' => 'Diagnóstico',
-        '16' => 'Tratamiento',
-        '17' => 'Rehabilitación',
-        '21' => 'Atención básica de orientación familiar',
-        '31' => 'Prevención del consumo de sustancias psicoactivas',
-        '35' => 'Promoción de estrategias de afrontamiento frente a sucesos vitales',
-        '44' => 'Otra',
+        '15' => 'Diagnosis',
+        '16' => 'Treatment',
+        '17' => 'Rehabilitation',
+        '21' => 'Basic family guidance',
+        '31' => 'Prevention of psychoactive substance use',
+        '35' => 'Coping strategies for life events',
+        '44' => 'Other',
     ];
 
-    /** Tabla RIPSCausaExternaVersion2 (subconjunto util en psicologia). */
+    /** RIPSCausaExternaVersion2 table (subset useful in psychology). */
     public const CAUSES = [
-        '38' => 'Enfermedad general',
-        '39' => 'Enfermedad laboral',
-        '21' => 'Accidente de trabajo',
-        '28' => 'Lesión por agresión',
-        '29' => 'Lesión autoinfligida',
-        '30' => 'Sospecha de violencia física',
-        '31' => 'Sospecha de violencia psicológica',
-        '32' => 'Sospecha de violencia sexual',
-        '33' => 'Sospecha de negligencia y abandono',
-        '40' => 'Promoción y mantenimiento de la salud',
+        '38' => 'General illness',
+        '39' => 'Occupational illness',
+        '21' => 'Work accident',
+        '28' => 'Injury from assault',
+        '29' => 'Self-inflicted injury',
+        '30' => 'Suspected physical violence',
+        '31' => 'Suspected psychological violence',
+        '32' => 'Suspected sexual violence',
+        '33' => 'Suspected neglect or abandonment',
+        '40' => 'Health promotion and maintenance',
     ];
+
+    /** Informative only: the validator itself decides where it reports. */
+    public const ENVIRONMENTS = ['test' => 'Test', 'production' => 'Production'];
+
+    public const STATUSES = ['generated' => 'Generated', 'validated' => 'Validated', 'rejected' => 'Rejected'];
 
     /**
-     * Arma el reporte de un periodo. Devuelve las consultas listas, las que
-     * tienen datos faltantes (con el motivo) y el JSON resultante.
+     * Builds the report for a period. Returns the consultations that are
+     * ready, the ones with missing data (and why) and the resulting JSON.
      */
-    public static function build(string $from, string $to, ?string $numNota = null): array
+    public static function build(string $from, string $to, ?string $noteNumber = null): array
     {
         $settings = Settings::all();
         $config = self::configIssues($settings);
@@ -150,7 +159,7 @@ final class Rips
             $users[$key]['servicios']['consultas'][] = $consulta;
         }
 
-        // Consecutivos (U10 y C21): inician en 1 y no se repiten.
+        // Sequence numbers (U10 and C21) start at 1 and never repeat.
         $usuarios = [];
         foreach (array_values($users) as $userIndex => $user) {
             $user['consecutivo'] = $userIndex + 1;
@@ -168,27 +177,27 @@ final class Rips
             'readyCount' => count($ready),
             'usersCount' => count($usuarios),
             'rips' => [
-                'numDocumentoIdObligado' => preg_replace('/\D+/', '', (string) ($settings['rips_obligado_documento'] ?? '')),
+                'numDocumentoIdObligado' => self::digits((string) ($settings['rips_reporter_id'] ?? '')),
                 'numFactura' => null,
                 'tipoNota' => 'RS',
-                'numNota' => $numNota ?? self::nextNumNota(),
+                'numNota' => $noteNumber ?? self::nextNoteNumber(),
                 'usuarios' => $usuarios,
             ],
         ];
     }
 
-    public static function nextNumNota(): string
+    public static function nextNoteNumber(): string
     {
-        $last = (int) Database::value('SELECT COALESCE(MAX(CAST(num_nota AS UNSIGNED)), 0) FROM rips_reports');
-        $start = (int) Settings::get('rips_numero_inicial', '1');
+        $last = (int) Database::value('SELECT COALESCE(MAX(CAST(note_number AS UNSIGNED)), 0) FROM rips_reports');
+        $start = (int) Settings::get('rips_first_note_number', '1');
 
-        return (string) max($last + 1, $start);
+        return (string) max($last + 1, $start, 1);
     }
 
     /**
-     * CIE-10 en el formato del RIPS: sin punto, en mayusculas. El campo exige
-     * al menos 4 caracteres: un codigo de 3 (categoria con subdivisiones) se
-     * rechaza para que el profesional elija la subcategoria exacta.
+     * ICD-10 in RIPS format: no dot, upper case. The field needs at least 4
+     * characters: a 3-character code (a category with subdivisions) is
+     * rejected so the professional picks the exact subcategory.
      */
     public static function icd10ForRips(?string $code): ?string
     {
@@ -197,21 +206,26 @@ final class Rips
         return preg_match('/^[A-Z]\d{2}[0-9A-Z]{1,2}$/', $normalized) === 1 ? $normalized : null;
     }
 
-    /** Datos de configuracion de la clinica que faltan para poder reportar. */
+    /** Practice settings that are still missing before anything can be reported. */
     public static function configIssues(array $settings): array
     {
         $issues = [];
-        if (!preg_match('/^\d{4,12}$/', preg_replace('/\D+/', '', (string) ($settings['rips_obligado_documento'] ?? '')) ?? '')) {
-            $issues[] = __('Falta el NIT o documento del obligado a reportar (Configuración → RIPS).');
+        if (!preg_match('/^\d{4,12}$/', self::digits((string) ($settings['rips_reporter_id'] ?? '')))) {
+            $issues[] = 'Add the NIT or ID number of the party required to report (Settings → RIPS).';
         }
-        if (!preg_match('/^\d{10,12}$/', (string) ($settings['rips_cod_prestador'] ?? ''))) {
-            $issues[] = __('Falta el código de habilitación del prestador en el REPS (12 dígitos).');
+        if (!preg_match('/^\d{10,12}$/', (string) ($settings['rips_provider_code'] ?? ''))) {
+            $issues[] = 'Add the provider code registered in REPS (10 to 12 digits).';
         }
-        if (!preg_match('/^\d{3,4}$/', (string) ($settings['rips_cod_servicio'] ?? ''))) {
-            $issues[] = __('Falta el código del servicio habilitado (Resolución 3100 de 2019).');
+        if (!preg_match('/^\d{3,4}$/', (string) ($settings['rips_service_code'] ?? ''))) {
+            $issues[] = 'Add the code of the enabled health service (Resolution 3100 of 2019).';
         }
 
         return $issues;
+    }
+
+    private static function digits(string $value): string
+    {
+        return preg_replace('/\D+/', '', $value) ?? '';
     }
 
     private static function diagnosesFor(int $patientId): array
@@ -220,7 +234,7 @@ final class Rips
             'SELECT id, `system`, code, icd10_code, title, is_primary, status, created_at
              FROM diagnoses
              WHERE patient_id = :id AND status IN ("active", "remission")
-             ORDER BY is_primary DESC, created_at',
+             ORDER BY is_primary DESC, created_at, id',
             ['id' => $patientId]
         );
 
@@ -244,33 +258,33 @@ final class Rips
         $issues = [];
 
         if (!array_key_exists((string) $appointment['document_type'], self::DOCUMENT_TYPES)) {
-            $issues[] = __('Tipo de documento del paciente no válido para RIPS.');
+            $issues[] = 'The patient\'s document type is not valid for RIPS.';
         }
         if (!preg_match('/^[A-Za-z0-9]{4,20}$/', (string) $appointment['document_id'])) {
-            $issues[] = __('Falta el número de documento del paciente.');
+            $issues[] = 'The patient\'s document number is missing.';
         } elseif (in_array($appointment['document_type'], ['CC', 'TI'], true) && !ctype_digit((string) $appointment['document_id'])) {
-            $issues[] = __('Con CC o TI el documento solo puede tener números.');
+            $issues[] = 'With CC or TI the document number can only contain digits.';
         }
         if (empty($appointment['birth_date'])) {
-            $issues[] = __('Falta la fecha de nacimiento del paciente.');
+            $issues[] = 'The patient\'s date of birth is missing.';
         }
         if (!array_key_exists((string) $appointment['biological_sex'], self::SEXES)) {
-            $issues[] = __('Falta el sexo según el documento de identidad.');
+            $issues[] = 'The sex stated on the patient\'s ID document is missing.';
         }
         if ($appointment['residence_country'] === '170' && !preg_match('/^\d{5}$/', (string) $appointment['residence_municipality'])) {
-            $issues[] = __('Falta el municipio de residencia (código DIVIPOLA de 5 dígitos).');
+            $issues[] = 'The municipality of residence is missing (5-digit DIVIPOLA code).';
         }
         if (!array_key_exists((string) $appointment['professional_document_type'], self::DOCUMENT_TYPES)
             || !preg_match('/^[A-Za-z0-9]{4,20}$/', (string) $appointment['professional_document_number'])) {
-            $issues[] = __('Falta el documento del profesional que atendió (Mi perfil o Usuarios).');
+            $issues[] = 'The ID document of the professional who saw the patient is missing (My profile or Users).';
         }
 
         if ($diagnoses === []) {
-            $issues[] = __('El paciente no tiene un diagnóstico activo.');
+            $issues[] = 'The patient has no active diagnosis.';
         } elseif ($diagnoses[0]['icd10'] === null) {
             $issues[] = $diagnoses[0]['icd10_raw']
-                ? __('El diagnóstico principal necesita su código CIE-10 de 4 caracteres para el RIPS (hoy: %s).', $diagnoses[0]['icd10_raw'])
-                : __('El diagnóstico principal necesita su código CIE-10 de 4 caracteres para el RIPS.');
+                ? sprintf('The primary diagnosis needs its 4-character ICD-10 code for RIPS (currently %s).', $diagnoses[0]['icd10_raw'])
+                : 'The primary diagnosis needs its 4-character ICD-10 code for RIPS.';
         }
 
         return $issues;
@@ -314,8 +328,8 @@ final class Rips
             array_slice($diagnoses, 1)
         )));
 
-        // Tipo de diagnostico (C14): 02 confirmado nuevo en la primera consulta
-        // posterior a su registro; 03 confirmado repetido en las siguientes.
+        // Diagnosis type (C14): 02 newly confirmed at the first consultation
+        // after it was recorded; 03 confirmed, repeated, afterwards.
         $repeated = (int) Database::value(
             'SELECT COUNT(*) FROM appointments
              WHERE patient_id = :patient AND status = "completed" AND starts_at < :starts AND starts_at >= :since',
@@ -323,17 +337,17 @@ final class Rips
         ) > 0;
 
         return [
-            'codPrestador' => (string) $settings['rips_cod_prestador'],
+            'codPrestador' => (string) $settings['rips_provider_code'],
             'fechaInicioAtencion' => date('Y-m-d H:i', strtotime((string) $appointment['starts_at'])),
             'numAutorizacion' => null,
             'codConsulta' => $cups,
             'modalidadGrupoServicioTecSal' => self::MODALITY[$appointment['modality']] ?? '01',
             'grupoServicios' => '01',
-            'codServicio' => (int) $settings['rips_cod_servicio'],
+            'codServicio' => (int) $settings['rips_service_code'],
             'finalidadTecnologiaSalud' => $cups === self::CUPS_FIRST
-                ? (string) ($settings['rips_finalidad_primera'] ?? '15')
-                : (string) ($settings['rips_finalidad_control'] ?? '16'),
-            'causaMotivoAtencion' => (string) ($settings['rips_causa'] ?? '38'),
+                ? (string) ($settings['rips_purpose_first'] ?? '15')
+                : (string) ($settings['rips_purpose_follow_up'] ?? '16'),
+            'causaMotivoAtencion' => (string) ($settings['rips_cause'] ?? '38'),
             'codDiagnosticoPrincipal' => $principal['icd10'],
             'codDiagnosticoRelacionado1' => $related[0] ?? null,
             'codDiagnosticoRelacionado2' => $related[1] ?? null,
@@ -349,7 +363,7 @@ final class Rips
         ];
     }
 
-    /** Orden de campos del Anexo Tecnico 1 (U01 a U11 y luego servicios). */
+    /** Field order of Technical Annex 1 (U01 to U11, then services). */
     private static function orderUser(array $user): array
     {
         $order = [

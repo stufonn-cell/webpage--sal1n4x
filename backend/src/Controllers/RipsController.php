@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -14,6 +14,7 @@ use PsiClinic\Core\Auth;
 use PsiClinic\Core\Controller;
 use PsiClinic\Core\Database;
 use PsiClinic\Core\HttpException;
+use PsiClinic\Core\OutboundUrl;
 use PsiClinic\Core\Request;
 use PsiClinic\Domain\AuditLog;
 use PsiClinic\Domain\Rips;
@@ -22,16 +23,22 @@ use PsiClinic\Support\MuvClient;
 use PsiClinic\Support\Present;
 
 /**
- * Reportes RIPS sin factura: vista previa de un periodo, generacion del JSON,
- * descarga para el Validador Local y envio al API Docker del Ministerio.
+ * RIPS reports without invoice: preview of a period, JSON generation,
+ * download for the Ministry's local validator and submission to its Docker API.
  */
 final class RipsController extends Controller
 {
+    /**
+     * Builds the validator client from (url, verifyTls). Tests swap it for a
+     * client with a fake transport; in production it stays null.
+     */
+    public static ?\Closure $clientFactory = null;
+
     public function index(Request $request): void
     {
         $this->ok([
             'reports' => Database::all(
-                'SELECT r.id, r.num_nota, r.period_start, r.period_end, r.status, r.cuv, r.users_count,
+                'SELECT r.id, r.note_number, r.period_start, r.period_end, r.status, r.cuv, r.users_count,
                         r.services_count, r.created_at, r.sent_at, c.full_name AS created_by_name, s.full_name AS sent_by_name
                  FROM rips_reports r
                  LEFT JOIN users c ON c.id = r.created_by
@@ -39,17 +46,9 @@ final class RipsController extends Controller
                  ORDER BY r.id DESC LIMIT 100'
             ),
             'configIssues' => Rips::configIssues(Settings::all()),
-            'nextNumNota' => Rips::nextNumNota(),
-            'environment' => Settings::get('rips_ambiente', 'pruebas'),
-            'muvConfigured' => Settings::get('rips_muv_url') !== '',
-            'catalogs' => [
-                'documentTypes' => Present::options(Rips::DOCUMENT_TYPES),
-                'userTypes' => Present::options(Rips::USER_TYPES),
-                'sexes' => Present::options(Rips::SEXES),
-                'zones' => Present::options(Rips::ZONES),
-                'purposes' => Present::options(Rips::PURPOSES),
-                'causes' => Present::options(Rips::CAUSES),
-            ],
+            'nextNoteNumber' => Rips::nextNoteNumber(),
+            'environment' => Settings::get('rips_environment', 'test'),
+            'validatorConfigured' => Settings::get('rips_validator_url') !== '',
         ]);
     }
 
@@ -71,15 +70,15 @@ final class RipsController extends Controller
         }
 
         $id = Database::transaction(static function () use ($from, $to): ?int {
-            $numNota = Rips::nextNumNota();
-            $result = Rips::build($from, $to, $numNota);
+            $noteNumber = Rips::nextNoteNumber();
+            $result = Rips::build($from, $to, $noteNumber);
 
             if ($result['readyCount'] === 0) {
                 return null;
             }
 
             $id = Database::insert('rips_reports', [
-                'num_nota' => $numNota,
+                'note_number' => $noteNumber,
                 'period_start' => $from,
                 'period_end' => $to,
                 'payload' => json_encode($result['rips'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
@@ -98,48 +97,66 @@ final class RipsController extends Controller
         });
 
         if ($id === null) {
-            throw HttpException::unprocessable('No hay consultas completas para reportar en ese periodo. Revisa los datos que faltan.');
+            throw HttpException::unprocessable('There are no complete consultations to report in that period. Review the missing data.');
         }
 
         AuditLog::record('create', 'rips_report', $id);
-        $this->created(['id' => $id], 'RIPS generado. Ya puedes descargarlo o enviarlo al validador.');
+        $this->created(['id' => $id], 'RIPS generated. You can now download it or send it to the validator.');
     }
 
     public function show(Request $request, string $id): void
     {
-        $report = $this->find((int) $id);
+        $report = $this->abortIfMissing(Database::first(
+            'SELECT r.*, c.full_name AS created_by_name, s.full_name AS sent_by_name
+             FROM rips_reports r
+             LEFT JOIN users c ON c.id = r.created_by
+             LEFT JOIN users s ON s.id = r.sent_by
+             WHERE r.id = :id',
+            ['id' => (int) $id]
+        ), 'We could not find this report.');
 
-        $this->ok(Present::row($report, []) + [
+        $this->ok([
             'payload' => json_decode((string) $report['payload'], true),
             'validation_result' => json_decode((string) ($report['validation_result'] ?? 'null'), true),
-        ]);
+            'validatorConfigured' => Settings::get('rips_validator_url') !== '',
+        ] + Present::row($report, []));
     }
 
-    /** Descarga el JSON para cargarlo en el Validador Local (cliente-servidor). */
+    /** Downloads the JSON to load it into the Ministry's local validator. */
     public function download(Request $request, string $id): void
     {
         $report = $this->find((int) $id);
         AuditLog::record('download', 'rips_report', (int) $report['id']);
 
-        header('Content-Type: application/json; charset=UTF-8');
-        header('Cache-Control: no-store, max-age=0');
-        header('X-Content-Type-Options: nosniff');
-        header(sprintf('Content-Disposition: attachment; filename="RIPS_RS_%s.json"', preg_replace('/\D+/', '', (string) $report['num_nota'])));
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=UTF-8');
+            header('Cache-Control: no-store, max-age=0');
+            header('X-Content-Type-Options: nosniff');
+            header(sprintf('Content-Disposition: attachment; filename="RIPS_RS_%s.json"', preg_replace('/\D+/', '', (string) $report['note_number'])));
+        }
         echo json_encode(json_decode((string) $report['payload'], true), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
     }
 
-    /** Envia al API Docker del MUV. La contrasena no se guarda en ningun lugar. */
+    /** Sends the report to the MUV Docker API. The password is never stored. */
     public function send(Request $request, string $id): void
     {
         $report = $this->find((int) $id);
 
         if ($report['status'] === 'validated') {
-            throw HttpException::conflict('Este RIPS ya fue validado por el Ministerio.');
+            throw HttpException::conflict('The Ministry already validated this RIPS.');
         }
 
-        $url = Settings::get('rips_muv_url');
+        $url = Settings::get('rips_validator_url');
         if ($url === '' || !preg_match('#^https?://#i', $url)) {
-            throw HttpException::unprocessable('Configura la dirección del API Docker del validador en Configuración → RIPS.');
+            throw HttpException::unprocessable('Add the address of the validator Docker API in Settings → RIPS.');
+        }
+
+        // Checked again right before the call (the address could have been
+        // saved before this check existed, or its DNS could have changed):
+        // the server never calls cloud metadata or link-local addresses.
+        $problem = OutboundUrl::problem($url);
+        if ($problem !== null) {
+            throw HttpException::unprocessable($problem . ' Review the validator address in Settings → RIPS.');
         }
 
         $this->validate($request, [
@@ -148,12 +165,13 @@ final class RipsController extends Controller
             'password' => 'required|max:200',
         ]);
 
-        $client = new MuvClient($url, Settings::get('rips_muv_verify_tls', '1') === '1');
+        $verifyTls = Settings::get('rips_validator_verify_tls', '1') === '1';
+        $client = self::$clientFactory !== null ? (self::$clientFactory)($url, $verifyTls) : new MuvClient($url, $verifyTls);
         $token = $client->login(
             $request->string('document_type'),
             $request->string('document_number'),
             (string) $request->input('password'),
-            preg_replace('/\D+/', '', Settings::get('rips_obligado_documento')) ?? ''
+            preg_replace('/\D+/', '', Settings::get('rips_reporter_id')) ?? ''
         );
 
         $result = $client->sendWithoutInvoice($token, json_decode((string) $report['payload'], true));
@@ -168,32 +186,34 @@ final class RipsController extends Controller
         AuditLog::record($result['accepted'] ? 'send:validated' : 'send:rejected', 'rips_report', (int) $report['id']);
 
         $this->message(
-            $result['accepted'] ? 'El Ministerio validó el RIPS y entregó el CUV.' : 'El validador rechazó el RIPS. Revisa los mensajes, corrige y vuelve a generarlo.',
+            $result['accepted']
+                ? 'The Ministry validated the RIPS and issued the CUV.'
+                : 'The validator rejected the RIPS. Review the messages, fix the data, delete this report and generate it again.',
             $result
         );
     }
 
     /**
-     * Elimina un reporte no validado para liberar sus citas y generarlo de
-     * nuevo tras corregir. Un RIPS con CUV no se puede borrar.
+     * Deletes a report that was not validated, so its appointments can be
+     * reported again after fixing the data. A RIPS with a CUV cannot be deleted.
      */
     public function destroy(Request $request, string $id): void
     {
         $report = $this->find((int) $id);
 
         if ($report['status'] === 'validated') {
-            throw HttpException::conflict('Un RIPS validado por el Ministerio no se puede eliminar.');
+            throw HttpException::conflict('A RIPS validated by the Ministry cannot be deleted.');
         }
 
         Database::delete('rips_reports', (int) $report['id']);
         AuditLog::record('delete', 'rips_report', (int) $report['id']);
 
-        $this->message('Reporte eliminado. Sus consultas quedan disponibles para un nuevo RIPS.');
+        $this->message('Report deleted. Its consultations are available for a new RIPS.');
     }
 
     private function find(int $id): array
     {
-        return $this->abortIfMissing(Database::first('SELECT * FROM rips_reports WHERE id = :id', ['id' => $id]), 'No encontramos este reporte.');
+        return $this->abortIfMissing(Database::first('SELECT * FROM rips_reports WHERE id = :id', ['id' => $id]), 'We could not find this report.');
     }
 
     /** @return array{0:string,1:string} */
@@ -205,7 +225,7 @@ final class RipsController extends Controller
         $to = date('Y-m-d', strtotime($request->string('to')));
 
         if ($from > $to) {
-            throw HttpException::unprocessable('La fecha inicial es posterior a la final.', ['from' => 'Revisa el periodo.']);
+            throw HttpException::unprocessable('The start date is after the end date.', ['from' => 'Check the period.']);
         }
 
         return [$from, $to];

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -11,15 +11,17 @@ declare(strict_types=1);
 namespace PsiClinic\Domain;
 
 use PsiClinic\Core\Database;
-use PsiClinic\Core\Lang;
 
 /**
- * Catalogo CIE-11 MMS 2025-01, adoptado en Colombia por la Resolucion 1442
- * de 2024. Solo codigo y nombre (espanol e ingles), mas la equivalencia
- * CIE-10 de la OMS para la codificacion dual durante la transicion.
+ * ICD-11 MMS 2025-01 catalog, adopted in Colombia by Resolution 1442 of 2024.
+ * Code and title only, plus the WHO ICD-10 equivalent used for dual coding
+ * during the transition (RIPS still requires ICD-10).
  *
- * Fuente: Organizacion Mundial de la Salud, ICD-11 for Mortality and
- * Morbidity Statistics, release 2025-01. Licencia CC BY-ND 3.0 IGO.
+ * Titles are shown in English. The Spanish title of the official release is
+ * kept in the table so a search in either language finds the code.
+ *
+ * Source: World Health Organization, ICD-11 for Mortality and Morbidity
+ * Statistics, release 2025-01. Licence CC BY-ND 3.0 IGO.
  */
 final class Icd11
 {
@@ -32,11 +34,11 @@ final class Icd11
         return (int) Database::value('SELECT COUNT(*) FROM icd11_codes') > 0;
     }
 
-    /** Carga el catalogo desde database/data. Devuelve las filas cargadas. */
+    /** Loads the catalog from database/data. Returns the number of rows loaded. */
     public static function import(string $directory): int
     {
         $equivalences = [];
-        $map = fopen($directory . '/cie11-a-cie10.tsv', 'rb');
+        $map = fopen($directory . '/icd11-to-icd10.tsv', 'rb');
         if ($map !== false) {
             fgets($map);
             while (($line = fgets($map)) !== false) {
@@ -48,9 +50,9 @@ final class Icd11
             fclose($map);
         }
 
-        $catalog = fopen($directory . '/cie11-' . self::RELEASE . '.tsv', 'rb');
+        $catalog = fopen($directory . '/icd11-' . self::RELEASE . '.tsv', 'rb');
         if ($catalog === false) {
-            throw new \RuntimeException('No se encontro el archivo del catalogo CIE-11.');
+            throw new \RuntimeException('The ICD-11 catalog file was not found.');
         }
 
         fgets($catalog);
@@ -59,12 +61,12 @@ final class Icd11
 
         while (($line = fgets($catalog)) !== false) {
             [$code, $titleEs, $titleEn, $chapter, $leaf] = array_pad(explode("\t", rtrim($line, "\r\n")), 5, '');
-            if ($code === '' || $titleEs === '') {
+            if ($code === '' || ($titleEn === '' && $titleEs === '')) {
                 continue;
             }
             $rows[] = [
                 $code,
-                mb_substr($titleEs, 0, 400),
+                mb_substr($titleEs !== '' ? $titleEs : $titleEn, 0, 400),
                 mb_substr($titleEn !== '' ? $titleEn : $titleEs, 0, 400),
                 $chapter,
                 $leaf === '1' ? 1 : 0,
@@ -82,9 +84,8 @@ final class Icd11
     }
 
     /**
-     * Busqueda por codigo o por palabras del nombre, en espanol e ingles. Los
-     * codigos de salud mental (capitulo 06) aparecen primero. El titulo se
-     * devuelve en el idioma de la peticion.
+     * Searches by code or by words of the title. Mental health codes
+     * (chapter 06) come first, then exact and prefix code matches.
      */
     public static function search(string $term, int $limit = 20): array
     {
@@ -99,38 +100,46 @@ final class Icd11
 
         foreach ($words as $index => $word) {
             $key = 'w' . $index;
-            $where[] = '(title_es LIKE :' . $key . 'e OR title_en LIKE :' . $key . 'n OR code LIKE :' . $key . 'c)';
-            $like = '%' . addcslashes($word, '%_\\') . '%';
-            $params[$key . 'e'] = $like;
+            $where[] = '(title_en LIKE :' . $key . 'n OR title_es LIKE :' . $key . 'e OR code LIKE :' . $key . 'c)';
+            $like = Database::like($word);
             $params[$key . 'n'] = $like;
-            $params[$key . 'c'] = addcslashes(strtoupper($word), '%_\\') . '%';
+            $params[$key . 'e'] = $like;
+            $params[$key . 'c'] = Database::like(strtoupper($word), 'prefix');
         }
 
         $params['exact'] = strtoupper($term);
-        $params['prefix'] = addcslashes(strtoupper($term), '%_\\') . '%';
+        $params['prefix'] = Database::like(strtoupper($term), 'prefix');
 
-        return Database::all(
-            'SELECT code, ' . self::titleColumn() . ' AS title, chapter, is_leaf, icd10_code
+        return array_map([self::class, 'present'], Database::all(
+            'SELECT code, title_en AS title, chapter, is_leaf, icd10_code
              FROM icd11_codes
              WHERE ' . implode(' AND ', $where) . '
              ORDER BY (code = :exact) DESC, (code LIKE :prefix) DESC,
-                      (chapter = "' . self::MENTAL_HEALTH_CHAPTER . '") DESC, is_leaf DESC, CHAR_LENGTH(' . self::titleColumn() . ')
-             LIMIT ' . max(1, min($limit, 50)),
+                      (chapter = "' . self::MENTAL_HEALTH_CHAPTER . '") DESC, is_leaf DESC, CHAR_LENGTH(title_en)' .
+            Database::limit($limit, 0, 50),
             $params
-        );
+        ));
     }
 
     public static function find(string $code): ?array
     {
-        return Database::first(
-            'SELECT code, ' . self::titleColumn() . ' AS title, chapter, is_leaf, icd10_code FROM icd11_codes WHERE code = :code',
-            ['code' => $code]
+        $row = Database::first(
+            'SELECT code, title_en AS title, chapter, is_leaf, icd10_code FROM icd11_codes WHERE code = :code',
+            ['code' => strtoupper(trim($code))]
         );
+
+        return $row === null ? null : self::present($row);
     }
 
-    private static function titleColumn(): string
+    private static function present(array $row): array
     {
-        return Lang::isEnglish() ? 'title_en' : 'title_es';
+        return [
+            'code' => (string) $row['code'],
+            'title' => (string) $row['title'],
+            'chapter' => (string) $row['chapter'],
+            'is_leaf' => (int) $row['is_leaf'] === 1,
+            'icd10_code' => $row['icd10_code'] !== null ? (string) $row['icd10_code'] : null,
+        ];
     }
 
     private static function insert(array $rows): int
