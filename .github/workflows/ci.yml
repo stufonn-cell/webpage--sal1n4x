@@ -48,8 +48,8 @@ jobs:
           cp ../.env.example .env
           sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' .env
           sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=psiclinic_ci/' .env
-          sed -i 's/^DB_DATABASE=.*/DB_DATABASE=psiclinic_test/' .env
-          echo "DB_TEST_DATABASE=psiclinic_test" >> .env
+          # DB_DATABASE keeps "psiclinic" from .env.example: the test bootstrap
+          # refuses to run when it equals DB_TEST_DATABASE (psiclinic_test).
 
       - name: Run the test suite
         run: php bin/test
