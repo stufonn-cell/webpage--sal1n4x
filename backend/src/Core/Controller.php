@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -24,30 +24,30 @@ abstract class Controller
 
     protected function created(mixed $data, string $message = ''): void
     {
-        Response::json(['data' => $data] + ($message === '' ? [] : ['message' => Lang::t($message)]), 201);
+        Response::json(['data' => $data] + ($message === '' ? [] : ['message' => $message]), 201);
     }
 
     protected function message(string $message, mixed $data = null): void
     {
-        Response::json(['message' => Lang::t($message), 'data' => $data]);
+        Response::json(['message' => $message, 'data' => $data]);
     }
 
     /**
-     * Valida la entrada y corta la peticion con un 422 que lleva el error de
-     * cada campo, para que el formulario lo muestre junto al input.
+     * Validates the input and stops the request with a 422 that carries the
+     * error for each field, so the form can show it next to the input.
      */
     protected function validate(Request $request, array $rules): array
     {
         $validator = (new Validator($request->all()))->validate($rules);
 
         if ($validator->fails()) {
-            throw HttpException::unprocessable('Revisa los campos marcados en el formulario.', $validator->errors());
+            throw HttpException::unprocessable('Please check the highlighted fields in the form.', $validator->errors());
         }
 
         return $request->all();
     }
 
-    protected function abortIfMissing(mixed $record, string $message = 'No encontramos lo que buscas.'): array
+    protected function abortIfMissing(mixed $record, string $message = "We couldn't find what you're looking for."): array
     {
         if (!is_array($record)) {
             throw HttpException::notFound($message);
@@ -57,8 +57,8 @@ abstract class Controller
     }
 
     /**
-     * Restringe un valor a las claves de un catalogo (ENUM de la base). Evita
-     * que un valor arbitrario llegue a MySQL en modo estricto y produzca un 500.
+     * Restricts a value to the keys of a catalog (a database ENUM). This keeps
+     * an arbitrary value from reaching MySQL in strict mode and causing a 500.
      */
     protected function oneOf(string $value, array $catalog, string $default): string
     {

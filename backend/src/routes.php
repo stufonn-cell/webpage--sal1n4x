@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -29,15 +29,24 @@ use PsiClinic\Core\Middleware\Authenticate;
 use PsiClinic\Core\Middleware\RequireAdmin;
 use PsiClinic\Core\Middleware\RequirePatient;
 use PsiClinic\Core\Middleware\RequireStaff;
+use PsiClinic\Core\Middleware\Throttle;
 use PsiClinic\Core\Middleware\VerifyCsrf;
 use PsiClinic\Core\Router;
 
 /*
- * API JSON consumida por el frontend (frontend/). Todas las rutas viven bajo
- * /api y toda escritura exige el token CSRF en la cabecera X-CSRF-Token.
+ * JSON API consumed by the frontend (frontend/). Every route lives under /api
+ * and every write requires the CSRF token in the X-CSRF-Token header.
+ *
+ * Rate limits (Core/RateLimiter.php, configurable in .env): a generous limit
+ * per IP for the whole API, and stricter ones for sign-in, the public form,
+ * the search boxes, uploads, profile changes and sending RIPS. Throttles go
+ * first so even refused requests (bad token, no session) are counted.
  */
 
 $router = new Router();
+$router->before(Throttle::class . ':api');
+
+$throttle = static fn (string $profile): string => Throttle::class . ':' . $profile;
 
 $csrf = [VerifyCsrf::class];
 $auth = [Authenticate::class];
@@ -49,22 +58,22 @@ $adminWrite = [VerifyCsrf::class, RequireStaff::class, RequireAdmin::class];
 $patient = [RequirePatient::class];
 $patientWrite = [VerifyCsrf::class, RequirePatient::class];
 
-// Sitio publico y sesion
+// Public site and session
 $router->get('/api/session', [AuthController::class, 'session']);
 $router->get('/api/public/site', [PublicController::class, 'site']);
-$router->post('/api/public/appointment-requests', [PublicController::class, 'requestAppointment'], $csrf);
-$router->post('/api/auth/login', [AuthController::class, 'login'], $csrf);
+$router->post('/api/public/appointment-requests', [PublicController::class, 'requestAppointment'], [$throttle('public_form'), ...$csrf]);
+$router->post('/api/auth/login', [AuthController::class, 'login'], [$throttle('login'), ...$csrf]);
 $router->post('/api/auth/logout', [AuthController::class, 'logout'], $authWrite);
 
-// Perfil de la persona autenticada
+// Profile of the signed-in person
 $router->get('/api/profile', [AuthController::class, 'profile'], $auth);
-$router->put('/api/profile', [AuthController::class, 'updateProfile'], $authWrite);
+$router->put('/api/profile', [AuthController::class, 'updateProfile'], [$throttle('profile'), ...$authWrite]);
 $router->put('/api/profile/theme', [AuthController::class, 'updateTheme'], $authWrite);
 
-// Equipo clinico
+// Clinical team
 $router->get('/api/meta', [MetaController::class, 'index'], $staff);
 $router->get('/api/dashboard', [DashboardController::class, 'index'], $staff);
-$router->get('/api/search', [SearchController::class, 'index'], $staff);
+$router->get('/api/search', [SearchController::class, 'index'], [$throttle('search'), ...$staff]);
 
 $router->get('/api/appointment-requests', [AppointmentRequestController::class, 'index'], $staff);
 $router->patch('/api/appointment-requests/{id}', [AppointmentRequestController::class, 'update'], $staffWrite);
@@ -107,7 +116,7 @@ $router->get('/api/consents/{id}', [ConsentController::class, 'show'], $auth);
 $router->post('/api/consents/{id}/sign', [ConsentController::class, 'sign'], $authWrite);
 
 $router->get('/api/documents', [DocumentController::class, 'index'], $staff);
-$router->post('/api/documents', [DocumentController::class, 'store'], $staffWrite);
+$router->post('/api/documents', [DocumentController::class, 'store'], [$throttle('upload'), ...$staffWrite]);
 $router->get('/api/documents/{id}/download', [DocumentController::class, 'download'], $auth);
 $router->delete('/api/documents/{id}', [DocumentController::class, 'destroy'], $staffWrite);
 
@@ -116,14 +125,14 @@ $router->post('/api/invoices', [BillingController::class, 'store'], $staffWrite)
 $router->get('/api/invoices/{id}', [BillingController::class, 'show'], $staff);
 $router->post('/api/invoices/{id}/payments', [BillingController::class, 'storePayment'], $staffWrite);
 
-// Catalogo CIE-11 y RIPS (Resolucion 2275 de 2023)
-$router->get('/api/icd11', [Icd11Controller::class, 'search'], $staff);
+// ICD-11 catalog and RIPS (Resolution 2275 of 2023)
+$router->get('/api/icd11', [Icd11Controller::class, 'search'], [$throttle('icd11'), ...$staff]);
 $router->get('/api/rips', [RipsController::class, 'index'], $admin);
 $router->post('/api/rips/preview', [RipsController::class, 'preview'], $adminWrite);
 $router->post('/api/rips', [RipsController::class, 'store'], $adminWrite);
 $router->get('/api/rips/{id}', [RipsController::class, 'show'], $admin);
 $router->get('/api/rips/{id}/download', [RipsController::class, 'download'], $admin);
-$router->post('/api/rips/{id}/send', [RipsController::class, 'send'], $adminWrite);
+$router->post('/api/rips/{id}/send', [RipsController::class, 'send'], [$throttle('rips_send'), ...$adminWrite]);
 $router->delete('/api/rips/{id}', [RipsController::class, 'destroy'], $adminWrite);
 
 $router->get('/api/settings', [SettingsController::class, 'index'], $staff);
@@ -134,7 +143,7 @@ $router->patch('/api/users/{id}', [SettingsController::class, 'updateUser'], $ad
 $router->post('/api/users/{id}/toggle', [SettingsController::class, 'toggleUser'], $adminWrite);
 $router->get('/api/audit', [SettingsController::class, 'audit'], $staff);
 
-// Portal del paciente
+// Patient portal
 $router->get('/api/portal', [PortalController::class, 'index'], $patient);
 $router->get('/api/portal/appointments', [PortalController::class, 'appointments'], $patient);
 $router->get('/api/portal/questionnaires', [PortalController::class, 'questionnaires'], $patient);

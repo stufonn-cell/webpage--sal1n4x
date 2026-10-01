@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -76,15 +76,4 @@ function uuid(): string
     $bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
 
     return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
-}
-
-/**
- * Traduce un mensaje con formato (sprintf). Los mensajes fijos se traducen
- * solos al responder; este ayudante es para los que llevan valores.
- */
-function __(string $format, mixed ...$values): string
-{
-    $translated = \PsiClinic\Core\Lang::t($format);
-
-    return $values === [] ? $translated : vsprintf($translated, $values);
 }

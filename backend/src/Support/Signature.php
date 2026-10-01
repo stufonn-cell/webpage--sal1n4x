@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -11,9 +11,9 @@ declare(strict_types=1);
 namespace PsiClinic\Support;
 
 /**
- * La firma llega como coordenadas y el SVG se construye aqui. Nunca se guarda
- * ni se devuelve marcado enviado por el navegador: eso permitia inyectar
- * scripts en la vista del equipo clinico.
+ * The signature arrives as coordinates and the SVG is built here. Markup sent
+ * by the browser is never stored or returned: that used to allow injecting
+ * scripts into the clinical team's view.
  */
 final class Signature
 {
@@ -55,7 +55,7 @@ final class Signature
         return self::build($paths);
     }
 
-    /** Reconstruye una firma guardada conservando solo trazos validos. */
+    /** Rebuilds a stored signature, keeping only valid strokes. */
     public static function sanitize(?string $svg): string
     {
         if ($svg === null || trim($svg) === '') {

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -21,7 +21,7 @@ final class RequireStaff
         (new Authenticate())->handle($request);
 
         if (!Auth::isStaff()) {
-            throw HttpException::forbidden('Esta sección es solo para el equipo clínico.');
+            throw HttpException::forbidden('This section is only for the clinical team.');
         }
     }
 }

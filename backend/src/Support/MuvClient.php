@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -11,17 +11,19 @@ declare(strict_types=1);
 namespace PsiClinic\Support;
 
 use PsiClinic\Core\HttpException;
+use PsiClinic\Core\Log;
+use PsiClinic\Core\OutboundUrl;
 
 /**
- * Cliente del Mecanismo Unico de Validacion (MUV) en su version API Docker,
- * que el obligado instala en su propia infraestructura (Manual de consumo API
- * Docker FEV-RIPS, Minsalud).
+ * Client for the Ministry of Health's single validation mechanism (MUV) in
+ * its Docker API flavour, which the reporting party runs on its own
+ * infrastructure (Minsalud "Manual de consumo API Docker FEV-RIPS").
  *
  *   POST {base}/api/Auth/LoginSISPRO                          -> token
- *   POST {base}/api/PaquetesFevRips/CargarRipsSinFactura      -> CUV o errores
+ *   POST {base}/api/PaquetesFevRips/CargarRipsSinFactura      -> CUV or errors
  *
- * Las credenciales SISPRO llegan en cada envio y nunca se guardan ni se
- * escriben en el log.
+ * SISPRO credentials arrive with every submission and are never stored or
+ * written to the log.
  */
 final class MuvClient
 {
@@ -48,15 +50,15 @@ final class MuvClient
         $token = is_array($data) ? ($data['token'] ?? $data['Token'] ?? $data['access_token'] ?? null) : null;
 
         if ($status >= 400 || !is_string($token) || $token === '') {
-            throw HttpException::unprocessable('SISPRO no aceptó las credenciales. Revisa el documento, la contraseña y el NIT.');
+            throw HttpException::unprocessable('SISPRO did not accept the credentials. Check the document, the password and the NIT.');
         }
 
         return $token;
     }
 
     /**
-     * Envia un RIPS sin factura. Devuelve si fue aceptado, el CUV y la lista
-     * de rechazos y notificaciones tal como la entrega el Ministerio.
+     * Sends a RIPS without invoice. Returns whether it was accepted, the CUV
+     * and the list of rejections and notices exactly as the Ministry returns them.
      */
     public function sendWithoutInvoice(string $token, array $rips): array
     {
@@ -67,7 +69,7 @@ final class MuvClient
 
         $data = json_decode($body, true);
         if (!is_array($data)) {
-            throw new HttpException(502, __('El validador respondió algo inesperado (HTTP %d). Revisa que el API Docker esté en ejecución.', $status));
+            throw new HttpException(502, sprintf('The validator sent an unexpected response (HTTP %d). Check that the Docker API is running.', $status));
         }
 
         $results = [];
@@ -99,7 +101,7 @@ final class MuvClient
     private function curl(string $method, string $path, array $payload, ?string $token): array
     {
         if (!function_exists('curl_init')) {
-            throw new HttpException(500, 'El servidor no tiene la extensión cURL de PHP.');
+            throw new HttpException(500, 'The server is missing the PHP cURL extension.');
         }
 
         $headers = ['Content-Type: application/json', 'Accept: application/json'];
@@ -107,20 +109,43 @@ final class MuvClient
             $headers[] = 'Authorization: Bearer ' . $token;
         }
 
-        $handle = curl_init(rtrim($this->baseUrl, '/') . $path);
-        curl_setopt_array($handle, [
+        $url = rtrim($this->baseUrl, '/') . $path;
+        $options = [
             CURLOPT_CUSTOMREQUEST => $method,
             CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             CURLOPT_HTTPHEADER => $headers,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_TIMEOUT => 120,
-            // El API Docker usa por defecto un certificado propio en
-            // https://localhost:9443; la verificacion se puede desactivar
-            // solo para ese caso desde la configuracion.
+            // Only plain HTTP(S), never redirects: a redirect could send the
+            // SISPRO token or the clinical payload somewhere else.
+            CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+            CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_MAXFILESIZE => 20 * 1024 * 1024,
+            // By default the Docker API uses its own certificate on
+            // https://localhost:9443; verification can be turned off in the
+            // settings for that case only.
             CURLOPT_SSL_VERIFYPEER => $this->verifyTls,
             CURLOPT_SSL_VERIFYHOST => $this->verifyTls ? 2 : 0,
-        ]);
+        ];
+
+        // Pin the address that was checked against reserved networks, so a DNS
+        // answer that changes between the check and the request (rebinding)
+        // cannot redirect the call.
+        $host = (string) parse_url($url, PHP_URL_HOST);
+        if ($host !== '' && filter_var(trim($host, '[]'), FILTER_VALIDATE_IP) === false) {
+            $ip = gethostbyname($host);
+            if ($ip === $host || OutboundUrl::isBlockedIp($ip)) {
+                throw new HttpException(502, 'We could not reach the Ministry validator. Check that the Docker API is running and that its address is correct.');
+            }
+            $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+            $port = (int) (parse_url($url, PHP_URL_PORT) ?: ($scheme === 'https' ? 443 : 80));
+            $options[CURLOPT_RESOLVE] = [sprintf('%s:%d:%s', $host, $port, $ip)];
+        }
+
+        $handle = curl_init($url);
+        curl_setopt_array($handle, $options);
 
         $body = curl_exec($handle);
         $status = (int) curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
@@ -128,8 +153,8 @@ final class MuvClient
         curl_close($handle);
 
         if ($body === false) {
-            error_log('MUV no disponible: ' . $error);
-            throw new HttpException(502, 'No pudimos conectar con el validador del Ministerio. Revisa que el API Docker esté en ejecución y la dirección configurada.');
+            Log::error('MUV unavailable', ['error' => $error]);
+            throw new HttpException(502, 'We could not reach the Ministry validator. Check that the Docker API is running and that its address is correct.');
         }
 
         return [$status, (string) $body];

@@ -1,20 +1,18 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
 
 namespace PsiClinic\Support;
 
-use PsiClinic\Core\Lang;
-
 /**
- * Da forma a lo que sale por la API. Las filas de usuarios nunca se devuelven
- * completas: contienen el hash de la contrasena.
+ * Shapes what goes out through the API. User rows are never returned in full:
+ * they contain the password hash.
  */
 final class Present
 {
@@ -42,7 +40,7 @@ final class Present
         return array_map(static fn (array $row): array => self::user($row) + array_intersect_key($row, ['record_number' => true]), $rows);
     }
 
-    /** Quita columnas internas que la interfaz no necesita. */
+    /** Removes internal columns the interface doesn't need. */
     public static function row(?array $row, array $hidden = ['uuid']): ?array
     {
         if ($row === null) {
@@ -75,12 +73,12 @@ final class Present
         return $consent;
     }
 
-    /** Convierte un catalogo clave => etiqueta en una lista ordenada. */
+    /** Turns a key => label catalog into an ordered list. */
     public static function options(array $catalog): array
     {
         $out = [];
         foreach ($catalog as $value => $label) {
-            $out[] = ['value' => (string) $value, 'label' => Lang::t((string) $label)];
+            $out[] = ['value' => (string) $value, 'label' => (string) $label];
         }
 
         return $out;

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -17,7 +17,7 @@ use PsiClinic\Domain\Icd11;
 final class Installer
 {
     private const DEMO_PASSWORD = 'Psiclinic2026';
-    private const PATIENT_PASSWORD = 'Paciente2026';
+    private const PATIENT_PASSWORD = 'Patient2026';
 
     public static function install(): void
     {
@@ -33,7 +33,7 @@ final class Installer
 
         foreach ($files as $file) {
             self::runScript((string) file_get_contents($file));
-            self::line('Migracion aplicada: ' . basename($file));
+            self::line('Migration applied: ' . basename($file));
         }
 
         if (!Icd11::isLoaded()) {
@@ -41,11 +41,11 @@ final class Installer
         }
     }
 
-    /** Carga (o actualiza) el catalogo CIE-11 desde database/data. */
+    /** Loads (or refreshes) the ICD-11 catalog from database/data. */
     public static function importIcd11(): void
     {
         $rows = Icd11::import(dirname(__DIR__, 2) . '/database/data');
-        self::line(sprintf('Catalogo CIE-11 %s cargado: %d codigos.', Icd11::RELEASE, $rows));
+        self::line(sprintf('ICD-11 catalog %s loaded: %d codes.', Icd11::RELEASE, $rows));
     }
 
     public static function fresh(): void
@@ -62,30 +62,31 @@ final class Installer
         }
         Database::run('SET FOREIGN_KEY_CHECKS = 1');
 
-        self::line('Base de datos vaciada.');
+        self::line('Database cleared.');
         self::install();
     }
 
     public static function seed(): void
     {
         if ((int) Database::value('SELECT COUNT(*) FROM users') > 0) {
-            self::line('La base ya contiene datos. Usa "fresh" para reiniciar.');
+            self::line('The database already has data. Use "fresh" to start over.');
 
             return;
         }
 
-        $adminId = self::createUser('admin', 'admin@psiclinic.local', 'Ana Salinas', 'admin', 'TP-10234');
-        $psychologistId = self::createUser('l.moreno', 'l.moreno@psiclinic.local', 'Laura Moreno', 'psychologist', 'TP-48120');
-        self::createUser('c.rojas', 'c.rojas@psiclinic.local', 'Camilo Rojas', 'assistant', null);
+        $adminId = self::createUser('admin', 'admin@psiclinic.local', 'Ana Salinas', 'admin', 'TP-10234', '1020304050');
+        $psychologistId = self::createUser('l.moreno', 'l.moreno@psiclinic.local', 'Laura Moreno', 'psychologist', 'TP-48120', '1030405060');
+        self::createUser('c.rojas', 'c.rojas@psiclinic.local', 'Camilo Rojas', 'assistant', null, null);
 
-        // Perfil visible en el sitio publico de demostracion.
+        // Profile shown on the public demo site.
         Database::update('users', $psychologistId, [
             'show_on_site' => 1,
-            'public_bio' => 'Acompaña a adultos y adolescentes en procesos de ansiedad, estado de ánimo y regulación emocional desde un enfoque cognitivo conductual.',
+            'public_bio' => 'Supports adults and teenagers through anxiety, low mood and emotion regulation, using a cognitive behavioral approach.',
         ]);
 
         $patients = self::createPatients($psychologistId, $adminId);
-        self::createPortalAccount($patients[0]);
+        $portalUsername = self::createPortalAccount($patients[0]);
+        self::createDiagnoses($patients, $psychologistId);
         self::createAppointments($patients, $psychologistId);
         self::createNotes($patients, $psychologistId);
         self::createAssessments($patients, $psychologistId);
@@ -93,16 +94,16 @@ final class Installer
         self::createInvoices($patients, $adminId);
         self::createSettings();
 
-        self::line('Datos de demostracion cargados.');
+        self::line('Demo data loaded.');
         self::line('  admin / ' . self::DEMO_PASSWORD);
         self::line('  l.moreno / ' . self::DEMO_PASSWORD);
-        self::line('  hc-2026-0001 / ' . self::PATIENT_PASSWORD . ' (portal del paciente)');
+        self::line('  ' . $portalUsername . ' / ' . self::PATIENT_PASSWORD . ' (patient portal)');
     }
 
     public static function printHelp(array $commands): void
     {
-        self::line('PsiClinic - utilidades de linea de comandos');
-        self::line('Uso: php bin/console <comando>');
+        self::line('PsiClinic - command line tools');
+        self::line('Usage: php bin/console <command>');
         self::line('');
 
         foreach ($commands as $name => $description) {
@@ -115,9 +116,9 @@ final class Installer
         $connection = Database::connection();
 
         foreach (self::splitStatements($script) as $statement) {
-            // query() + closeCursor() en lugar de exec(): sentencias como
-            // EXECUTE pueden devolver filas, y si no se consumen la siguiente
-            // falla con "unbuffered queries are active" (2014).
+            // query() + closeCursor() instead of exec(): statements such as
+            // EXECUTE can return rows, and if they are not consumed the next
+            // one fails with "unbuffered queries are active" (2014).
             $result = $connection->query($statement);
             if ($result !== false) {
                 if ($result->columnCount() > 0) {
@@ -144,7 +145,8 @@ final class Installer
         string $email,
         string $fullName,
         string $role,
-        ?string $license
+        ?string $license,
+        ?string $documentNumber
     ): int {
         return Database::insert('users', [
             'uuid' => uuid(),
@@ -152,9 +154,11 @@ final class Installer
             'email' => $email,
             'password_hash' => password_hash(self::DEMO_PASSWORD, PASSWORD_DEFAULT),
             'full_name' => $fullName,
+            'document_type' => 'CC',
+            'document_number' => $documentNumber,
             'role' => $role,
             'license_number' => $license,
-            'specialty' => $role === 'psychologist' ? 'Terapia cognitivo conductual' : null,
+            'specialty' => $role === 'psychologist' ? 'Cognitive behavioral therapy' : null,
         ]);
     }
 
@@ -164,29 +168,29 @@ final class Installer
             [
                 'first_name' => 'Mariana', 'last_name' => 'Vega', 'birth_date' => '1994-03-18',
                 'gender' => 'female', 'email' => 'mariana.vega@example.com', 'phone' => '3005512233',
-                'reason_for_consult' => 'Episodios de ansiedad anticipatoria asociados al entorno laboral.',
-                'relevant_history' => 'Sin antecedentes psiquiatricos previos. Consumo ocasional de cafeina elevado.',
+                'reason_for_consult' => 'Episodes of anticipatory anxiety linked to her work environment.',
+                'relevant_history' => 'No previous psychiatric history. Occasional high caffeine intake.',
                 'risk_level' => 'low', 'status' => 'active', 'psychologist_id' => $psychologistId,
             ],
             [
                 'first_name' => 'Daniel', 'last_name' => 'Ortiz', 'birth_date' => '1987-11-02',
                 'gender' => 'male', 'email' => 'daniel.ortiz@example.com', 'phone' => '3129987744',
-                'reason_for_consult' => 'Estado de animo depresivo tras separacion reciente.',
-                'relevant_history' => 'Episodio depresivo previo en 2019 tratado con psicoterapia.',
+                'reason_for_consult' => 'Depressed mood after a recent separation.',
+                'relevant_history' => 'Previous depressive episode in 2019, treated with psychotherapy.',
                 'risk_level' => 'moderate', 'status' => 'active', 'psychologist_id' => $psychologistId,
             ],
             [
                 'first_name' => 'Sofia', 'last_name' => 'Cardenas', 'birth_date' => '2001-07-25',
                 'gender' => 'female', 'email' => 'sofia.cardenas@example.com', 'phone' => '3162244551',
-                'reason_for_consult' => 'Dificultades de regulacion emocional y estres academico.',
-                'relevant_history' => 'Acompanamiento psicopedagogico en bachillerato.',
+                'reason_for_consult' => 'Difficulty regulating emotions and academic stress.',
+                'relevant_history' => 'Educational psychology support during high school.',
                 'risk_level' => 'none', 'status' => 'active', 'psychologist_id' => $adminId,
             ],
             [
                 'first_name' => 'Julian', 'last_name' => 'Pena', 'birth_date' => '1979-01-14',
                 'gender' => 'male', 'email' => 'julian.pena@example.com', 'phone' => '3014477882',
-                'reason_for_consult' => 'Insomnio de conciliacion y rumiacion nocturna.',
-                'relevant_history' => 'Hipertension controlada.',
+                'reason_for_consult' => 'Trouble falling asleep and rumination at night.',
+                'relevant_history' => 'Controlled hypertension.',
                 'risk_level' => 'none', 'status' => 'discharged', 'psychologist_id' => $psychologistId,
             ],
         ];
@@ -197,13 +201,20 @@ final class Installer
         foreach ($definitions as $definition) {
             $ids[] = Database::insert('patients', $definition + [
                 'uuid' => uuid(),
-                'record_number' => sprintf('HC-%s-%04d', date('Y'), $index),
+                'record_number' => sprintf('MR-%s-%04d', date('Y'), $index),
                 'document_type' => 'CC',
                 'document_id' => (string) (1010000000 + $index * 7321),
                 'city' => 'Bogota',
                 'country' => 'Colombia',
-                'emergency_contact_name' => 'Contacto familiar',
+                'emergency_contact_name' => 'Family contact',
                 'emergency_contact_phone' => '3001112233',
+                // Data RIPS needs for each user: Bogota (DIVIPOLA 11001), urban zone, Colombia (170).
+                'biological_sex' => $definition['gender'] === 'female' ? 'F' : 'M',
+                'rips_user_type' => '12',
+                'residence_country' => '170',
+                'residence_municipality' => '11001',
+                'residence_zone' => '01',
+                'origin_country' => '170',
             ]);
             $index++;
         }
@@ -211,19 +222,68 @@ final class Installer
         return $ids;
     }
 
-    private static function createPortalAccount(int $patientId): void
+    /** Creates the portal account of a patient and returns its username. */
+    private static function createPortalAccount(int $patientId): string
     {
         $patient = Database::first('SELECT * FROM patients WHERE id = :id', ['id' => $patientId]);
+        $username = strtolower((string) $patient['record_number']);
 
         Database::insert('users', [
             'uuid' => uuid(),
-            'username' => strtolower((string) $patient['record_number']),
+            'username' => $username,
             'email' => (string) $patient['email'],
             'password_hash' => password_hash(self::PATIENT_PASSWORD, PASSWORD_DEFAULT),
             'full_name' => $patient['first_name'] . ' ' . $patient['last_name'],
             'role' => 'patient',
             'patient_id' => $patientId,
         ]);
+
+        return $username;
+    }
+
+    /**
+     * ICD-11 diagnoses with their ICD-10 equivalent, as RIPS requires. The third
+     * patient has none on purpose: the RIPS screen lists her as missing data.
+     */
+    private static function createDiagnoses(array $patients, int $psychologistId): void
+    {
+        $diagnoses = [
+            [
+                'patient' => 0, 'code' => '6B00', 'status' => 'active', 'onset' => '-8 months',
+                'notes' => 'Persistent worry about work, with muscle tension and poor sleep.',
+            ],
+            [
+                'patient' => 1, 'code' => '6A70.1', 'status' => 'active', 'onset' => '-2 months',
+                'notes' => 'Began after the separation. Reassess risk every session.',
+            ],
+            [
+                'patient' => 3, 'code' => '7A00', 'status' => 'resolved', 'onset' => '-1 year',
+                'notes' => 'Sleep improved with stimulus control and sleep hygiene.',
+            ],
+        ];
+
+        $createdAt = date('Y-m-d H:i:s', strtotime('-15 days'));
+
+        foreach ($diagnoses as $diagnosis) {
+            $entry = Icd11::find($diagnosis['code']);
+            if ($entry === null) {
+                continue;
+            }
+
+            Database::insert('diagnoses', [
+                'patient_id' => $patients[$diagnosis['patient']],
+                'system' => 'icd11',
+                'code' => $entry['code'],
+                'icd10_code' => $entry['icd10_code'],
+                'title' => mb_substr($entry['title'], 0, 200),
+                'status' => $diagnosis['status'],
+                'is_primary' => 1,
+                'onset_date' => date('Y-m-d', strtotime($diagnosis['onset'])),
+                'notes' => $diagnosis['notes'],
+                'created_by' => $psychologistId,
+                'created_at' => $createdAt,
+            ]);
+        }
     }
 
     private static function createAppointments(array $patients, int $psychologistId): void
@@ -250,8 +310,8 @@ final class Installer
                 'ends_at' => date('Y-m-d H:i:s', strtotime($starts . ' +50 minutes')),
                 'modality' => $modality,
                 'status' => $status,
-                'session_type' => $index === 0 ? 'Primera consulta' : 'Seguimiento',
-                'location' => $modality === 'in_person' ? 'Consultorio 2' : null,
+                'session_type' => $index === 0 ? 'First consultation' : 'Follow-up',
+                'location' => $modality === 'in_person' ? 'Office 2' : null,
                 'meeting_url' => $modality === 'online' ? 'https://meet.example.com/psiclinic' : null,
                 'fee' => 120000,
             ]);
@@ -263,31 +323,31 @@ final class Installer
         $notes = [
             [
                 'patient' => 0, 'offset' => '-14 days', 'mood' => 5, 'risk' => 'low',
-                'subjective' => 'Refiere tension sostenida durante la jornada laboral y dificultad para desconectar por las noches.',
-                'objective' => 'Discurso coherente, tono ansioso. Verbaliza preocupacion anticipatoria recurrente.',
-                'assessment' => 'Sintomatologia ansiosa compatible con ansiedad generalizada de intensidad leve a moderada.',
-                'plan' => 'Psicoeducacion sobre el ciclo de la ansiedad, registro de preocupaciones y respiracion diafragmatica.',
+                'subjective' => 'Reports constant tension during the workday and trouble switching off at night.',
+                'objective' => 'Coherent speech, anxious tone. Describes recurring anticipatory worry.',
+                'assessment' => 'Anxiety symptoms consistent with generalized anxiety of mild to moderate intensity.',
+                'plan' => 'Psychoeducation on the anxiety cycle, a worry log and diaphragmatic breathing.',
             ],
             [
                 'patient' => 0, 'offset' => '-7 days', 'mood' => 6, 'risk' => 'low',
-                'subjective' => 'Reporta menor frecuencia de episodios de tension tras aplicar el registro de preocupaciones.',
-                'objective' => 'Mayor apertura, afecto congruente. Completo la tarea asignada.',
-                'assessment' => 'Evolucion favorable. Mantiene evitacion parcial de reuniones de equipo.',
-                'plan' => 'Iniciar jerarquia de exposicion gradual a situaciones laborales evitadas.',
+                'subjective' => 'Reports fewer episodes of tension since she started using the worry log.',
+                'objective' => 'More open, congruent affect. Completed the assigned homework.',
+                'assessment' => 'Good progress. Still partly avoids team meetings.',
+                'plan' => 'Start a graded exposure hierarchy for the work situations she avoids.',
             ],
             [
                 'patient' => 1, 'offset' => '-6 days', 'mood' => 3, 'risk' => 'moderate',
-                'subjective' => 'Describe anhedonia, aislamiento social y alteracion del sueno desde hace cinco semanas.',
-                'objective' => 'Enlentecimiento psicomotor leve, contacto visual reducido. Niega ideacion suicida estructurada.',
-                'assessment' => 'Cuadro depresivo moderado reactivo a duelo por separacion.',
-                'plan' => 'Activacion conductual con programacion de actividades gratificantes. Reevaluar riesgo cada sesion.',
+                'subjective' => 'Describes anhedonia, social withdrawal and disturbed sleep over the last five weeks.',
+                'objective' => 'Mild psychomotor slowing, reduced eye contact. Denies structured suicidal ideation.',
+                'assessment' => 'Moderate depressive picture in reaction to grief over the separation.',
+                'plan' => 'Behavioral activation, scheduling rewarding activities. Reassess risk every session.',
             ],
             [
                 'patient' => 2, 'offset' => '-4 days', 'mood' => 7, 'risk' => 'none',
-                'subjective' => 'Consulta por estres academico previo a periodo de evaluaciones.',
-                'objective' => 'Buen nivel de insight, colaboradora durante la sesion.',
-                'assessment' => 'Estres situacional sin criterios de trastorno.',
-                'plan' => 'Entrenamiento en organizacion del tiempo y tecnicas de regulacion emocional.',
+                'subjective' => 'Seeks help for academic stress ahead of the exam period.',
+                'objective' => 'Good insight, cooperative during the session.',
+                'assessment' => 'Situational stress that does not meet criteria for a disorder.',
+                'plan' => 'Time management training and emotion regulation techniques.',
             ],
         ];
 
@@ -303,8 +363,8 @@ final class Installer
                 'objective' => $note['objective'],
                 'assessment' => $note['assessment'],
                 'plan' => $note['plan'],
-                'interventions' => 'Psicoeducación, Reestructuración cognitiva',
-                'homework' => 'Registro diario de situaciones activadoras.',
+                'interventions' => 'Psychoeducation, Cognitive restructuring',
+                'homework' => 'Daily log of triggering situations.',
                 'mood_score' => $note['mood'],
                 'risk_level' => $note['risk'],
                 'is_locked' => $index < 2 ? 1 : 0,
@@ -360,7 +420,7 @@ final class Installer
     {
         $templates = \PsiClinic\Domain\ConsentTemplates::all();
 
-        foreach ([['general', 0, true], ['teleconsulta', 0, false], ['datos', 1, true]] as [$code, $patientIndex, $signed]) {
+        foreach ([['general', 0, true], ['telehealth', 0, false], ['data_processing', 1, true]] as [$code, $patientIndex, $signed]) {
             $patientId = $patients[$patientIndex];
             $patient = Database::first('SELECT * FROM patients WHERE id = :id', ['id' => $patientId]);
 
@@ -388,7 +448,7 @@ final class Installer
             $invoiceId = Database::insert('invoices', [
                 'uuid' => uuid(),
                 'patient_id' => $patients[$patientIndex],
-                'number' => sprintf('FAC-%s-%04d', date('Y'), $index + 1),
+                'number' => sprintf('INV-%s-%04d', date('Y'), $index + 1),
                 'issued_at' => date('Y-m-d', strtotime('-10 days')),
                 'due_at' => date('Y-m-d', strtotime('+5 days')),
                 'subtotal' => $subtotal,
@@ -400,7 +460,7 @@ final class Installer
 
             Database::insert('invoice_items', [
                 'invoice_id' => $invoiceId,
-                'description' => 'Sesion de psicoterapia individual',
+                'description' => 'Individual psychotherapy session',
                 'quantity' => $sessions,
                 'unit_price' => $unitPrice,
                 'amount' => $subtotal,
@@ -423,17 +483,17 @@ final class Installer
     {
         $values = [
             'clinic_name' => 'PsiClinic',
-            'clinic_tagline' => 'Centro de atención psicológica',
-            'clinic_email' => 'contacto@psiclinic.local',
+            'clinic_tagline' => 'Psychological care center',
+            'clinic_email' => 'contact@psiclinic.local',
             'clinic_phone' => '+57 601 000 0000',
-            'clinic_address' => 'Calle 100 #15-20, Bogotá',
+            'clinic_address' => 'Calle 100 #15-20, Bogota',
             'currency' => 'COP',
             'session_duration' => '50',
             'default_fee' => '120000',
             'working_hours_start' => '07:00',
             'working_hours_end' => '19:00',
             'note_lock_hours' => '72',
-            'clinic_about' => 'Somos un equipo de psicología clínica que acompaña procesos individuales y familiares con calma, respeto y confidencialidad. Cada proceso empieza por escucharte.',
+            'clinic_about' => 'We are a clinical psychology team that supports individuals and families with calm, respect and confidentiality. Every process starts by listening to you.',
             'whatsapp_number' => '',
             'crisis_line' => '123',
         ];

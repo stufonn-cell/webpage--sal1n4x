@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -22,13 +22,20 @@ final class VerifyCsrf
             return;
         }
 
+        // Second line of defence: modern browsers say where a request comes
+        // from. A write started by another site is refused even before the
+        // token is checked.
+        if (in_array(strtolower($request->header('Sec-Fetch-Site')), ['cross-site', 'same-site'], true)) {
+            throw HttpException::forbidden('For your security, this action has to be done from within PsiClinic.');
+        }
+
         $token = $request->header('X-CSRF-Token');
         if ($token === '') {
             $token = $request->string('_token');
         }
 
         if (!Csrf::verify($token)) {
-            throw new HttpException(419, 'Tu sesión de seguridad expiró. Recarga la página e inténtalo de nuevo.');
+            throw new HttpException(419, 'Your security session has expired. Reload the page and try again.');
         }
     }
 }

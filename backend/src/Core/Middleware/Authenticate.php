@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -19,7 +19,7 @@ final class Authenticate
     public function handle(Request $request): void
     {
         if (!Auth::check()) {
-            throw new HttpException(401, 'Tu sesión terminó. Vuelve a ingresar para continuar.');
+            throw new HttpException(401, 'Your session has ended. Please log in again to continue.');
         }
     }
 }
