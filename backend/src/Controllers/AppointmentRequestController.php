@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -18,7 +18,7 @@ use PsiClinic\Domain\AppointmentRequests;
 use PsiClinic\Domain\AuditLog;
 use PsiClinic\Support\Present;
 
-/** Bandeja de solicitudes que llegan desde el sitio publico. */
+/** Inbox for the requests that come in from the public site. */
 final class AppointmentRequestController extends Controller
 {
     public function index(Request $request): void
@@ -28,7 +28,7 @@ final class AppointmentRequestController extends Controller
 
     public function update(Request $request, string $id): void
     {
-        $row = $this->abortIfMissing(AppointmentRequests::find((int) $id), 'No encontramos esta solicitud.');
+        $row = $this->abortIfMissing(AppointmentRequests::find((int) $id), "We couldn't find this request.");
         $status = $this->oneOf($request->string('status'), AppointmentRequests::STATUSES, (string) $row['status']);
 
         Database::update('appointment_requests', (int) $row['id'], [
@@ -38,6 +38,6 @@ final class AppointmentRequestController extends Controller
         ]);
         AuditLog::record('status:' . $status, 'appointment_request', (int) $row['id']);
 
-        $this->message(__('Solicitud marcada como %s.', mb_strtolower(__(AppointmentRequests::STATUSES[$status]))), ['status' => $status]);
+        $this->message(sprintf('Request marked as %s.', mb_strtolower(AppointmentRequests::STATUSES[$status])), ['status' => $status]);
     }
 }

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -15,18 +15,18 @@ use PsiClinic\Core\Database;
 final class Invoices
 {
     public const STATUSES = [
-        'draft' => 'Borrador',
-        'issued' => 'Emitida',
-        'paid' => 'Pagada',
-        'void' => 'Anulada',
+        'draft' => 'Draft',
+        'issued' => 'Issued',
+        'paid' => 'Paid',
+        'void' => 'Void',
     ];
 
     public const METHODS = [
-        'cash' => 'Efectivo',
-        'card' => 'Tarjeta',
-        'transfer' => 'Transferencia',
-        'insurance' => 'Aseguradora',
-        'other' => 'Otro',
+        'cash' => 'Cash',
+        'card' => 'Card',
+        'transfer' => 'Bank transfer',
+        'insurance' => 'Insurance',
+        'other' => 'Other',
     ];
 
     public static function paginate(string $status = '', int $page = 1, int $perPage = 15): array
@@ -40,7 +40,7 @@ final class Invoices
         }
 
         $total = (int) Database::value('SELECT COUNT(*) FROM invoices i WHERE ' . $where, $params);
-        $offset = max(0, ($page - 1) * $perPage);
+        $offset = Database::offset($page, $perPage);
 
         return [
             'rows' => Database::all(
@@ -49,8 +49,7 @@ final class Invoices
                  FROM invoices i
                  JOIN patients p ON p.id = i.patient_id
                  WHERE ' . $where . '
-                 ORDER BY i.issued_at DESC, i.id DESC
-                 LIMIT ' . $perPage . ' OFFSET ' . $offset,
+                 ORDER BY i.issued_at DESC, i.id DESC' . Database::limit($perPage, $offset),
                 $params
             ),
             'total' => $total,
@@ -93,10 +92,10 @@ final class Invoices
         $year = date('Y');
         $count = (int) Database::value(
             'SELECT COUNT(*) FROM invoices WHERE number LIKE :prefix',
-            ['prefix' => 'FAC-' . $year . '-%']
+            ['prefix' => 'INV-' . $year . '-%']
         );
 
-        return sprintf('FAC-%s-%04d', $year, $count + 1);
+        return sprintf('INV-%s-%04d', $year, $count + 1);
     }
 
     public static function refreshStatus(int $invoiceId): void

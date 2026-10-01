@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -23,8 +23,8 @@ use PsiClinic\Domain\Patients;
 use PsiClinic\Support\Present;
 
 /**
- * Portal del paciente. Cada consulta filtra por el paciente de la sesion: el
- * identificador nunca se toma de la peticion.
+ * Patient portal. Every query filters by the patient in the session: the id is
+ * never taken from the request.
  */
 final class PortalController extends Controller
 {
@@ -75,7 +75,7 @@ final class PortalController extends Controller
         $assessment = $this->ownAssessment((int) $id);
 
         if ($assessment['status'] === 'completed') {
-            throw HttpException::conflict('Ya respondiste este cuestionario. ¡Gracias!');
+            throw HttpException::conflict("You've already answered this questionnaire. Thank you!");
         }
 
         $this->ok([
@@ -89,20 +89,20 @@ final class PortalController extends Controller
         $assessment = $this->ownAssessment((int) $id);
 
         if ($assessment['status'] === 'completed') {
-            throw HttpException::conflict('Ya respondiste este cuestionario. ¡Gracias!');
+            throw HttpException::conflict("You've already answered this questionnaire. Thank you!");
         }
 
         $code = (string) $assessment['instrument_code'];
         $answers = Instruments::normalizeAnswers($code, $request->array('answers'));
 
         if ($answers === null) {
-            throw HttpException::unprocessable('Falta responder alguna pregunta. Revisa las que están marcadas.');
+            throw HttpException::unprocessable('Some questions are still unanswered. Please check the highlighted ones.');
         }
 
         Assessments::complete((int) $assessment['id'], $code, $answers);
         AuditLog::record('submit', 'assessment', (int) $assessment['id']);
 
-        $this->message('Gracias por tomarte este tiempo. Tu profesional revisará tus respuestas antes de la próxima sesión.');
+        $this->message('Thank you for taking the time. Your professional will review your answers before your next session.');
     }
 
     public function documents(Request $request): void
@@ -114,8 +114,8 @@ final class PortalController extends Controller
     }
 
     /**
-     * Al paciente se le muestra su fecha y severidad, pero no la
-     * interpretacion clinica: esa conversacion corresponde a la sesion.
+     * The patient sees the date and severity, but not the clinical
+     * interpretation: that conversation belongs in the session.
      */
     private function assessmentsFor(int $patientId, ?string $status = null): array
     {
@@ -151,7 +151,7 @@ final class PortalController extends Controller
         return $this->abortIfMissing(Database::first(
             'SELECT * FROM assessments WHERE id = :id AND patient_id = :patient',
             ['id' => $id, 'patient' => (int) $this->patient()['id']]
-        ), 'No encontramos este cuestionario.');
+        ), "We couldn't find this questionnaire.");
     }
 
     private function patient(): array
@@ -159,7 +159,7 @@ final class PortalController extends Controller
         $patient = Patients::find((int) Auth::patientId());
 
         if ($patient === null) {
-            throw HttpException::forbidden('Tu cuenta no está vinculada a una historia clínica. Comunícate con el consultorio.');
+            throw HttpException::forbidden("Your account isn't linked to a clinical record. Please contact the practice.");
         }
 
         return $patient;

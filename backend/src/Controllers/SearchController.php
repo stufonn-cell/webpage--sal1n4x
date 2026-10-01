@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -16,9 +16,12 @@ use PsiClinic\Core\Request;
 
 final class SearchController extends Controller
 {
+    private const MAX_TERM_LENGTH = 100;
+
     public function index(Request $request): void
     {
-        $term = $request->string('q');
+        // Long terms only make the LIKE scans slower: nobody types 100 characters in a search box.
+        $term = mb_substr($request->string('q'), 0, self::MAX_TERM_LENGTH);
 
         if (mb_strlen($term) < 2) {
             $this->json(['results' => []]);
@@ -26,7 +29,8 @@ final class SearchController extends Controller
             return;
         }
 
-        $like = '%' . addcslashes($term, '%_\\') . '%';
+        // %, _ and \ typed by the person match literally.
+        $like = Database::like($term);
 
         $patients = Database::all(
             'SELECT id, record_number, first_name, last_name
@@ -41,10 +45,10 @@ final class SearchController extends Controller
 
         foreach ($patients as $patient) {
             $results[] = [
-                'group' => __('Pacientes'),
+                'group' => 'Patients',
                 'label' => $patient['first_name'] . ' ' . $patient['last_name'],
                 'meta' => (string) $patient['record_number'],
-                'url' => '/app/pacientes/' . (int) $patient['id'],
+                'url' => '/app/patients/' . (int) $patient['id'],
             ];
         }
 
@@ -57,14 +61,14 @@ final class SearchController extends Controller
             ['s1' => $like, 's2' => $like, 's3' => $like]
         ) as $note) {
             $results[] = [
-                'group' => __('Notas'),
-                'label' => __('Sesión %d · %s %s', (int) $note['session_number'], $note['first_name'], $note['last_name']),
+                'group' => 'Notes',
+                'label' => sprintf('Session %d · %s %s', (int) $note['session_number'], $note['first_name'], $note['last_name']),
                 'meta' => (string) $note['session_date'],
-                'url' => '/app/notas/' . (int) $note['id'],
+                'url' => '/app/notes/' . (int) $note['id'],
             ];
         }
 
-        // Las etiquetas viajan como texto plano; la interfaz las escapa al pintarlas.
+        // Labels travel as plain text; the interface escapes them when rendering.
         $this->json(['results' => $results]);
     }
 }

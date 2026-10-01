@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -16,34 +16,34 @@ use PsiClinic\Core\Env;
 final class AppointmentRequests
 {
     public const STATUSES = [
-        'new' => 'Nueva',
-        'contacted' => 'Contactada',
-        'scheduled' => 'Cita agendada',
-        'dismissed' => 'Descartada',
+        'new' => 'New',
+        'contacted' => 'Contacted',
+        'scheduled' => 'Appointment booked',
+        'dismissed' => 'Dismissed',
     ];
 
     public const MODALITIES = [
-        'in_person' => 'Presencial',
-        'online' => 'Virtual',
-        'no_preference' => 'Sin preferencia',
+        'in_person' => 'In person',
+        'online' => 'Online',
+        'no_preference' => 'No preference',
     ];
 
     public const ATTENDEES = [
-        'self' => 'Para mí',
-        'minor' => 'Para un niño, niña o adolescente',
-        'other' => 'Para otra persona adulta',
+        'self' => 'For me',
+        'minor' => 'For a child or teenager',
+        'other' => 'For another adult',
     ];
 
     public const CONTACT_PREFERENCES = [
-        'email' => 'Correo',
-        'phone' => 'Llamada',
+        'email' => 'Email',
+        'phone' => 'Phone call',
         'whatsapp' => 'WhatsApp',
     ];
 
     public const TIMES = [
-        'morning' => 'Mañana',
-        'afternoon' => 'Tarde',
-        'evening' => 'Final de la tarde',
+        'morning' => 'Morning',
+        'afternoon' => 'Afternoon',
+        'evening' => 'Late afternoon',
     ];
 
     private const MAX_PER_HOUR = 3;
@@ -57,7 +57,7 @@ final class AppointmentRequests
         ]);
     }
 
-    /** Freno basico contra envios masivos desde una misma IP. */
+    /** Basic brake against bulk submissions from the same IP. */
     public static function tooManyFrom(string $ip): bool
     {
         return (int) Database::value(
@@ -77,7 +77,7 @@ final class AppointmentRequests
         }
 
         $total = (int) Database::value('SELECT COUNT(*) FROM appointment_requests r WHERE ' . $where, $params);
-        $offset = max(0, ($page - 1) * $perPage);
+        $offset = Database::offset($page, $perPage);
 
         return [
             'rows' => Database::all(
@@ -88,8 +88,8 @@ final class AppointmentRequests
                  LEFT JOIN users u ON u.id = r.preferred_professional_id
                  LEFT JOIN users h ON h.id = r.handled_by
                  WHERE ' . $where . '
-                 ORDER BY FIELD(r.status, "new", "contacted", "scheduled", "dismissed"), r.created_at DESC
-                 LIMIT ' . $perPage . ' OFFSET ' . $offset,
+                 ORDER BY FIELD(r.status, "new", "contacted", "scheduled", "dismissed"), r.created_at DESC' .
+                Database::limit($perPage, $offset),
                 $params
             ),
             'total' => $total,
@@ -110,7 +110,7 @@ final class AppointmentRequests
 
     private static function ipHash(string $ip): string
     {
-        // Se guarda un hash con la clave de la app, no la IP en claro.
+        // A hash keyed with the app key is stored, never the plain IP.
         return hash_hmac('sha256', $ip, (string) Env::get('APP_KEY', 'psiclinic'));
     }
 }

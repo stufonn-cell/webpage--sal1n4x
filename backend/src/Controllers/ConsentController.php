@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -17,6 +17,7 @@ use PsiClinic\Core\HttpException;
 use PsiClinic\Core\Request;
 use PsiClinic\Domain\AuditLog;
 use PsiClinic\Domain\ConsentTemplates;
+use PsiClinic\Domain\DocumentLanguage;
 use PsiClinic\Domain\Patients;
 use PsiClinic\Support\Present;
 use PsiClinic\Support\Signature;
@@ -28,7 +29,7 @@ final class ConsentController extends Controller
         $this->ok(array_map(
             static fn (array $row): array => Present::consent($row, true),
             Database::all(
-                'SELECT c.id, c.patient_id, c.template_code, c.title, c.status, c.signed_name, c.signed_at,
+                'SELECT c.id, c.patient_id, c.template_code, c.language, c.title, c.status, c.signed_name, c.signed_at,
                         c.created_at, p.first_name, p.last_name, p.record_number
                  FROM consents c
                  JOIN patients p ON p.id = c.patient_id
@@ -38,27 +39,39 @@ final class ConsentController extends Controller
         ));
     }
 
+    /**
+     * Creates a consent from a template, in English or Spanish. The text is
+     * copied into the consent so it never changes after the patient signs.
+     */
     public function store(Request $request): void
     {
         $patientId = $request->integer('patient_id');
         $code = $request->string('template_code');
-        $template = ConsentTemplates::get($code);
+        $requested = $request->string('language');
+
+        if ($requested !== '' && !DocumentLanguage::isValid($requested)) {
+            throw HttpException::unprocessable('Choose English or Spanish for the document.', ['language' => 'Choose a language.']);
+        }
+
+        $language = DocumentLanguage::resolve($requested);
+        $template = ConsentTemplates::get($code, $language);
 
         if (Patients::find($patientId) === null || $template === null) {
-            throw HttpException::unprocessable('Selecciona un paciente y una plantilla.');
+            throw HttpException::unprocessable('Select a patient and a template.');
         }
 
         $id = Database::insert('consents', [
             'uuid' => uuid(),
             'patient_id' => $patientId,
             'template_code' => $code,
+            'language' => $language,
             'title' => $template['title'],
             'body' => $template['body'],
             'created_by' => Auth::id(),
         ]);
         AuditLog::record('create', 'consent', $id);
 
-        $this->created(['id' => $id], 'Consentimiento generado. El paciente ya puede firmarlo desde su portal.');
+        $this->created(['id' => $id], 'Consent created. The patient can now sign it from their portal.');
     }
 
     public function show(Request $request, string $id): void
@@ -74,7 +87,7 @@ final class ConsentController extends Controller
         $consent = $this->findAccessible((int) $id);
 
         if ($consent['status'] !== 'pending') {
-            throw HttpException::conflict('Este consentimiento ya fue firmado.');
+            throw HttpException::conflict('This consent has already been signed.');
         }
 
         $signedName = mb_substr($request->string('signed_name'), 0, 160);
@@ -82,13 +95,13 @@ final class ConsentController extends Controller
 
         $errors = [];
         if ($signedName === '') {
-            $errors['signed_name'] = 'Escribe tu nombre completo.';
+            $errors['signed_name'] = 'Type your full name.';
         }
         if ($signature === '') {
-            $errors['strokes'] = 'Dibuja tu firma en el recuadro.';
+            $errors['strokes'] = 'Draw your signature in the box.';
         }
         if ($errors !== []) {
-            throw HttpException::unprocessable('Falta completar la firma.', $errors);
+            throw HttpException::unprocessable('The signature is not complete yet.', $errors);
         }
 
         Database::update('consents', (int) $consent['id'], [
@@ -100,12 +113,12 @@ final class ConsentController extends Controller
         ]);
         AuditLog::record('sign', 'consent', (int) $consent['id']);
 
-        $this->message('Consentimiento firmado. Gracias.');
+        $this->message('Consent signed. Thank you.');
     }
 
     /**
-     * El equipo ve cualquier consentimiento; un paciente solo los suyos. Antes
-     * bastaba con cambiar el id en la URL para ver o firmar el de otra persona.
+     * The team sees any consent; a patient only sees their own. Before, changing
+     * the id in the URL was enough to view or sign someone else's.
      */
     private function findAccessible(int $id): array
     {
@@ -113,10 +126,10 @@ final class ConsentController extends Controller
             'SELECT c.*, p.first_name, p.last_name, p.record_number, p.document_id
              FROM consents c JOIN patients p ON p.id = c.patient_id WHERE c.id = :id',
             ['id' => $id]
-        ), 'No encontramos este consentimiento.');
+        ), "We couldn't find this consent.");
 
         if (!Auth::isStaff() && (int) $consent['patient_id'] !== Auth::patientId()) {
-            throw HttpException::notFound('No encontramos este consentimiento.');
+            throw HttpException::notFound("We couldn't find this consent.");
         }
 
         return $consent;

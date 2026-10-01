@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -15,23 +15,23 @@ use PsiClinic\Core\Database;
 final class Patients
 {
     public const STATUSES = [
-        'active' => 'En tratamiento',
-        'on_hold' => 'En pausa',
-        'discharged' => 'Alta',
+        'active' => 'In treatment',
+        'on_hold' => 'On hold',
+        'discharged' => 'Discharged',
     ];
 
     public const RISK_LEVELS = [
-        'none' => 'Sin riesgo',
-        'low' => 'Bajo',
-        'moderate' => 'Moderado',
-        'high' => 'Alto',
+        'none' => 'No risk',
+        'low' => 'Low',
+        'moderate' => 'Moderate',
+        'high' => 'High',
     ];
 
     public const GENDERS = [
-        'female' => 'Femenino',
-        'male' => 'Masculino',
-        'non_binary' => 'No binario',
-        'undisclosed' => 'Prefiere no decirlo',
+        'female' => 'Female',
+        'male' => 'Male',
+        'non_binary' => 'Non-binary',
+        'undisclosed' => 'Prefers not to say',
     ];
 
     public static function paginate(string $search = '', string $status = '', int $page = 1, int $perPage = 12): array
@@ -39,9 +39,10 @@ final class Patients
         $where = ['1 = 1'];
         $params = [];
 
+        $search = mb_substr($search, 0, 100);
         if ($search !== '') {
             $where[] = '(p.first_name LIKE :s1 OR p.last_name LIKE :s2 OR p.record_number LIKE :s3 OR p.document_id LIKE :s4 OR p.email LIKE :s5)';
-            $like = '%' . $search . '%';
+            $like = Database::like($search);
             $params += ['s1' => $like, 's2' => $like, 's3' => $like, 's4' => $like, 's5' => $like];
         }
 
@@ -53,7 +54,7 @@ final class Patients
         $clause = implode(' AND ', $where);
         $total = (int) Database::value('SELECT COUNT(*) FROM patients p WHERE ' . $clause, $params);
 
-        $offset = max(0, ($page - 1) * $perPage);
+        $offset = Database::offset($page, $perPage);
         $rows = Database::all(
             'SELECT p.*, u.full_name AS psychologist_name,
                     (SELECT MAX(session_date) FROM clinical_notes n WHERE n.patient_id = p.id) AS last_session,
@@ -61,8 +62,7 @@ final class Patients
              FROM patients p
              LEFT JOIN users u ON u.id = p.psychologist_id
              WHERE ' . $clause . '
-             ORDER BY p.last_name, p.first_name
-             LIMIT ' . $perPage . ' OFFSET ' . $offset,
+             ORDER BY p.last_name, p.first_name' . Database::limit($perPage, $offset),
             $params
         );
 
@@ -93,15 +93,16 @@ final class Patients
         );
     }
 
+    /** Next record number for the current year: MR-YYYY-NNNN. */
     public static function nextRecordNumber(): string
     {
         $year = date('Y');
         $count = (int) Database::value(
             'SELECT COUNT(*) FROM patients WHERE record_number LIKE :prefix',
-            ['prefix' => 'HC-' . $year . '-%']
+            ['prefix' => 'MR-' . $year . '-%']
         );
 
-        return sprintf('HC-%s-%04d', $year, $count + 1);
+        return sprintf('MR-%s-%04d', $year, $count + 1);
     }
 
     public static function fullName(array $patient): string
@@ -121,9 +122,9 @@ final class Patients
             $events[] = [
                 'at' => (string) $note['at'],
                 'type' => 'note',
-                'title' => __('Sesión %d registrada', (int) $note['session_number']),
+                'title' => sprintf('Session %d recorded', (int) $note['session_number']),
                 'meta' => strtoupper((string) $note['format']),
-                'link' => '/app/notas/' . (int) $note['id'],
+                'link' => '/app/notes/' . (int) $note['id'],
             ];
         }
 
@@ -135,9 +136,9 @@ final class Patients
             $events[] = [
                 'at' => (string) $appointment['at'],
                 'type' => 'appointment',
-                'title' => __('Cita %s', mb_strtolower(__(Appointments::STATUSES[$appointment['status']]))),
-                'meta' => __(Appointments::MODALITIES[$appointment['modality']]),
-                'link' => '/app/agenda',
+                'title' => sprintf('Appointment %s', mb_strtolower(Appointments::STATUSES[$appointment['status']])),
+                'meta' => Appointments::MODALITIES[$appointment['modality']],
+                'link' => '/app/schedule',
             ];
         }
 
@@ -149,9 +150,9 @@ final class Patients
             $events[] = [
                 'at' => (string) $assessment['at'],
                 'type' => 'assessment',
-                'title' => __('%s: %d puntos', $assessment['instrument_code'], (int) $assessment['total_score']),
+                'title' => sprintf('%s: %d points', $assessment['instrument_code'], (int) $assessment['total_score']),
                 'meta' => (string) $assessment['severity'],
-                'link' => '/app/evaluaciones/' . (int) $assessment['id'],
+                'link' => '/app/assessments/' . (int) $assessment['id'],
             ];
         }
 

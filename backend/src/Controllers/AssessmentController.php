@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -17,6 +17,7 @@ use PsiClinic\Core\HttpException;
 use PsiClinic\Core\Request;
 use PsiClinic\Domain\Assessments;
 use PsiClinic\Domain\AuditLog;
+use PsiClinic\Domain\DocumentLanguage;
 use PsiClinic\Domain\Instruments;
 use PsiClinic\Domain\Patients;
 use PsiClinic\Support\Present;
@@ -42,24 +43,26 @@ final class AssessmentController extends Controller
 
     public function instrument(Request $request, string $code): void
     {
-        $this->ok($this->abortIfMissing(Instruments::describe($code), 'Ese instrumento no está disponible.'));
+        $this->ok($this->abortIfMissing(Instruments::describe($code), "That instrument isn't available."));
     }
 
     public function store(Request $request): void
     {
+        $this->validate($request, ['clinician_notes' => 'max:10000']);
+
         $code = $request->string('instrument_code');
         $patientId = $request->integer('patient_id');
 
         if (Instruments::get($code) === null || Patients::find($patientId) === null) {
             throw HttpException::unprocessable(
-                'Selecciona un paciente y un instrumento válidos.',
-                Patients::find($patientId) === null ? ['patient_id' => 'Elige un paciente.'] : []
+                'Select a valid patient and instrument.',
+                Patients::find($patientId) === null ? ['patient_id' => 'Choose a patient.'] : []
             );
         }
 
         $answers = Instruments::normalizeAnswers($code, $request->array('answers'));
         if ($answers === null) {
-            throw HttpException::unprocessable('Responde todos los ítems antes de guardar.');
+            throw HttpException::unprocessable('Answer every item before saving.');
         }
 
         $id = Database::insert('assessments', [
@@ -74,27 +77,41 @@ final class AssessmentController extends Controller
         $result = Assessments::complete($id, $code, $answers);
         AuditLog::record('create', 'assessment', $id);
 
-        $this->created(['id' => $id, 'alerts' => $result['alerts']], 'Evaluación registrada y corregida.');
+        $this->created(['id' => $id, 'alerts' => $result['alerts']], 'Assessment recorded and scored.');
     }
 
+    /**
+     * Assessment report. `language` (en|es) picks the language of the report:
+     * the instrument text and the band labels are taken from that catalog and
+     * recalculated from the stored answers, so the score never changes.
+     */
     public function show(Request $request, string $id): void
     {
-        $assessment = $this->abortIfMissing(Assessments::find((int) $id), 'No encontramos esta evaluación.');
+        $assessment = $this->abortIfMissing(Assessments::find((int) $id), "We couldn't find this assessment.");
         $code = (string) $assessment['instrument_code'];
         $answers = json_decode((string) ($assessment['answers'] ?? '[]'), true) ?: [];
+        $language = DocumentLanguage::resolve($request->string('language'));
 
+        $row = Present::row($assessment, ['uuid', 'answers', 'subscale_scores']);
+        $subscales = json_decode((string) ($assessment['subscale_scores'] ?? '[]'), true) ?: [];
         $alerts = [];
-        if ($assessment['status'] === 'completed') {
-            $alerts = Instruments::score($code, $answers)['alerts'];
+
+        if ($assessment['status'] === 'completed' && $answers !== []) {
+            $result = Instruments::score($code, $answers, $language);
+            $alerts = $result['alerts'];
+            $subscales = $result['subscales'];
+            $row['severity'] = $result['severity'];
+            $row['interpretation'] = $result['interpretation'];
         }
 
         AuditLog::record('view', 'assessment', (int) $assessment['id']);
 
         $this->ok([
-            'assessment' => Present::row($assessment, ['uuid', 'answers', 'subscale_scores']),
-            'instrument' => Instruments::describe($code),
+            'language' => $language,
+            'assessment' => $row,
+            'instrument' => Instruments::describe($code, $language),
             'answers' => $answers,
-            'subscales' => json_decode((string) ($assessment['subscale_scores'] ?? '[]'), true) ?: [],
+            'subscales' => $subscales,
             'alerts' => $alerts,
             'series' => Assessments::series((int) $assessment['patient_id'], $code),
         ]);
@@ -102,11 +119,11 @@ final class AssessmentController extends Controller
 
     public function assign(Request $request, string $patientId): void
     {
-        $patient = $this->abortIfMissing(Patients::find((int) $patientId), 'No encontramos a este paciente.');
+        $patient = $this->abortIfMissing(Patients::find((int) $patientId), "We couldn't find this patient.");
         $code = $request->string('instrument_code');
 
         if (Instruments::get($code) === null) {
-            throw HttpException::unprocessable('Ese instrumento no está disponible.');
+            throw HttpException::unprocessable("That instrument isn't available.");
         }
 
         $id = Database::insert('assessments', [
@@ -118,16 +135,16 @@ final class AssessmentController extends Controller
         ]);
         AuditLog::record('assign', 'assessment', $id);
 
-        $this->created(['id' => $id], 'Cuestionario enviado al portal del paciente.');
+        $this->created(['id' => $id], 'Questionnaire sent to the patient portal.');
     }
 
     public function destroy(Request $request, string $id): void
     {
-        $assessment = $this->abortIfMissing(Assessments::find((int) $id), 'No encontramos esta evaluación.');
+        $assessment = $this->abortIfMissing(Assessments::find((int) $id), "We couldn't find this assessment.");
 
         Database::delete('assessments', (int) $assessment['id']);
         AuditLog::record('delete', 'assessment', (int) $assessment['id']);
 
-        $this->message('Evaluación eliminada.');
+        $this->message('Assessment deleted.');
     }
 }

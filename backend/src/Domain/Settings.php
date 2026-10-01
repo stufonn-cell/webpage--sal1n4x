@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -18,8 +18,8 @@ final class Settings
 
     public const DEFAULTS = [
         'clinic_name' => 'PsiClinic',
-        'clinic_tagline' => 'Centro de atención psicológica',
-        'clinic_email' => 'contacto@psiclinic.local',
+        'clinic_tagline' => 'Psychological care center',
+        'clinic_email' => 'contact@psiclinic.local',
         'clinic_phone' => '',
         'clinic_address' => '',
         'currency' => 'COP',
@@ -31,20 +31,22 @@ final class Settings
         'clinic_about' => '',
         'whatsapp_number' => '',
         'crisis_line' => '123',
-        // RIPS (Resolucion 2275 de 2023). Nunca se exponen en el sitio publico.
-        'rips_obligado_documento' => '',
-        'rips_cod_prestador' => '',
-        'rips_cod_servicio' => '344',
-        'rips_finalidad_primera' => '15',
-        'rips_finalidad_control' => '16',
-        'rips_causa' => '38',
-        'rips_numero_inicial' => '1',
-        'rips_ambiente' => 'pruebas',
-        'rips_muv_url' => '',
-        'rips_muv_verify_tls' => '1',
+        // Default language of consents, printed notes, invoices and reports.
+        'document_language' => 'en',
+        // RIPS (Resolution 2275 of 2023). Never exposed on the public site.
+        'rips_reporter_id' => '',
+        'rips_provider_code' => '',
+        'rips_service_code' => '344',
+        'rips_purpose_first' => '15',
+        'rips_purpose_follow_up' => '16',
+        'rips_cause' => '38',
+        'rips_first_note_number' => '1',
+        'rips_environment' => 'test',
+        'rips_validator_url' => '',
+        'rips_validator_verify_tls' => '1',
     ];
 
-    /** Claves que puede leer cualquier visitante del sitio publico. */
+    /** Keys any visitor of the public site can read. */
     public const PUBLIC_KEYS = [
         'clinic_name', 'clinic_tagline', 'clinic_email', 'clinic_phone', 'clinic_address',
         'session_duration', 'working_hours_start', 'working_hours_end',
@@ -67,7 +69,8 @@ final class Settings
             $stored[$row['setting_key']] = $row['setting_value'];
         }
 
-        self::$cache = $stored + self::DEFAULTS;
+        // Only known keys: stale rows from older versions never reach the API.
+        self::$cache = array_intersect_key($stored, self::DEFAULTS) + self::DEFAULTS;
 
         return self::$cache;
     }

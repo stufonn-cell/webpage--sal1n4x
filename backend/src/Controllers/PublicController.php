@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -22,8 +22,8 @@ use PsiClinic\Domain\Settings;
 use PsiClinic\Support\Present;
 
 /**
- * Endpoints del sitio publico. No requieren sesion y solo exponen datos que
- * la clinica ha decidido publicar.
+ * Public site endpoints. They don't require a session and only expose data
+ * the clinic has chosen to publish.
  */
 final class PublicController extends Controller
 {
@@ -50,15 +50,15 @@ final class PublicController extends Controller
 
     public function requestAppointment(Request $request): void
     {
-        // Campo trampa: las personas no lo ven, los bots suelen llenarlo.
+        // Honeypot field: people don't see it, bots usually fill it in.
         if ($request->string('website') !== '') {
-            $this->created(null, 'Recibimos tu solicitud.');
+            $this->created(null, 'We received your request.');
 
             return;
         }
 
         if (AppointmentRequests::tooManyFrom($request->ip())) {
-            throw new HttpException(429, 'Ya recibimos varias solicitudes desde esta conexión. Si necesitas algo más, escríbenos o llámanos directamente.');
+            throw new HttpException(429, "We've already received several requests from this connection. If you need anything else, write to us or call us directly.");
         }
 
         $this->validate($request, [
@@ -74,23 +74,23 @@ final class PublicController extends Controller
         $errors = [];
         $contact = $request->string('contact_preference');
         if (in_array($contact, ['phone', 'whatsapp'], true) && $request->string('phone') === '') {
-            $errors['phone'] = 'Déjanos un número para poder llamarte o escribirte.';
+            $errors['phone'] = 'Leave us a number so we can call or message you.';
         }
         if (!$request->bool('privacy_accepted')) {
-            $errors['privacy_accepted'] = 'Necesitamos tu autorización para usar estos datos y contactarte.';
+            $errors['privacy_accepted'] = 'We need your permission to use this information and contact you.';
         }
 
         $professionalId = $request->integer('preferred_professional_id');
         if ($professionalId > 0 && !in_array($professionalId, array_column($this->professionals(), 'id'), true)) {
-            $errors['preferred_professional_id'] = 'Elige un profesional de la lista.';
+            $errors['preferred_professional_id'] = 'Choose a professional from the list.';
         }
 
         if ($errors !== []) {
-            throw HttpException::unprocessable('Revisa los campos marcados.', $errors);
+            throw HttpException::unprocessable('Please check the highlighted fields.', $errors);
         }
 
         $times = array_values(array_intersect(
-            array_map('strval', $request->array('preferred_times')),
+            array_map('strval', array_filter($request->array('preferred_times'), 'is_scalar')),
             array_keys(AppointmentRequests::TIMES)
         ));
 
@@ -108,7 +108,7 @@ final class PublicController extends Controller
 
         AuditLog::record('create', 'appointment_request', $id);
 
-        $this->created(null, 'Recibimos tu solicitud.');
+        $this->created(null, 'We received your request.');
     }
 
     private function professionals(): array

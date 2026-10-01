@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ final class Assessments
             $params
         );
 
-        $offset = max(0, ($page - 1) * $perPage);
+        $offset = Database::offset($page, $perPage);
 
         return [
             'rows' => Database::all(
@@ -43,8 +43,7 @@ final class Assessments
                  FROM assessments a
                  JOIN patients p ON p.id = a.patient_id
                  WHERE ' . $clause . '
-                 ORDER BY COALESCE(a.administered_at, a.created_at) DESC
-                 LIMIT ' . $perPage . ' OFFSET ' . $offset,
+                 ORDER BY COALESCE(a.administered_at, a.created_at) DESC' . Database::limit($perPage, $offset),
                 $params
             ),
             'total' => $total,

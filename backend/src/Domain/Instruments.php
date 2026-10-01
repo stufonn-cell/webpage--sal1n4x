@@ -1,26 +1,41 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
 
 namespace PsiClinic\Domain;
 
+/**
+ * Psychometric instruments. The English catalog is the reference; the Spanish
+ * one (instrument_catalog_es.php) mirrors it item by item and is used to
+ * produce assessment reports in Spanish. Scores never depend on the language.
+ */
 final class Instruments
 {
-    private static ?array $catalog = null;
+    private const CATALOGS = [
+        'en' => 'instrument_catalog.php',
+        'es' => 'instrument_catalog_es.php',
+    ];
 
-    public static function all(): array
+    private const UNCLASSIFIED = ['en' => 'Unclassified', 'es' => 'Sin clasificar'];
+
+    /** @var array<string, array> */
+    private static array $catalogs = [];
+
+    public static function all(string $language = 'en'): array
     {
-        if (self::$catalog === null) {
-            self::$catalog = require __DIR__ . '/instrument_catalog.php';
+        $language = isset(self::CATALOGS[$language]) ? $language : 'en';
+
+        if (!isset(self::$catalogs[$language])) {
+            self::$catalogs[$language] = require __DIR__ . '/' . self::CATALOGS[$language];
         }
 
-        return self::$catalog;
+        return self::$catalogs[$language];
     }
 
     public static function codes(): array
@@ -28,9 +43,9 @@ final class Instruments
         return array_keys(self::all());
     }
 
-    public static function get(string $code): ?array
+    public static function get(string $code, string $language = 'en'): ?array
     {
-        $instrument = self::all()[$code] ?? null;
+        $instrument = self::all($language)[$code] ?? null;
 
         return $instrument === null ? null : $instrument + ['code' => $code];
     }
@@ -50,8 +65,8 @@ final class Instruments
     }
 
     /**
-     * Normaliza las respuestas recibidas. Devuelve null si falta algun item o
-     * si algun valor no pertenece a la escala del instrumento.
+     * Normalizes the answers received. Returns null when an item is missing or
+     * when a value is not part of the instrument's scale.
      */
     public static function normalizeAnswers(string $code, array $answers): ?array
     {
@@ -77,10 +92,10 @@ final class Instruments
         return $normalized;
     }
 
-    /** Version publica del instrumento para pintar el formulario. */
-    public static function describe(string $code): ?array
+    /** Public version of the instrument, used to render the form and the report. */
+    public static function describe(string $code, string $language = 'en'): ?array
     {
-        $instrument = self::get($code);
+        $instrument = self::get($code, $language);
 
         if ($instrument === null) {
             return null;
@@ -109,9 +124,10 @@ final class Instruments
         ];
     }
 
-    public static function score(string $code, array $answers): array
+    public static function score(string $code, array $answers, string $language = 'en'): array
     {
-        $instrument = self::get($code);
+        $instrument = self::get($code, $language);
+        $unclassified = self::UNCLASSIFIED[$language] ?? self::UNCLASSIFIED['en'];
 
         if ($instrument === null) {
             return ['total' => 0, 'severity' => '', 'interpretation' => '', 'subscales' => [], 'alerts' => []];
@@ -139,11 +155,11 @@ final class Instruments
 
             $subscales[$label] = [
                 'score' => $subtotal,
-                'severity' => self::bandLabel($instrument['subscale_bands'][$label] ?? [], $subtotal),
+                'severity' => self::band($instrument['subscale_bands'][$label] ?? [], $subtotal, $unclassified)[0],
             ];
         }
 
-        [$severity, $interpretation] = self::band($instrument['bands'], $total);
+        [$severity, $interpretation] = self::band($instrument['bands'], $total, $unclassified);
 
         $alerts = [];
         foreach ($instrument['critical_items'] ?? [] as $index) {
@@ -161,25 +177,15 @@ final class Instruments
         ];
     }
 
-    private static function band(array $bands, int $score): array
+    /** @return array{0:string,1:string} */
+    private static function band(array $bands, int $score, string $unclassified): array
     {
         foreach ($bands as $band) {
             if ($score >= $band[0] && $score <= $band[1]) {
-                return [$band[2], $band[3] ?? ''];
+                return [(string) $band[2], (string) ($band[3] ?? '')];
             }
         }
 
-        return ['Sin clasificar', ''];
-    }
-
-    private static function bandLabel(array $bands, int $score): string
-    {
-        foreach ($bands as $band) {
-            if ($score >= $band[0] && $score <= $band[1]) {
-                return (string) $band[2];
-            }
-        }
-
-        return 'Sin clasificar';
+        return [$unclassified, ''];
     }
 }

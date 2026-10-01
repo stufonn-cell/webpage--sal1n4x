@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -16,17 +16,17 @@ use PsiClinic\Core\Database;
 final class Appointments
 {
     public const STATUSES = [
-        'scheduled' => 'Programada',
-        'confirmed' => 'Confirmada',
-        'completed' => 'Realizada',
-        'cancelled' => 'Cancelada',
-        'no_show' => 'No asistió',
+        'scheduled' => 'Scheduled',
+        'confirmed' => 'Confirmed',
+        'completed' => 'Completed',
+        'cancelled' => 'Cancelled',
+        'no_show' => 'No-show',
     ];
 
     public const MODALITIES = [
-        'in_person' => 'Presencial',
-        'online' => 'Virtual',
-        'phone' => 'Telefónica',
+        'in_person' => 'In person',
+        'online' => 'Online',
+        'phone' => 'Phone',
     ];
 
     public static function week(DateTimeImmutable $reference, ?int $psychologistId = null): array

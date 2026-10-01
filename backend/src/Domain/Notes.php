@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -15,22 +15,22 @@ use PsiClinic\Core\Database;
 final class Notes
 {
     public const FORMATS = [
-        'soap' => 'SOAP (subjetivo, objetivo, análisis, plan)',
-        'dap' => 'DAP (datos, análisis, plan)',
-        'free' => 'Nota libre',
+        'soap' => 'SOAP (subjective, objective, assessment, plan)',
+        'dap' => 'DAP (data, assessment, plan)',
+        'free' => 'Free-form note',
     ];
 
     public const INTERVENTIONS = [
-        'Reestructuración cognitiva',
-        'Activación conductual',
-        'Exposicion gradual',
-        'Entrenamiento en relajación',
+        'Cognitive restructuring',
+        'Behavioral activation',
+        'Graded exposure',
+        'Relaxation training',
         'Mindfulness',
-        'Regulación emocional',
-        'Habilidades sociales',
-        'Psicoeducación',
-        'Terapia de aceptación y compromiso',
-        'Entrevista motivacional',
+        'Emotion regulation',
+        'Social skills training',
+        'Psychoeducation',
+        'Acceptance and commitment therapy',
+        'Motivational interviewing',
     ];
 
     public static function paginate(string $search, int $page = 1, int $perPage = 15): array
@@ -38,9 +38,10 @@ final class Notes
         $where = '1 = 1';
         $params = [];
 
+        $search = mb_substr($search, 0, 100);
         if ($search !== '') {
             $where = '(p.first_name LIKE :s1 OR p.last_name LIKE :s2 OR n.subjective LIKE :s3 OR n.assessment LIKE :s4)';
-            $like = '%' . $search . '%';
+            $like = Database::like($search);
             $params = ['s1' => $like, 's2' => $like, 's3' => $like, 's4' => $like];
         }
 
@@ -49,7 +50,7 @@ final class Notes
             $params
         );
 
-        $offset = max(0, ($page - 1) * $perPage);
+        $offset = Database::offset($page, $perPage);
 
         return [
             'rows' => Database::all(
@@ -58,8 +59,7 @@ final class Notes
                  JOIN patients p ON p.id = n.patient_id
                  JOIN users u ON u.id = n.author_id
                  WHERE ' . $where . '
-                 ORDER BY n.session_date DESC, n.id DESC
-                 LIMIT ' . $perPage . ' OFFSET ' . $offset,
+                 ORDER BY n.session_date DESC, n.id DESC' . Database::limit($perPage, $offset),
                 $params
             ),
             'total' => $total,
