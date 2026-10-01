@@ -1,107 +1,137 @@
 # Arquitectura
 
-Documento de referencia para entender y extender el codigo.
+Documento de referencia para entender y extender el código.
 
-## Principios
-
-1. **Sin magia.** No hay contenedor de dependencias ni ORM. Cada capa hace una
-   sola cosa y se puede leer de arriba abajo.
-2. **Sin build step.** No hay Composer ni npm. El autoloader es PSR-4 propio en
-   `src/autoload.php` y el CSS y el JS se sirven tal cual.
-3. **Consultas explicitas.** El SQL vive en la capa `Domain`, no repartido por
-   los controladores.
-4. **Escapado por defecto.** Toda salida en las vistas pasa por `e()`.
-
-## Capas
-
-```
-public/index.php     Punto de entrada unico. Todo el trafico pasa por aqui.
-src/Core/            Infraestructura: no conoce las reglas del negocio.
-src/Domain/          Reglas del negocio y consultas. No imprime nada.
-src/Controllers/     Orquestacion: valida, llama al dominio y elige la vista.
-src/Support/         Ayudantes transversales: iconos, graficas, instalador.
-views/               Presentacion. Solo lee datos, nunca consulta la base.
-```
-
-### src/Core
-
-| Clase | Responsabilidad |
-|---|---|
-| `App` | Arranque: carga el `.env`, inicia la sesion y recoge datos flash |
-| `Env` | Lectura tipada del archivo `.env` |
-| `Database` | Envoltorio de PDO con `all`, `first`, `value`, `insert`, `update`, `transaction` |
-| `Router` | Tabla de rutas con parametros `{id}` y middlewares por ruta |
-| `Request` | Acceso normalizado a `$_GET`, `$_POST` y `$_FILES`, con soporte de `_method` |
-| `Response` | Emision de HTML, JSON, redirecciones y descargas |
-| `View` | Renderizado de plantillas PHP con layout |
-| `Session` | Sesion, mensajes flash, errores y valores previos de formulario |
-| `Auth` | Autenticacion, roles y limitacion de intentos |
-| `Csrf` | Generacion y verificacion del token |
-| `Validator` | Reglas encadenadas por campo |
-| `Controller` | Clase base con `view`, `json`, `redirect`, `validate` |
-
-### Middlewares
-
-Se declaran por ruta en `src/routes.php` y se ejecutan antes del controlador.
-
-- `VerifyCsrf`: obligatorio en `POST`, `PUT` y `DELETE`.
-- `Authenticate`: exige sesion iniciada.
-- `RequireStaff`: exige rol clinico o administrativo.
-- `RequireAdmin`: exige rol de administrador.
-
-## Ciclo de una peticion
+## Visión general
 
 ```
 Navegador
-   v
-public/index.php          Carga el autoloader y arranca App
-   v
-Router::dispatch          Compara metodo y ruta
-   v
-Middlewares               CSRF, sesion, rol
-   v
-Controller                Valida la entrada
-   v
-Domain                    Consulta o escribe en la base
-   v
-View::render              Compone plantilla y layout
-   v
-Response                  Envia el HTML
+   │  mismo origen (cookie de sesión HttpOnly + cabecera X-CSRF-Token)
+   ▼
+Nginx ──────────────► frontend/dist        (SPA: sitio, app, portal)
+   │
+   └── /api/* ──────► PHP-FPM → backend/public/index.php
+                         Router → Middlewares → Controller → Domain → JSON
+                                                                │
+                                                              MySQL
 ```
 
-## Puntos de extension
+### Por qué esta separación
 
-**Agregar un instrumento psicometrico**
+- **El backend PHP se conserva.** La lógica clínica (puntuación de instrumentos,
+  choques de agenda, firma de notas, auditoría) ya estaba probada. Reescribirla
+  en otro lenguaje habría añadido riesgo sin beneficio para el usuario.
+- **El frontend pasa a React.** La interfaz tiene mucho estado (formularios por
+  pasos, pestañas, búsqueda, firma, cuestionarios) y se beneficia de componentes
+  reutilizables y tipado estricto.
+- **Mismo origen.** Nginx sirve ambas piezas, así que no hace falta CORS ni
+  tokens en `localStorage`: la sesión vive en una cookie `HttpOnly`.
 
-Editar `src/Domain/instruments.php` y anadir una entrada con `name`, `domain`,
-`window`, `description`, `scale`, `items`, `bands`, y de forma opcional
-`reverse`, `subscales`, `subscale_bands`, `multiplier` y `critical_items`. El
-resto del sistema (formulario, correccion, graficas, portal) lo toma automatico.
+## Backend
 
-**Agregar un modulo**
+### Principios
 
-1. Crear la tabla en un nuevo archivo `database/migrations/00N_*.sql`.
-2. Crear la clase de dominio en `src/Domain/`.
-3. Crear el controlador en `src/Controllers/`.
-4. Registrar las rutas en `src/routes.php`.
-5. Crear las vistas en `views/<modulo>/`.
-6. Anadir el enlace en `views/partials/sidebar.php`.
+1. **Sin magia.** No hay contenedor de dependencias ni ORM.
+2. **Consultas explícitas.** El SQL vive en `Domain`.
+3. **Solo JSON.** Ya no hay vistas: cada controlador devuelve datos.
+4. **Errores esperados como excepciones.** `HttpException` lleva el código
+   HTTP, un mensaje pensado para personas y los errores por campo.
+5. **Nada sensible sale por la API.** `Support/Present` filtra columnas
+   (por ejemplo, nunca devuelve `password_hash`).
 
-**Cambiar a PostgreSQL**
+### Capas
 
-Ajustar el DSN en `Database::connection()`, cambiar los tipos `ENUM` por
-`VARCHAR` con `CHECK`, `AUTO_INCREMENT` por `GENERATED ALWAYS AS IDENTITY` y
-reemplazar `ON DUPLICATE KEY UPDATE` por `ON CONFLICT DO UPDATE` en
-`Settings::put()` y en el instalador. El resto del codigo no cambia porque todo
-el acceso pasa por PDO.
+| Capa | Responsabilidad |
+|---|---|
+| `public/index.php` | Arranque, cabeceras, captura de `HttpException` (JSON) y de cualquier otro error (500 genérico, detalle solo al log) |
+| `src/Core` | `Router` (404/405 en JSON), `Request` (cuerpo JSON), `Session` (expiración por inactividad), `Auth` (intentos fallidos en base de datos), `Csrf` (rotación al iniciar sesión), `Validator`, `HttpException` |
+| `src/Core/Middleware` | `VerifyCsrf` (cabecera `X-CSRF-Token`), `Authenticate` (401), `RequireStaff`, `RequireAdmin`, `RequirePatient` (403) |
+| `src/Controllers` | Validan la entrada, restringen los valores de catálogo (`oneOf`) y llaman al dominio |
+| `src/Domain` | Reglas y consultas. Las constantes de catálogo son la fuente de las etiquetas que muestra la interfaz (`/api/meta`) |
+| `src/Support` | `Present` (serialización), `Signature` (construye el SVG de la firma a partir de coordenadas), `Installer` |
+
+### Formato de respuesta
+
+```json
+{ "data": { ... }, "message": "Texto opcional para mostrar" }
+{ "error": { "message": "Texto para la persona", "fields": { "email": "..." } } }
+```
+
+Códigos usados: `200`, `201`, `401`, `403`, `404`, `405`, `409` (conflicto:
+choque de agenda, nota ya firmada…), `419` (CSRF), `422` (validación), `429`
+(demasiados intentos), `500`.
+
+## Frontend
+
+### Estructura
+
+| Carpeta | Contenido |
+|---|---|
+| `styles/tokens.css` | Única fuente de colores, tipografía, espaciado, radios, sombras, movimiento y breakpoints, en claro y oscuro |
+| `styles/base.css` | Reset, foco visible, enlace para saltar al contenido, utilidades de layout, animación de aparición, impresión |
+| `components/ui` | Button, Field, Badge, Panel, PageHeader, EmptyState, Tabs, Toast, diálogo de confirmación, estados de carga, paginación, iconos |
+| `components/charts` | Línea, barras y distribución en SVG, con resumen accesible |
+| `components/forms` | Firma (Pointer Events), cuestionario Likert, documento de consentimiento |
+| `site/` | Sitio público. Los textos editoriales están en `site/content.ts` |
+| `app/` | Aplicación del equipo; una carpeta por módulo en `app/pages` |
+| `portal/` | Portal del paciente |
+| `session/` | Sesión (usuario, CSRF, cierre por 401) y tema |
+| `lib/` | Cliente de la API, formatos es-CO, catálogos, tipos |
+
+### Decisiones
+
+- **Tres bundles.** El sitio público no descarga el código clínico y un paciente
+  no descarga el del equipo (`React.lazy` por área).
+- **Datos con TanStack Query.** Caché, reintentos y estados de carga uniformes.
+  No se reintenta un error 4xx.
+- **Formularios sin librería.** `hooks/useForm` gestiona valores, errores del
+  cliente y los `422` de la API, y enfoca el primer campo con error.
+- **Sin librerías de animación.** Transiciones CSS (`opacity` + `transform`) y
+  un `IntersectionObserver` para la aparición al hacer scroll. Todo se desactiva
+  con `prefers-reduced-motion`.
+- **Fuentes propias.** Newsreader y Source Sans 3 se sirven desde el propio
+  dominio (`@fontsource`): sin peticiones a terceros.
+- **Nada personal en `localStorage`.** Solo se guarda la preferencia de tema.
+  Los datos de una solicitud nunca viajan en la URL (se usa el estado del router).
+
+## Seguridad
+
+| Riesgo | Control |
+|---|---|
+| CSRF | Token por sesión en cabecera; rota al iniciar sesión; reintento automático tras un 419 |
+| XSS | React escapa toda salida; la firma se reconstruye en el servidor y se muestra como `<img>`; CSP `script-src 'self'` sin `unsafe-inline` |
+| IDOR | Consentimientos, documentos y cuestionarios se filtran por el paciente de la sesión |
+| Fuerza bruta | Intentos fallidos en base de datos, por usuario y por IP |
+| Sesión olvidada | Cierre tras `SESSION_LIFETIME` segundos sin actividad |
+| Datos en caché | `Cache-Control: no-store` en toda respuesta de la API |
+| Exposición | `Present` filtra columnas; tarifas y correos del equipo no son públicos |
+| Errores | Nunca se muestran detalles técnicos; van al log del servidor |
+
+## Puntos de extensión
+
+**Agregar un instrumento**: editar `backend/src/Domain/instrument_catalog.php`.
+La API (`/api/instruments`), el formulario, el portal y las gráficas lo toman
+automáticamente.
+
+**Agregar un módulo**
+
+1. Migración en `backend/database/migrations/00N_*.sql` (idempotente).
+2. Dominio en `backend/src/Domain`, controlador en `backend/src/Controllers`.
+3. Rutas en `backend/src/routes.php` con el middleware adecuado.
+4. Prueba en `backend/tests/Feature/ApiTest.php`.
+5. Página en `frontend/src/app/pages/<modulo>/`, ruta en `app/StaffApp.tsx` y
+   enlace en `app/layout/StaffLayout.tsx`.
+
+**Cambiar textos del sitio**: `frontend/src/site/content.ts`. Los datos de
+contacto, la presentación y el número de WhatsApp se editan desde
+*Configuración* en la aplicación.
 
 ## Convenciones
 
-- Clases y metodos con tipos declarados y `strict_types`.
-- Nombres en ingles en el codigo, textos de interfaz en espanol.
-- Metodos publicos primero, privados al final.
-- Sin comentarios que repitan lo que dice el codigo.
-- Vistas sin logica de negocio: solo presentacion y bucles.
+- Backend: `strict_types`, nombres en inglés, textos de interfaz en español.
+- Frontend: TypeScript estricto, componentes pequeños, sin estilos sueltos
+  (siempre tokens), etiquetas de catálogo desde `/api/meta`.
+- Textos para personas: español neutro, cercano, con tildes, sin tecnicismos.
 
 ---
 

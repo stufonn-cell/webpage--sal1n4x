@@ -2,6 +2,42 @@
 
 Formato basado en Keep a Changelog. Versionado semantico.
 
+## [2.0.0] - 2026-10-01
+
+Separación de backend y frontend. Detalle completo en `docs/MIGRACION-2.0.md`.
+
+### Arquitectura
+
+- El backend PHP pasa a `backend/` y expone una API JSON bajo `/api`.
+- Nuevo frontend en React 19 + TypeScript + Vite en `frontend/`.
+- Nginx sirve la SPA y reenvía `/api` a PHP-FPM (mismo origen).
+- Imagen de producción propia para el frontend; CI con dos suites.
+
+### Nuevo
+
+- Sitio público con servicios, equipo, confidencialidad, preguntas frecuentes,
+  contacto, privacidad y datos estructurados.
+- Solicitud de cita en tres pasos y bandeja de solicitudes para el equipo.
+- Perfil público opcional por profesional, WhatsApp y línea de emergencias
+  configurables.
+- Sistema de diseño con tokens, modo oscuro, diseño móvil propio y
+  movimiento que respeta `prefers-reduced-motion`.
+
+### Seguridad
+
+- Corregido XSS almacenado en la firma de consentimientos.
+- Corregido acceso de un paciente a consentimientos ajenos (IDOR).
+- Corregido XSS en la búsqueda global.
+- Intentos de acceso persistentes, cierre por inactividad, rotación de CSRF y
+  CSP estricta.
+
+### Cambiado
+
+- Validación de catálogos, de enlaces de videollamada y de respuestas de
+  cuestionarios; la edición de citas valida como el alta.
+- Firmar una nota queda reservado a su autor o a administración.
+- Contraseñas de al menos 10 caracteres; cambiarla exige la actual.
+
 ## [1.0.0] - 2026-08-01
 
 Primera version funcional completa.

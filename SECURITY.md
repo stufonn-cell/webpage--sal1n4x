@@ -17,11 +17,18 @@ ejecucion local en un equipo controlado, no para exposicion directa a internet.
 ## Controles implementados
 
 - Contrasenas con `password_hash` y rehash automatico.
-- Token CSRF obligatorio en toda peticion que modifica datos.
+- Token CSRF obligatorio (cabecera `X-CSRF-Token`) en toda petición que modifica datos.
 - Limitacion de intentos de acceso con bloqueo temporal.
 - Consultas preparadas en todo el acceso a datos.
-- Escapado de salida en las vistas mediante el ayudante `e()`.
-- Validacion de tipo MIME y de tamano en la carga de archivos.
+- Escapado de toda salida en la interfaz (React) y Content-Security-Policy sin scripts en línea.
+- Firmas reconstruidas en el servidor a partir de coordenadas; nunca se guarda marcado del navegador.
+- Acceso a consentimientos, documentos y cuestionarios filtrado por el paciente de la sesión.
+- Intentos de acceso registrados en la base de datos, por usuario y por IP.
+- Cierre de sesión por inactividad y rotación del token CSRF al ingresar.
+- `Cache-Control: no-store` en todas las respuestas de la API.
+- Respuestas de la API filtradas: nunca incluyen hashes de contraseña.
+- Formulario público con campo trampa y límite de envíos por conexión; la IP se guarda como HMAC.
+- Validación de tipo MIME (sin SVG) y de tamaño en la carga de archivos.
 - Registro de auditoria de accesos y cambios sobre datos clinicos.
 - Control de acceso por rol mediante middleware.
 

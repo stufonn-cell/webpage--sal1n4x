@@ -11,7 +11,8 @@ sobreescribir el codigo que viaja dentro de la imagen.
 
 | Aspecto | Local | Produccion |
 |---|---|---|
-| Codigo | volumen montado, cambios en caliente | copiado dentro de la imagen |
+| Backend | `backend/` montado como volumen | copiado dentro de la imagen `app` |
+| Frontend | Vite en 5173 con recarga + `frontend/dist` en 8080 | compilado dentro de la imagen `web` (Nginx) |
 | Etapa del Dockerfile | `development` | `production` |
 | Puerto web | `0.0.0.0:8080` | `127.0.0.1:8080` detras del proxy |
 | OPcache | revalida archivos | cache fija, sin revalidacion |
@@ -109,6 +110,12 @@ server {
 
 Con el proxy activo, poner `SESSION_SECURE=true` y reiniciar `app`.
 
+El Nginx del contenedor `web` toma la IP real del visitante de `X-Forwarded-For`
+(solo cuando la petición llega desde una red privada, como el proxy). Es
+importante: los límites de intentos de ingreso y de solicitudes de cita se
+calculan por IP. Si el proxy no reenvía esa cabecera, todas las personas
+parecerían venir de la misma dirección.
+
 ---
 
 ## Copias de seguridad
@@ -120,7 +127,7 @@ docker compose exec -T mysql mysqldump \
   | gzip > "respaldo-$(date +%F).sql.gz"
 
 # Archivos adjuntos
-tar czf "archivos-$(date +%F).tar.gz" storage/uploads
+tar czf "archivos-$(date +%F).tar.gz" backend/storage/uploads
 ```
 
 Restaurar:
@@ -136,9 +143,9 @@ gunzip < respaldo-2026-08-01.sql.gz \
 
 `.github/workflows/ci.yml` se ejecuta en cada push y pull request sobre `main`:
 
-1. `php -l` sobre todo el codigo y todas las vistas.
-2. Suite completa de pruebas contra un servicio MySQL 8.4.
-3. Construccion de la imagen de produccion.
+1. `php -l` sobre todo el backend y suite de pruebas contra MySQL 8.4.
+2. Frontend: `npm ci`, comprobación de tipos, Vitest y compilación.
+3. Construcción de las dos imágenes de producción (`app` y `web`).
 
 ---
 
