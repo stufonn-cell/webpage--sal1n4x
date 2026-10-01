@@ -1,5 +1,5 @@
 -- ---------------------------------------------------------------------------
--- PsiClinic - esquema base (MySQL 8 / MariaDB 10.6+)
+-- PsiClinic - base schema (MySQL 8 / MariaDB 10.6+)
 -- ---------------------------------------------------------------------------
 
 SET NAMES utf8mb4;
@@ -63,9 +63,9 @@ CREATE TABLE IF NOT EXISTS patients (
     CONSTRAINT fk_patients_psychologist FOREIGN KEY (psychologist_id) REFERENCES users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- La relacion users -> patients se agrega despues porque ambas tablas se
--- referencian mutuamente. El bloque es idempotente para poder reejecutar la
--- migracion sobre una base existente.
+-- The users -> patients relation is added afterwards because both tables
+-- reference each other. The block is idempotent so the migration can run
+-- again on an existing database.
 SET @fk_users_patient := (
     SELECT COUNT(*) FROM information_schema.table_constraints
     WHERE constraint_schema = DATABASE() AND constraint_name = 'fk_users_patient'
