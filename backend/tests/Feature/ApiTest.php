@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -20,8 +20,8 @@ use PsiClinic\Core\Router;
 use PsiClinic\Domain\Instruments;
 
 /**
- * Recorre la API real (rutas + middlewares + controladores) tal como la usa
- * el frontend: cuerpo JSON y token CSRF en la cabecera.
+ * Exercises the real API (routes + middleware + controllers) the way the
+ * frontend uses it: JSON body and the CSRF token in a header.
  */
 final class ApiTest extends FeatureTestCase
 {
@@ -46,12 +46,12 @@ final class ApiTest extends FeatureTestCase
         $this->assertSame(200, $status);
         $this->assertNull($body['data']['user']);
         $this->assertSame(64, strlen($body['data']['csrfToken']));
-        $this->assertCount(0, $body['data']['demoAccounts'], 'Las cuentas demo solo se anuncian en local');
+        $this->assertCount(0, $body['data']['demoAccounts'], 'Demo accounts are only advertised locally');
     }
 
     public function testLoginReturnsTheUserWithoutItsPasswordHash(): void
     {
-        [$status, $body] = $this->call('POST', '/api/auth/login', ['identifier' => 'render', 'password' => 'Clave12345']);
+        [$status, $body] = $this->call('POST', '/api/auth/login', ['identifier' => 'render', 'password' => 'Password1234']);
 
         $this->assertSame(200, $status);
         $this->assertSame('render', $body['data']['user']['username']);
@@ -60,10 +60,10 @@ final class ApiTest extends FeatureTestCase
 
     public function testWrongCredentialsGiveAFriendlyError(): void
     {
-        [$status, $body] = $this->call('POST', '/api/auth/login', ['identifier' => 'render', 'password' => 'mala']);
+        [$status, $body] = $this->call('POST', '/api/auth/login', ['identifier' => 'render', 'password' => 'wrong']);
 
         $this->assertSame(422, $status);
-        $this->assertContains('no coinciden', $body['error']['message']);
+        $this->assertContains("don't match", $body['error']['message']);
     }
 
     public function testWritesWithoutTheCsrfTokenAreRejected(): void
@@ -84,8 +84,8 @@ final class ApiTest extends FeatureTestCase
 
     public function testPatientsCannotReachStaffEndpoints(): void
     {
-        $this->createPortalUser($this->patientId, 'hc-portal');
-        $this->loginAs('hc-portal');
+        $this->createPortalUser($this->patientId, 'mr-portal');
+        $this->loginAs('mr-portal');
 
         [$status] = $this->call('GET', '/api/patients');
 
@@ -107,7 +107,7 @@ final class ApiTest extends FeatureTestCase
     {
         $this->loginAs('render');
 
-        [$status, $body] = $this->call('POST', '/api/patients', ['first_name' => '', 'email' => 'no-es-correo']);
+        [$status, $body] = $this->call('POST', '/api/patients', ['first_name' => '', 'email' => 'not-an-email']);
 
         $this->assertSame(422, $status);
         $this->assertArrayHasKey('first_name', $body['error']['fields']);
@@ -119,7 +119,7 @@ final class ApiTest extends FeatureTestCase
         $this->loginAs('render');
 
         [$status, $body] = $this->call('POST', '/api/patients', [
-            'first_name' => 'Lucia', 'last_name' => 'Paz', 'gender' => 'otro-valor', 'status' => 'raro', 'risk_level' => 'x',
+            'first_name' => 'Lucia', 'last_name' => 'Paz', 'gender' => 'other-value', 'status' => 'odd', 'risk_level' => 'x',
         ]);
 
         $this->assertSame(201, $status);
@@ -137,7 +137,7 @@ final class ApiTest extends FeatureTestCase
 
         $this->assertSame(200, $status);
         foreach (['patient', 'notes', 'assessments', 'series', 'timeline', 'diagnoses', 'appointments', 'documents', 'consents', 'invoices'] as $key) {
-            $this->assertArrayHasKey($key, $body['data'], 'Falta la seccion ' . $key);
+            $this->assertArrayHasKey($key, $body['data'], 'Missing section ' . $key);
         }
         $this->assertSame('Mariana', $body['data']['patient']['first_name']);
     }
@@ -156,7 +156,7 @@ final class ApiTest extends FeatureTestCase
 
         $this->assertSame(201, $first);
         $this->assertSame(409, $second);
-        $this->assertContains('se cruza', $body['error']['message']);
+        $this->assertContains('overlaps', $body['error']['message']);
     }
 
     public function testMeetingLinksMustBeHttp(): void
@@ -176,9 +176,9 @@ final class ApiTest extends FeatureTestCase
     public function testOnlyTheAuthorCanSignANoteAndOnlyOnce(): void
     {
         $noteId = $this->createNote($this->patientId, $this->psychologistId);
-        $this->createUser('psychologist', 'colega');
+        $this->createUser('psychologist', 'colleague');
 
-        $this->loginAs('colega');
+        $this->loginAs('colleague');
         [$foreign] = $this->call('POST', '/api/notes/' . $noteId . '/sign');
 
         $this->loginAs('render');
@@ -191,19 +191,19 @@ final class ApiTest extends FeatureTestCase
         $this->assertSame(403, $foreign);
         $this->assertSame(200, $own);
         $this->assertSame(409, $again);
-        $this->assertSame(409, $edit, 'Una nota firmada no admite cambios');
+        $this->assertSame(409, $edit, 'A signed note cannot be changed');
     }
 
     public function testAPatientCannotOpenAnotherPatientsConsent(): void
     {
-        $otherPatient = $this->createPatient(['first_name' => 'Otra', 'last_name' => 'Persona']);
+        $otherPatient = $this->createPatient(['first_name' => 'Other', 'last_name' => 'Person']);
         $foreignConsent = $this->createConsent($otherPatient);
-        $this->createPortalUser($this->patientId, 'hc-propio');
-        $this->loginAs('hc-propio');
+        $this->createPortalUser($this->patientId, 'mr-own');
+        $this->loginAs('mr-own');
 
         [$view] = $this->call('GET', '/api/consents/' . $foreignConsent);
         [$sign] = $this->call('POST', '/api/consents/' . $foreignConsent . '/sign', [
-            'signed_name' => 'Intruso', 'strokes' => [[[1, 1], [20, 20]]],
+            'signed_name' => 'Intruder', 'strokes' => [[[1, 1], [20, 20]]],
         ]);
 
         $this->assertSame(404, $view);
@@ -213,8 +213,8 @@ final class ApiTest extends FeatureTestCase
     public function testSignaturesAreRebuiltOnTheServer(): void
     {
         $consentId = $this->createConsent($this->patientId);
-        $this->createPortalUser($this->patientId, 'hc-firma');
-        $this->loginAs('hc-firma');
+        $this->createPortalUser($this->patientId, 'mr-signature');
+        $this->loginAs('mr-signature');
 
         [$status] = $this->call('POST', '/api/consents/' . $consentId . '/sign', [
             'signed_name' => 'Mariana Vega',
@@ -228,7 +228,7 @@ final class ApiTest extends FeatureTestCase
         $stored = (string) Database::value('SELECT signature_svg FROM consents WHERE id = :id', ['id' => $consentId]);
 
         $this->assertSame(200, $status);
-        $this->assertSame(409, $again, 'No se puede volver a firmar');
+        $this->assertSame(409, $again, 'It cannot be signed twice');
         $this->assertFalse(str_contains($stored, 'script'));
         $this->assertContains('M10 10 L50 40 L600 0', $stored);
     }
@@ -255,8 +255,8 @@ final class ApiTest extends FeatureTestCase
             'uuid' => uuid(), 'patient_id' => $this->patientId, 'instrument_code' => 'GAD-7',
             'assigned_by' => $this->psychologistId, 'status' => 'pending',
         ]);
-        $this->createPortalUser($this->patientId, 'hc-cuestionario');
-        $this->loginAs('hc-cuestionario');
+        $this->createPortalUser($this->patientId, 'mr-questionnaire');
+        $this->loginAs('mr-questionnaire');
 
         [$invalid] = $this->call('POST', '/api/portal/questionnaires/' . $assessmentId, ['answers' => [9, 9, 9, 9, 9, 9, 9]]);
         [$valid] = $this->call('POST', '/api/portal/questionnaires/' . $assessmentId, ['answers' => [1, 1, 1, 1, 1, 1, 1]]);
@@ -270,15 +270,15 @@ final class ApiTest extends FeatureTestCase
 
     public function testThePublicSiteOnlyListsProfessionalsWhoOptedIn(): void
     {
-        Database::update('users', $this->psychologistId, ['show_on_site' => 1, 'specialty' => 'Terapia de pareja']);
-        $this->createUser('psychologist', 'privada');
+        Database::update('users', $this->psychologistId, ['show_on_site' => 1, 'specialty' => 'Couples therapy']);
+        $this->createUser('psychologist', 'private');
 
         [$status, $body] = $this->call('GET', '/api/public/site');
 
         $this->assertSame(200, $status);
         $this->assertCount(1, $body['data']['professionals']);
         $this->assertFalse(array_key_exists('email', $body['data']['professionals'][0]));
-        $this->assertFalse(array_key_exists('default_fee', $body['data']['clinic']), 'La tarifa no es un dato publico');
+        $this->assertFalse(array_key_exists('default_fee', $body['data']['clinic']), 'The fee is not public data');
     }
 
     public function testAppointmentRequestsAreValidatedAndRateLimited(): void
@@ -286,7 +286,7 @@ final class ApiTest extends FeatureTestCase
         $valid = [
             'full_name' => 'Sofia Ruiz', 'email' => 'sofia@example.com', 'contact_preference' => 'email',
             'modality' => 'online', 'attendee' => 'self', 'privacy_accepted' => true,
-            'preferred_times' => ['morning', 'inventado'],
+            'preferred_times' => ['morning', 'made-up'],
         ];
 
         [$missing, $errors] = $this->call('POST', '/api/public/appointment-requests', ['privacy_accepted' => false] + $valid);
@@ -323,8 +323,8 @@ final class ApiTest extends FeatureTestCase
 
     public function testAnAdminCannotDeactivateTheirOwnAccount(): void
     {
-        $adminId = $this->createUser('admin', 'jefa');
-        $this->loginAs('jefa');
+        $adminId = $this->createUser('admin', 'boss');
+        $this->loginAs('boss');
 
         [$status] = $this->call('POST', '/api/users/' . $adminId . '/toggle');
 
@@ -337,7 +337,7 @@ final class ApiTest extends FeatureTestCase
 
         [, $body] = $this->call('GET', '/api/search', [], ['q' => 'Mariana']);
 
-        $this->assertSame('/app/pacientes/' . $this->patientId, $body['results'][0]['url']);
+        $this->assertSame('/app/patients/' . $this->patientId, $body['results'][0]['url']);
     }
 
     public function testEveryInstrumentCanBeDescribed(): void
@@ -346,14 +346,14 @@ final class ApiTest extends FeatureTestCase
 
         foreach (Instruments::codes() as $code) {
             [$status, $body] = $this->call('GET', '/api/instruments/' . $code);
-            $this->assertSame(200, $status, 'Falla el instrumento ' . $code);
+            $this->assertSame(200, $status, 'Instrument failed: ' . $code);
             $this->assertGreaterThan(0, count($body['data']['items']));
         }
     }
 
     public function testUnknownRoutesAnswerWithJson(): void
     {
-        [$status, $body] = $this->call('GET', '/api/no-existe');
+        [$status, $body] = $this->call('GET', '/api/does-not-exist');
 
         $this->assertSame(404, $status);
         $this->assertArrayHasKey('message', $body['error']);
@@ -393,7 +393,7 @@ final class ApiTest extends FeatureTestCase
     {
         Auth::logout();
         $_SESSION = [];
-        $this->assertTrue(Auth::attempt($username, 'Clave12345'), 'No se pudo iniciar sesion como ' . $username);
+        $this->assertTrue(Auth::attempt($username, 'Password1234'), 'Could not sign in as ' . $username);
     }
 
     private function createPortalUser(int $patientId, string $username): int
@@ -410,8 +410,8 @@ final class ApiTest extends FeatureTestCase
             'uuid' => uuid(),
             'patient_id' => $patientId,
             'template_code' => 'general',
-            'title' => 'Consentimiento de prueba',
-            'body' => 'Texto',
+            'title' => 'Test consent',
+            'body' => 'Text',
             'created_by' => $this->psychologistId,
         ]);
     }

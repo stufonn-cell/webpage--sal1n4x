@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -21,29 +21,40 @@ final class Runner
     private int $assertions = 0;
     private array $failures = [];
 
-    public function run(string $suite = ''): int
+    /**
+     * Runs every test class in the given suite ('unit', 'feature' or '' for both).
+     * When $filter is not empty, only classes whose short name contains it
+     * (case-insensitive) are run.
+     */
+    public function run(string $suite = '', string $filter = ''): int
     {
         $start = microtime(true);
 
-        foreach ($this->discover($suite) as $class) {
+        foreach ($this->discover($suite, $filter) as $class) {
             $this->runTestCase($class);
         }
 
         return $this->report(microtime(true) - $start);
     }
 
-    private function discover(string $suite): array
+    private function discover(string $suite, string $filter = ''): array
     {
         $directories = $suite === ''
             ? ['Unit', 'Feature']
-            : [ucfirst($suite)];
+            : [ucfirst(strtolower($suite))];
 
         $classes = [];
 
         foreach ($directories as $directory) {
             foreach (glob(__DIR__ . '/' . $directory . '/*Test.php') ?: [] as $file) {
+                $shortName = basename($file, '.php');
+
+                if ($filter !== '' && stripos($shortName, $filter) === false) {
+                    continue;
+                }
+
                 require_once $file;
-                $classes[] = 'PsiClinic\\Tests\\' . $directory . '\\' . basename($file, '.php');
+                $classes[] = 'PsiClinic\\Tests\\' . $directory . '\\' . $shortName;
             }
         }
 
@@ -94,14 +105,14 @@ final class Runner
     private function report(float $elapsed): int
     {
         if ($this->failures !== []) {
-            $this->write(PHP_EOL . '  Fallos:' . PHP_EOL . PHP_EOL);
+            $this->write(PHP_EOL . '  Failures:' . PHP_EOL . PHP_EOL);
             foreach ($this->failures as $failure) {
                 $this->write('    ' . $failure . PHP_EOL . PHP_EOL);
             }
         }
 
         $this->write(sprintf(
-            PHP_EOL . '  %d correctas, %d fallidas, %d omitidas | %d aserciones | %.2f s' . PHP_EOL . PHP_EOL,
+            PHP_EOL . '  %d passed, %d failed, %d skipped | %d assertions | %.2f s' . PHP_EOL . PHP_EOL,
             $this->passed,
             $this->failed,
             $this->skipped,

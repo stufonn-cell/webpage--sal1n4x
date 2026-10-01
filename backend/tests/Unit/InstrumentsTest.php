@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -22,23 +22,23 @@ final class InstrumentsTest extends TestCase
         $this->assertCount(6, $codes);
 
         foreach (['PHQ-9', 'GAD-7', 'DASS-21', 'PSS-10', 'RSES', 'WHO-5'] as $code) {
-            $this->assertNotNull(Instruments::get($code), 'Falta el instrumento ' . $code);
+            $this->assertNotNull(Instruments::get($code), 'Missing instrument ' . $code);
         }
     }
 
     public function testUnknownInstrumentReturnsNull(): void
     {
-        $this->assertNull(Instruments::get('NO-EXISTE'));
+        $this->assertNull(Instruments::get('DOES-NOT-EXIST'));
     }
 
     public function testEveryInstrumentDeclaresTheExpectedShape(): void
     {
         foreach (Instruments::all() as $code => $instrument) {
             foreach (['name', 'domain', 'window', 'description', 'scale', 'items', 'bands'] as $key) {
-                $this->assertArrayHasKey($key, $instrument, $code . ' sin la clave ' . $key);
+                $this->assertArrayHasKey($key, $instrument, $code . ' is missing the key ' . $key);
             }
 
-            $this->assertGreaterThan(0, count($instrument['items']), $code . ' sin items');
+            $this->assertGreaterThan(0, count($instrument['items']), $code . ' has no items');
         }
     }
 
@@ -48,9 +48,9 @@ final class InstrumentsTest extends TestCase
         $maximum = Instruments::score('PHQ-9', array_fill(0, 9, 3));
 
         $this->assertSame(0, $minimum['total']);
-        $this->assertSame('Minima', $minimum['severity']);
+        $this->assertSame('Minimal', $minimum['severity']);
         $this->assertSame(27, $maximum['total']);
-        $this->assertSame('Severa', $maximum['severity']);
+        $this->assertSame('Severe', $maximum['severity']);
     }
 
     public function testPhq9ClassifiesModerateSeverity(): void
@@ -58,7 +58,7 @@ final class InstrumentsTest extends TestCase
         $result = Instruments::score('PHQ-9', [2, 2, 1, 2, 1, 1, 1, 1, 0]);
 
         $this->assertSame(11, $result['total']);
-        $this->assertSame('Moderada', $result['severity']);
+        $this->assertSame('Moderate', $result['severity']);
     }
 
     public function testPhq9FlagsTheSuicidalIdeationItem(): void
@@ -72,8 +72,8 @@ final class InstrumentsTest extends TestCase
 
     public function testGad7UsesItsOwnBands(): void
     {
-        $this->assertSame('Minima', Instruments::score('GAD-7', array_fill(0, 7, 0))['severity']);
-        $this->assertSame('Severa', Instruments::score('GAD-7', array_fill(0, 7, 3))['severity']);
+        $this->assertSame('Minimal', Instruments::score('GAD-7', array_fill(0, 7, 0))['severity']);
+        $this->assertSame('Severe', Instruments::score('GAD-7', array_fill(0, 7, 3))['severity']);
         $this->assertSame(14, Instruments::score('GAD-7', [2, 2, 2, 2, 2, 2, 2])['total']);
     }
 
@@ -81,10 +81,10 @@ final class InstrumentsTest extends TestCase
     {
         $result = Instruments::score('DASS-21', array_fill(0, 21, 1));
 
-        $this->assertSame(42, $result['total'], 'Suma 21 por el multiplicador 2');
+        $this->assertSame(42, $result['total'], 'Sum of 21 times the multiplier of 2');
         $this->assertCount(3, $result['subscales']);
 
-        foreach (['Depresion', 'Ansiedad', 'Estres'] as $subscale) {
+        foreach (['Depression', 'Anxiety', 'Stress'] as $subscale) {
             $this->assertArrayHasKey($subscale, $result['subscales']);
             $this->assertSame(14, $result['subscales'][$subscale]['score'], $subscale . ': 7 items x 1 x 2');
         }
@@ -99,21 +99,21 @@ final class InstrumentsTest extends TestCase
 
         $result = Instruments::score('DASS-21', $answers);
 
-        $this->assertSame(42, $result['subscales']['Depresion']['score']);
-        $this->assertSame(0, $result['subscales']['Ansiedad']['score']);
-        $this->assertSame(0, $result['subscales']['Estres']['score']);
-        $this->assertSame('Extremadamente severa', $result['subscales']['Depresion']['severity']);
+        $this->assertSame(42, $result['subscales']['Depression']['score']);
+        $this->assertSame(0, $result['subscales']['Anxiety']['score']);
+        $this->assertSame(0, $result['subscales']['Stress']['score']);
+        $this->assertSame('Extremely severe', $result['subscales']['Depression']['severity']);
     }
 
     public function testPss10InvertsThePositivelyWordedItems(): void
     {
         $allZero = Instruments::score('PSS-10', array_fill(0, 10, 0));
 
-        $this->assertSame(16, $allZero['total'], 'Cuatro items inversos aportan 4 puntos cada uno');
+        $this->assertSame(16, $allZero['total'], 'Four reverse-scored items add 4 points each');
 
         $allMaximum = Instruments::score('PSS-10', array_fill(0, 10, 4));
 
-        $this->assertSame(24, $allMaximum['total'], 'Los seis items directos aportan 4 puntos cada uno');
+        $this->assertSame(24, $allMaximum['total'], 'The six directly scored items add 4 points each');
     }
 
     public function testRsesInvertsFiveItems(): void
@@ -121,8 +121,8 @@ final class InstrumentsTest extends TestCase
         $answers = array_fill(0, 10, 0);
         $result = Instruments::score('RSES', $answers);
 
-        $this->assertSame(15, $result['total'], 'Cinco items inversos aportan 3 puntos cada uno');
-        $this->assertSame('Media', $result['severity']);
+        $this->assertSame(15, $result['total'], 'Five reverse-scored items add 3 points each');
+        $this->assertSame('Normal self-esteem', $result['severity']);
     }
 
     public function testWho5ConvertsToAnIndexOutOfOneHundred(): void
@@ -130,7 +130,7 @@ final class InstrumentsTest extends TestCase
         $result = Instruments::score('WHO-5', array_fill(0, 5, 5));
 
         $this->assertSame(100, $result['total']);
-        $this->assertSame('Adecuado', $result['severity']);
+        $this->assertSame('Adequate', $result['severity']);
         $this->assertSame(0, Instruments::score('WHO-5', array_fill(0, 5, 0))['total']);
     }
 
@@ -146,7 +146,7 @@ final class InstrumentsTest extends TestCase
         ];
 
         foreach ($expected as $code => $maximum) {
-            $this->assertSame($maximum, Instruments::maxScore($code), 'Maximo de ' . $code);
+            $this->assertSame($maximum, Instruments::maxScore($code), 'Maximum for ' . $code);
         }
     }
 
@@ -170,14 +170,14 @@ final class InstrumentsTest extends TestCase
                     }
                 }
 
-                $this->assertSame(1, $matches, sprintf('%s: el puntaje %d no cae en exactamente una banda', $code, $score));
+                $this->assertSame(1, $matches, sprintf('%s: score %d does not fall in exactly one band', $code, $score));
             }
         }
     }
 
     public function testScoringAnUnknownInstrumentIsSafe(): void
     {
-        $result = Instruments::score('NO-EXISTE', [1, 2, 3]);
+        $result = Instruments::score('DOES-NOT-EXIST', [1, 2, 3]);
 
         $this->assertSame(0, $result['total']);
         $this->assertCount(0, $result['subscales']);

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -19,11 +19,11 @@ final class BillingTest extends FeatureTestCase
     {
         $year = date('Y');
 
-        $this->assertSame(sprintf('FAC-%s-0001', $year), Invoices::nextNumber());
+        $this->assertSame(sprintf('INV-%s-0001', $year), Invoices::nextNumber());
 
         $this->createInvoice($this->createPatient(), 240000.0);
 
-        $this->assertSame(sprintf('FAC-%s-0002', $year), Invoices::nextNumber());
+        $this->assertSame(sprintf('INV-%s-0002', $year), Invoices::nextNumber());
     }
 
     public function testTheBalanceEqualsTheTotalWithoutPayments(): void
@@ -41,7 +41,7 @@ final class BillingTest extends FeatureTestCase
 
         $this->assertSame(140000.0, Invoices::balance($invoiceId));
         Invoices::refreshStatus($invoiceId);
-        $this->assertSame('issued', Invoices::find($invoiceId)['status'], 'Un pago parcial no cierra la factura');
+        $this->assertSame('issued', Invoices::find($invoiceId)['status'], 'A partial payment does not close the invoice');
     }
 
     public function testTheInvoiceIsMarkedAsPaidWhenTheBalanceReachesZero(): void
@@ -132,7 +132,7 @@ final class BillingTest extends FeatureTestCase
 
         Database::insert('invoice_items', [
             'invoice_id' => $invoiceId,
-            'description' => 'Sesion de psicoterapia individual',
+            'description' => 'Individual psychotherapy session',
             'quantity' => $quantity,
             'unit_price' => $total / $quantity,
             'amount' => $total,

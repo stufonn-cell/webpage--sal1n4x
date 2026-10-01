@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -22,14 +22,14 @@ final class EnvTest extends TestCase
         $this->file = sys_get_temp_dir() . '/psiclinic-env-test';
 
         file_put_contents($this->file, <<<'DOTENV'
-        # Comentario inicial
+        # Initial comment
         APP_NAME="PsiClinic QA"
         APP_DEBUG=true
         SESSION_SECURE=false
-        SESSION_LIFETIME=7200        # segundos
+        SESSION_LIFETIME=7200        # seconds
         EMPTY_VALUE=
-        SINGLE_QUOTED='valor citado'
-        NO_ES_PAR
+        SINGLE_QUOTED='quoted value'
+        NOT_A_PAIR
         DOTENV);
 
         Env::load($this->file);
@@ -45,7 +45,7 @@ final class EnvTest extends TestCase
     public function testQuotesAreRemoved(): void
     {
         $this->assertSame('PsiClinic QA', Env::get('APP_NAME'));
-        $this->assertSame('valor citado', Env::get('SINGLE_QUOTED'));
+        $this->assertSame('quoted value', Env::get('SINGLE_QUOTED'));
     }
 
     public function testInlineCommentsAreStripped(): void
@@ -61,14 +61,14 @@ final class EnvTest extends TestCase
 
     public function testEmptyAndMissingValuesUseTheDefault(): void
     {
-        $this->assertSame('respaldo', Env::get('EMPTY_VALUE', 'respaldo'));
-        $this->assertSame('respaldo', Env::get('NO_DEFINIDA', 'respaldo'));
-        $this->assertSame(50, Env::int('NO_DEFINIDA', 50));
+        $this->assertSame('fallback', Env::get('EMPTY_VALUE', 'fallback'));
+        $this->assertSame('fallback', Env::get('NOT_DEFINED', 'fallback'));
+        $this->assertSame(50, Env::int('NOT_DEFINED', 50));
     }
 
     public function testLinesWithoutAnEqualsSignAreIgnored(): void
     {
-        $this->assertNull(Env::get('NO_ES_PAR'));
+        $this->assertNull(Env::get('NOT_A_PAIR'));
     }
 
     public function testIntFallsBackWhenTheValueIsNotNumeric(): void
@@ -78,16 +78,16 @@ final class EnvTest extends TestCase
 
     public function testValuesCanBeOverriddenAtRuntime(): void
     {
-        Env::set('APP_NAME', 'Otro nombre');
+        Env::set('APP_NAME', 'Another name');
 
-        $this->assertSame('Otro nombre', Env::get('APP_NAME'));
+        $this->assertSame('Another name', Env::get('APP_NAME'));
     }
 
     public function testLoadingAMissingFileDoesNotFail(): void
     {
-        Env::set('APP_NAME', 'Otro nombre');
-        Env::load('/ruta/que/no/existe/.env');
+        Env::set('APP_NAME', 'Another name');
+        Env::load('/path/that/does/not/exist/.env');
 
-        $this->assertSame('Otro nombre', Env::get('APP_NAME'));
+        $this->assertSame('Another name', Env::get('APP_NAME'));
     }
 }

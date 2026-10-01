@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -18,7 +18,8 @@ final class SchemaTest extends FeatureTestCase
     private const EXPECTED_TABLES = [
         'users', 'patients', 'appointments', 'clinical_notes', 'diagnoses',
         'assessments', 'consents', 'documents', 'invoices', 'invoice_items',
-        'payments', 'audit_log', 'settings',
+        'payments', 'audit_log', 'settings', 'appointment_requests', 'login_attempts',
+        'icd11_codes', 'rips_reports', 'rips_report_items',
     ];
 
     public function testMigrationsCreateEveryTable(): void
@@ -29,7 +30,7 @@ final class SchemaTest extends FeatureTestCase
         ), 'name');
 
         foreach (self::EXPECTED_TABLES as $table) {
-            $this->assertTrue(in_array($table, $found, true), 'Falta la tabla ' . $table);
+            $this->assertTrue(in_array($table, $found, true), 'Missing table ' . $table);
         }
     }
 
@@ -42,8 +43,8 @@ final class SchemaTest extends FeatureTestCase
         );
 
         foreach ($rows as $row) {
-            $this->assertSame('InnoDB', $row['engine'], $row['name'] . ' no usa InnoDB');
-            $this->assertContains('utf8mb4', (string) $row['collation'], $row['name'] . ' sin utf8mb4');
+            $this->assertSame('InnoDB', $row['engine'], $row['name'] . ' does not use InnoDB');
+            $this->assertContains('utf8mb4', (string) $row['collation'], $row['name'] . ' is not utf8mb4');
         }
     }
 
@@ -83,11 +84,11 @@ final class SchemaTest extends FeatureTestCase
 
     public function testRecordNumberIsUnique(): void
     {
-        $this->createPatient(['record_number' => 'HC-DUP-0001']);
+        $this->createPatient(['record_number' => 'MR-DUP-0001']);
 
         $this->assertThrows(
-            fn () => $this->createPatient(['record_number' => 'HC-DUP-0001']),
-            'El numero de historia debe ser unico'
+            fn () => $this->createPatient(['record_number' => 'MR-DUP-0001']),
+            'The record number must be unique'
         );
     }
 
@@ -97,11 +98,11 @@ final class SchemaTest extends FeatureTestCase
 
         try {
             Database::transaction(function (): void {
-                $this->createPatient(['record_number' => 'HC-TX-0001']);
-                throw new \RuntimeException('fallo intencional');
+                $this->createPatient(['record_number' => 'MR-TX-0001']);
+                throw new \RuntimeException('intentional failure');
             });
         } catch (\RuntimeException) {
-            // esperado
+            // expected
         }
 
         $this->assertSame($before, (int) Database::value('SELECT COUNT(*) FROM patients'));

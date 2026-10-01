@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -19,17 +19,17 @@ final class PatientTest extends FeatureTestCase
     {
         $year = date('Y');
 
-        $this->assertSame(sprintf('HC-%s-0001', $year), Patients::nextRecordNumber());
+        $this->assertSame(sprintf('MR-%s-0001', $year), Patients::nextRecordNumber());
 
         Database::insert('patients', [
             'uuid' => uuid(),
-            'record_number' => sprintf('HC-%s-0001', $year),
-            'first_name' => 'Primero',
-            'last_name' => 'Paciente',
+            'record_number' => sprintf('MR-%s-0001', $year),
+            'first_name' => 'First',
+            'last_name' => 'Patient',
             'gender' => 'undisclosed',
         ]);
 
-        $this->assertSame(sprintf('HC-%s-0002', $year), Patients::nextRecordNumber());
+        $this->assertSame(sprintf('MR-%s-0002', $year), Patients::nextRecordNumber());
     }
 
     public function testFindReturnsTheAssignedProfessional(): void
@@ -40,7 +40,7 @@ final class PatientTest extends FeatureTestCase
         $patient = Patients::find($patientId);
 
         $this->assertNotNull($patient);
-        $this->assertSame('Usuario laura', $patient['psychologist_name']);
+        $this->assertSame('User laura', $patient['psychologist_name']);
     }
 
     public function testFindReturnsNullForAMissingPatient(): void
@@ -56,7 +56,7 @@ final class PatientTest extends FeatureTestCase
         $this->assertCount(1, Patients::paginate('Mariana')['rows']);
         $this->assertCount(1, Patients::paginate('Ortiz')['rows']);
         $this->assertCount(1, Patients::paginate('1015998877')['rows']);
-        $this->assertCount(0, Patients::paginate('inexistente')['rows']);
+        $this->assertCount(0, Patients::paginate('nonexistent')['rows']);
     }
 
     public function testFilteringByStatus(): void
@@ -112,25 +112,27 @@ final class PatientTest extends FeatureTestCase
             'instrument_code' => 'GAD-7',
             'status' => 'completed',
             'total_score' => 9,
-            'severity' => 'Leve',
+            'severity' => 'Mild',
             'administered_at' => '2026-03-10 10:00:00',
         ]);
 
         $timeline = Patients::timeline($patientId);
 
         $this->assertCount(3, $timeline);
-        $this->assertSame('assessment', $timeline[0]['type'], 'El evento mas reciente va primero');
+        $this->assertSame('assessment', $timeline[0]['type'], 'The most recent event comes first');
+        $this->assertSame('GAD-7: 9 points', $timeline[0]['title']);
         $this->assertSame('note', $timeline[2]['type']);
+        $this->assertSame('Session 1 recorded', $timeline[2]['title']);
     }
 
     public function testOptionsAreFormattedForSelectInputs(): void
     {
-        $this->createPatient(['first_name' => 'Sofia', 'last_name' => 'Cardenas', 'record_number' => 'HC-2026-0009']);
+        $this->createPatient(['first_name' => 'Sofia', 'last_name' => 'Cardenas', 'record_number' => 'MR-2026-0009']);
 
         $options = Patients::options();
 
         $this->assertCount(1, $options);
-        $this->assertSame('Cardenas, Sofia (HC-2026-0009)', $options[0]['label']);
+        $this->assertSame('Cardenas, Sofia (MR-2026-0009)', $options[0]['label']);
     }
 
     public function testFullNameJoinsBothParts(): void

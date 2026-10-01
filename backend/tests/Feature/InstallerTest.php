@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -32,10 +32,10 @@ final class InstallerTest extends FeatureTestCase
 
     public function testSeedCreatesTheDemonstrationAccounts(): void
     {
-        foreach (['admin', 'l.moreno', 'c.rojas', 'hc-' . strtolower(date('Y')) . '-0001'] as $username) {
+        foreach (['admin', 'l.moreno', 'c.rojas', 'mr-' . strtolower(date('Y')) . '-0001'] as $username) {
             $this->assertNotNull(
                 Database::first('SELECT id FROM users WHERE username = :u', ['u' => $username]),
-                'Falta el usuario ' . $username
+                'Missing user ' . $username
             );
         }
     }
@@ -49,6 +49,10 @@ final class InstallerTest extends FeatureTestCase
         Auth::logout();
 
         $this->assertTrue(Auth::attempt('l.moreno', 'Psiclinic2026'));
+
+        Auth::logout();
+
+        $this->assertTrue(Auth::attempt('mr-' . date('Y') . '-0001', 'Patient2026'), 'The demo patient can sign in to the portal');
     }
 
     public function testThePortalAccountIsLinkedToItsPatient(): void
@@ -80,8 +84,8 @@ final class InstallerTest extends FeatureTestCase
         $this->assertGreaterThan(0, count($rows));
 
         foreach ($rows as $row) {
-            $this->assertNotNull($row['total_score'], $row['instrument_code'] . ' sin puntaje');
-            $this->assertNotNull($row['severity'], $row['instrument_code'] . ' sin severidad');
+            $this->assertNotNull($row['total_score'], $row['instrument_code'] . ' has no score');
+            $this->assertNotNull($row['severity'], $row['instrument_code'] . ' has no severity');
         }
     }
 
@@ -89,14 +93,14 @@ final class InstallerTest extends FeatureTestCase
     {
         $this->assertSame('PsiClinic', Settings::get('clinic_name'));
         $this->assertSame('50', Settings::get('session_duration'));
-        $this->assertSame('valor por defecto', Settings::get('clave_inexistente', 'valor por defecto'));
+        $this->assertSame('default value', Settings::get('missing_key', 'default value'));
     }
 
     public function testSettingsCanBeOverwritten(): void
     {
-        Settings::put('clinic_name', 'Centro Salinas');
+        Settings::put('clinic_name', 'Salinas Center');
 
-        $this->assertSame('Centro Salinas', Settings::get('clinic_name'));
+        $this->assertSame('Salinas Center', Settings::get('clinic_name'));
     }
 
     public function testDashboardMetricsAreConsistentWithTheSeed(): void

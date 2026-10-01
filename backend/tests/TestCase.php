@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -32,13 +32,13 @@ abstract class TestCase
         $this->record();
 
         if (!$condition) {
-            throw new AssertionFailed($message !== '' ? $message : 'Se esperaba true.');
+            throw new AssertionFailed($message !== '' ? $message : 'Expected true.');
         }
     }
 
     protected function assertFalse(bool $condition, string $message = ''): void
     {
-        $this->assertTrue(!$condition, $message !== '' ? $message : 'Se esperaba false.');
+        $this->assertTrue(!$condition, $message !== '' ? $message : 'Expected false.');
     }
 
     protected function assertSame(mixed $expected, mixed $actual, string $message = ''): void
@@ -47,7 +47,7 @@ abstract class TestCase
 
         if ($expected !== $actual) {
             throw new AssertionFailed(sprintf(
-                '%sEsperado: %s | Obtenido: %s',
+                '%sExpected: %s | Actual: %s',
                 $message === '' ? '' : $message . ' - ',
                 $this->describe($expected),
                 $this->describe($actual)
@@ -61,7 +61,7 @@ abstract class TestCase
 
         if ($expected != $actual) {
             throw new AssertionFailed(sprintf(
-                '%sEsperado: %s | Obtenido: %s',
+                '%sExpected: %s | Actual: %s',
                 $message === '' ? '' : $message . ' - ',
                 $this->describe($expected),
                 $this->describe($actual)
@@ -71,24 +71,24 @@ abstract class TestCase
 
     protected function assertNull(mixed $value, string $message = ''): void
     {
-        $this->assertTrue($value === null, $message !== '' ? $message : 'Se esperaba null.');
+        $this->assertTrue($value === null, $message !== '' ? $message : 'Expected null.');
     }
 
     protected function assertNotNull(mixed $value, string $message = ''): void
     {
-        $this->assertTrue($value !== null, $message !== '' ? $message : 'No se esperaba null.');
+        $this->assertTrue($value !== null, $message !== '' ? $message : 'Did not expect null.');
     }
 
     protected function assertCount(int $expected, array $items, string $message = ''): void
     {
-        $this->assertSame($expected, count($items), $message !== '' ? $message : 'Cantidad de elementos');
+        $this->assertSame($expected, count($items), $message !== '' ? $message : 'Item count');
     }
 
     protected function assertContains(string $needle, string $haystack, string $message = ''): void
     {
         $this->assertTrue(
             str_contains($haystack, $needle),
-            $message !== '' ? $message : sprintf('El texto no contiene "%s".', $needle)
+            $message !== '' ? $message : sprintf('The text does not contain "%s".', $needle)
         );
     }
 
@@ -96,7 +96,7 @@ abstract class TestCase
     {
         $this->assertTrue(
             $value > $limit,
-            $message !== '' ? $message : sprintf('%s no es mayor que %s.', (string) $value, (string) $limit)
+            $message !== '' ? $message : sprintf('%s is not greater than %s.', (string) $value, (string) $limit)
         );
     }
 
@@ -104,7 +104,7 @@ abstract class TestCase
     {
         $this->assertTrue(
             array_key_exists($key, $items),
-            $message !== '' ? $message : sprintf('Falta la clave "%s".', (string) $key)
+            $message !== '' ? $message : sprintf('Missing key "%s".', (string) $key)
         );
     }
 
@@ -118,7 +118,7 @@ abstract class TestCase
             return;
         }
 
-        throw new AssertionFailed($message !== '' ? $message : 'Se esperaba una excepcion.');
+        throw new AssertionFailed($message !== '' ? $message : 'Expected an exception.');
     }
 
     private function record(): void

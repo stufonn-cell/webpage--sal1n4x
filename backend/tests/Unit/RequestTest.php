@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -17,9 +17,9 @@ final class RequestTest extends TestCase
 {
     public function testBodyTakesPrecedenceOverQueryString(): void
     {
-        $request = new Request(['q' => 'desde-url'], ['q' => 'desde-formulario'], [], []);
+        $request = new Request(['q' => 'from-url'], ['q' => 'from-form'], [], []);
 
-        $this->assertSame('desde-formulario', $request->input('q'));
+        $this->assertSame('from-form', $request->input('q'));
     }
 
     public function testStringInputIsTrimmed(): void
@@ -40,7 +40,7 @@ final class RequestTest extends TestCase
 
     public function testArrayAlwaysReturnsAnArray(): void
     {
-        $request = new Request([], ['answers' => [1, 2, 3], 'name' => 'texto'], [], []);
+        $request = new Request([], ['answers' => [1, 2, 3], 'name' => 'text'], [], []);
 
         $this->assertCount(3, $request->array('answers'));
         $this->assertCount(0, $request->array('name'));
@@ -58,9 +58,9 @@ final class RequestTest extends TestCase
 
     public function testPathStripsTheQueryStringAndTrailingSlash(): void
     {
-        $request = new Request([], [], [], ['REQUEST_URI' => '/pacientes/12/?tab=notas']);
+        $request = new Request([], [], [], ['REQUEST_URI' => '/patients/12/?tab=notes']);
 
-        $this->assertSame('/pacientes/12', $request->path());
+        $this->assertSame('/patients/12', $request->path());
     }
 
     public function testRootPathIsNormalised(): void
@@ -84,7 +84,7 @@ final class RequestTest extends TestCase
         $request->setAttribute('id', '42');
 
         $this->assertSame('42', $request->attribute('id'));
-        $this->assertSame('sin-valor', $request->attribute('otro', 'sin-valor'));
+        $this->assertSame('no-value', $request->attribute('other', 'no-value'));
     }
 
     public function testUserAgentIsTruncated(): void

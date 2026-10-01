@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -27,7 +27,7 @@ final class ClinicalNoteTest extends FeatureTestCase
         $this->createNote($firstPatient, $userId, ['session_number' => 2]);
 
         $this->assertSame(3, Notes::nextSessionNumber($firstPatient));
-        $this->assertSame(1, Notes::nextSessionNumber($secondPatient), 'Cada paciente lleva su propia numeracion');
+        $this->assertSame(1, Notes::nextSessionNumber($secondPatient), 'Each patient has their own numbering');
     }
 
     public function testNotesAreListedFromNewestToOldest(): void
@@ -52,7 +52,7 @@ final class ClinicalNoteTest extends FeatureTestCase
         $note = Notes::find($this->createNote($patientId, $userId));
 
         $this->assertSame('Mariana', $note['first_name']);
-        $this->assertSame('Usuario laura', $note['author_name']);
+        $this->assertSame('User laura', $note['author_name']);
         $this->assertSame('TP-48120', $note['license_number']);
     }
 
@@ -61,11 +61,11 @@ final class ClinicalNoteTest extends FeatureTestCase
         $userId = $this->createUser();
         $patientId = $this->createPatient();
 
-        $this->createNote($patientId, $userId, ['assessment' => 'Sintomatologia ansiosa en remision']);
-        $this->createNote($patientId, $userId, ['session_number' => 2, 'assessment' => 'Duelo no complicado']);
+        $this->createNote($patientId, $userId, ['assessment' => 'Anxiety symptoms in remission']);
+        $this->createNote($patientId, $userId, ['session_number' => 2, 'assessment' => 'Uncomplicated grief']);
 
-        $this->assertCount(1, Notes::paginate('remision')['rows']);
-        $this->assertCount(1, Notes::paginate('Duelo')['rows']);
+        $this->assertCount(1, Notes::paginate('remission')['rows']);
+        $this->assertCount(1, Notes::paginate('grief')['rows']);
         $this->assertCount(2, Notes::paginate('')['rows']);
     }
 
@@ -81,7 +81,7 @@ final class ClinicalNoteTest extends FeatureTestCase
         $series = Notes::moodSeries($patientId);
 
         $this->assertCount(2, $series);
-        $this->assertSame(4, (int) $series[0]['mood_score'], 'La serie va en orden cronologico');
+        $this->assertSame(4, (int) $series[0]['mood_score'], 'The series is in chronological order');
         $this->assertSame(7, (int) $series[1]['mood_score']);
     }
 
@@ -112,7 +112,7 @@ final class ClinicalNoteTest extends FeatureTestCase
 
         $note = Notes::find($noteId);
 
-        $this->assertNotNull($note, 'La nota clinica no se elimina con la cita');
+        $this->assertNotNull($note, 'The session note is not deleted with the appointment');
         $this->assertNull($note['appointment_id']);
     }
 

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -26,7 +26,7 @@ final class AssessmentTest extends FeatureTestCase
 
         $this->assertSame(17, $result['total']);
         $this->assertSame(17, (int) $stored['total_score']);
-        $this->assertSame('Moderada-severa', $stored['severity']);
+        $this->assertSame('Moderately severe', $stored['severity']);
         $this->assertSame('completed', $stored['status']);
         $this->assertNotNull($stored['administered_at']);
     }
@@ -54,7 +54,7 @@ final class AssessmentTest extends FeatureTestCase
         $subscales = json_decode((string) Assessments::find($assessmentId)['subscale_scores'], true);
 
         $this->assertCount(3, $subscales);
-        $this->assertSame(28, $subscales['Depresion']['score']);
+        $this->assertSame(28, $subscales['Depression']['score']);
     }
 
     public function testPendingAssessmentsAreListedForThePortal(): void
@@ -80,7 +80,7 @@ final class AssessmentTest extends FeatureTestCase
             Database::update('assessments', $id, [
                 'status' => 'completed',
                 'total_score' => $score,
-                'severity' => 'Moderada',
+                'severity' => 'Moderate',
                 'administered_at' => date('Y-m-d H:i:s', strtotime($offset)),
             ]);
         }
@@ -140,7 +140,7 @@ final class AssessmentTest extends FeatureTestCase
             $stored = Assessments::find($id);
 
             $this->assertSame('completed', $stored['status'], $code);
-            $this->assertNotNull($stored['severity'], $code . ' sin severidad');
+            $this->assertNotNull($stored['severity'], $code . ' has no severity');
         }
     }
 

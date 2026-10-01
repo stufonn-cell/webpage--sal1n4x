@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -32,8 +32,8 @@ final class ValidatorTest extends TestCase
 
     public function testEmailRuleChecksTheFormat(): void
     {
-        $invalid = (new Validator(['email' => 'correo-invalido']))->validate(['email' => 'email']);
-        $valid = (new Validator(['email' => 'paciente@example.com']))->validate(['email' => 'email']);
+        $invalid = (new Validator(['email' => 'invalid-email']))->validate(['email' => 'email']);
+        $valid = (new Validator(['email' => 'patient@example.com']))->validate(['email' => 'email']);
 
         $this->assertTrue($invalid->fails());
         $this->assertFalse($valid->fails());
@@ -43,7 +43,7 @@ final class ValidatorTest extends TestCase
     {
         $validator = (new Validator(['email' => '']))->validate(['email' => 'email']);
 
-        $this->assertFalse($validator->fails(), 'Un campo opcional vacio no debe fallar');
+        $this->assertFalse($validator->fails(), 'An empty optional field must not fail');
     }
 
     public function testMinAndMaxMeasureLength(): void
@@ -69,13 +69,13 @@ final class ValidatorTest extends TestCase
     public function testConfirmedRuleComparesTheTwinField(): void
     {
         $mismatch = (new Validator([
-            'password' => 'secreto123',
-            'password_confirmation' => 'otro',
+            'password' => 'secret123',
+            'password_confirmation' => 'other',
         ]))->validate(['password' => 'confirmed']);
 
         $match = (new Validator([
-            'password' => 'secreto123',
-            'password_confirmation' => 'secreto123',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
         ]))->validate(['password' => 'confirmed']);
 
         $this->assertTrue($mismatch->fails());
@@ -84,7 +84,7 @@ final class ValidatorTest extends TestCase
 
     public function testNumericAndDateRules(): void
     {
-        $this->assertTrue((new Validator(['fee' => 'gratis']))->validate(['fee' => 'numeric'])->fails());
+        $this->assertTrue((new Validator(['fee' => 'free']))->validate(['fee' => 'numeric'])->fails());
         $this->assertFalse((new Validator(['fee' => '120000']))->validate(['fee' => 'numeric'])->fails());
         $this->assertTrue((new Validator(['born' => '31/31/2026']))->validate(['born' => 'date'])->fails());
         $this->assertFalse((new Validator(['born' => '1994-03-18']))->validate(['born' => 'date'])->fails());
@@ -101,7 +101,7 @@ final class ValidatorTest extends TestCase
     {
         $validator = (new Validator([
             'first_name' => '',
-            'email' => 'no-es-correo',
+            'email' => 'not-an-email',
             'status' => 'active',
         ]))->validate([
             'first_name' => 'required',

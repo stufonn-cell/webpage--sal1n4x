@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -30,15 +30,15 @@ final class AuthTest extends FeatureTestCase
 
         $hash = (string) Database::value('SELECT password_hash FROM users WHERE username = :u', ['u' => 'ana']);
 
-        $this->assertFalse(str_contains($hash, 'Clave12345'));
-        $this->assertTrue(password_verify('Clave12345', $hash));
+        $this->assertFalse(str_contains($hash, 'Password1234'));
+        $this->assertTrue(password_verify('Password1234', $hash));
     }
 
     public function testLoginSucceedsWithTheUsername(): void
     {
         $id = $this->createUser('psychologist', 'l.moreno');
 
-        $this->assertTrue(Auth::attempt('l.moreno', 'Clave12345'));
+        $this->assertTrue(Auth::attempt('l.moreno', 'Password1234'));
         $this->assertSame($id, Auth::id());
     }
 
@@ -47,7 +47,7 @@ final class AuthTest extends FeatureTestCase
         $this->createUser('psychologist', 'l.moreno');
         Auth::logout();
 
-        $this->assertTrue(Auth::attempt('l.moreno@psiclinic.test', 'Clave12345'));
+        $this->assertTrue(Auth::attempt('l.moreno@psiclinic.test', 'Password1234'));
     }
 
     public function testLoginFailsWithTheWrongPassword(): void
@@ -55,33 +55,33 @@ final class AuthTest extends FeatureTestCase
         $this->createUser('psychologist', 'l.moreno');
         Auth::logout();
 
-        $this->assertFalse(Auth::attempt('l.moreno', 'incorrecta'));
+        $this->assertFalse(Auth::attempt('l.moreno', 'incorrect'));
         $this->assertNull(Auth::id());
     }
 
     public function testInactiveUsersCannotLogIn(): void
     {
-        $id = $this->createUser('assistant', 'inactivo');
+        $id = $this->createUser('assistant', 'inactive');
         Database::update('users', $id, ['is_active' => 0]);
         Auth::logout();
 
-        $this->assertFalse(Auth::attempt('inactivo', 'Clave12345'));
+        $this->assertFalse(Auth::attempt('inactive', 'Password1234'));
     }
 
     public function testTheLastLoginTimestampIsStored(): void
     {
-        $id = $this->createUser('admin', 'registro');
+        $id = $this->createUser('admin', 'tracked');
         Auth::logout();
-        Auth::attempt('registro', 'Clave12345');
+        Auth::attempt('tracked', 'Password1234');
 
         $this->assertNotNull(Database::value('SELECT last_login_at FROM users WHERE id = :id', ['id' => $id]));
     }
 
     public function testLoginIsRecordedInTheAuditLog(): void
     {
-        $this->createUser('admin', 'auditado');
+        $this->createUser('admin', 'audited');
         Auth::logout();
-        Auth::attempt('auditado', 'Clave12345');
+        Auth::attempt('audited', 'Password1234');
 
         $this->assertSame(
             1,
@@ -91,9 +91,9 @@ final class AuthTest extends FeatureTestCase
 
     public function testRolesDrivePermissionChecks(): void
     {
-        $this->createUser('assistant', 'asistente');
+        $this->createUser('assistant', 'assistant');
         Auth::logout();
-        Auth::attempt('asistente', 'Clave12345');
+        Auth::attempt('assistant', 'Password1234');
 
         $this->assertSame('assistant', Auth::role());
         $this->assertTrue(Auth::isStaff());
@@ -104,11 +104,11 @@ final class AuthTest extends FeatureTestCase
     public function testPatientAccountsAreNotStaff(): void
     {
         $patientId = $this->createPatient();
-        $userId = $this->createUser('patient', 'hc-test');
+        $userId = $this->createUser('patient', 'mr-test');
         Database::update('users', $userId, ['patient_id' => $patientId]);
 
         Auth::logout();
-        Auth::attempt('hc-test', 'Clave12345');
+        Auth::attempt('mr-test', 'Password1234');
 
         $this->assertFalse(Auth::isStaff());
         $this->assertTrue(Auth::is('patient'));
@@ -116,26 +116,26 @@ final class AuthTest extends FeatureTestCase
 
     public function testFailedAttemptsAreThrottled(): void
     {
-        $this->createUser('admin', 'bloqueado');
+        $this->createUser('admin', 'locked');
         Auth::logout();
 
         for ($attempt = 0; $attempt < 5; $attempt++) {
-            Auth::attempt('bloqueado', 'mala');
-            Auth::recordFailure('bloqueado');
+            Auth::attempt('locked', 'wrong');
+            Auth::recordFailure('locked');
         }
 
-        $this->assertTrue(Auth::tooManyAttempts('bloqueado'));
+        $this->assertTrue(Auth::tooManyAttempts('locked'));
 
-        Auth::clearAttempts('bloqueado');
+        Auth::clearAttempts('locked');
 
-        $this->assertFalse(Auth::tooManyAttempts('bloqueado'));
+        $this->assertFalse(Auth::tooManyAttempts('locked'));
     }
 
     public function testLogoutClearsTheSession(): void
     {
-        $this->createUser('admin', 'salida');
+        $this->createUser('admin', 'leaving');
         Auth::logout();
-        Auth::attempt('salida', 'Clave12345');
+        Auth::attempt('leaving', 'Password1234');
 
         $this->assertNotNull(Auth::id());
 
@@ -150,32 +150,32 @@ final class AuthTest extends FeatureTestCase
         $token = Csrf::token();
 
         $this->assertTrue(Csrf::verify($token));
-        $this->assertFalse(Csrf::verify('token-falso'));
+        $this->assertFalse(Csrf::verify('fake-token'));
         $this->assertFalse(Csrf::verify(null));
-        $this->assertSame($token, Csrf::token(), 'El token se reutiliza dentro de la misma sesion');
+        $this->assertSame($token, Csrf::token(), 'The token is reused within the same session');
     }
 
     public function testThrottlingSurvivesANewSession(): void
     {
-        $this->createUser('admin', 'persistente');
+        $this->createUser('admin', 'persistent');
 
         for ($attempt = 0; $attempt < 5; $attempt++) {
-            Auth::recordFailure('persistente', '10.0.0.8');
+            Auth::recordFailure('persistent', '10.0.0.8');
         }
 
         $_SESSION = [];
 
-        $this->assertTrue(Auth::tooManyAttempts('persistente'), 'Borrar la sesion no debe reiniciar el contador');
+        $this->assertTrue(Auth::tooManyAttempts('persistent'), 'Clearing the session must not reset the counter');
     }
 
     public function testTheCsrfTokenRotatesOnLogin(): void
     {
-        $this->createUser('admin', 'rotacion');
+        $this->createUser('admin', 'rotation');
         Auth::logout();
         $before = Csrf::token();
 
-        Auth::attempt('rotacion', 'Clave12345');
+        Auth::attempt('rotation', 'Password1234');
 
-        $this->assertFalse($before === Csrf::token(), 'Iniciar sesion debe emitir un token nuevo');
+        $this->assertFalse($before === Csrf::token(), 'Signing in must issue a new token');
     }
 }

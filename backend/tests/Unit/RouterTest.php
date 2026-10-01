@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -35,9 +35,9 @@ final class RouterTest extends TestCase
     public function testItExtractsRouteParameters(): void
     {
         $router = new Router();
-        $router->get('/pacientes/{id}', [RouteSpy::class, 'show']);
+        $router->get('/patients/{id}', [RouteSpy::class, 'show']);
 
-        $router->dispatch($this->request('GET', '/pacientes/42'));
+        $router->dispatch($this->request('GET', '/patients/42'));
 
         $this->assertSame('show', RouteSpy::$calledMethod);
         $this->assertSame(['42'], RouteSpy::$arguments);
@@ -46,9 +46,9 @@ final class RouterTest extends TestCase
     public function testItSupportsSeveralParameters(): void
     {
         $router = new Router();
-        $router->delete('/pacientes/{id}/diagnosticos/{diagnosisId}', [RouteSpy::class, 'destroy']);
+        $router->delete('/patients/{id}/diagnoses/{diagnosisId}', [RouteSpy::class, 'destroy']);
 
-        $router->dispatch($this->request('DELETE', '/pacientes/7/diagnosticos/13'));
+        $router->dispatch($this->request('DELETE', '/patients/7/diagnoses/13'));
 
         $this->assertSame(['7', '13'], RouteSpy::$arguments);
     }
@@ -56,10 +56,10 @@ final class RouterTest extends TestCase
     public function testTheHttpMethodIsPartOfTheMatch(): void
     {
         $router = new Router();
-        $router->get('/pacientes', [RouteSpy::class, 'index']);
-        $router->post('/pacientes', [RouteSpy::class, 'store']);
+        $router->get('/patients', [RouteSpy::class, 'index']);
+        $router->post('/patients', [RouteSpy::class, 'store']);
 
-        $router->dispatch($this->request('POST', '/pacientes'));
+        $router->dispatch($this->request('POST', '/patients'));
 
         $this->assertSame('store', RouteSpy::$calledMethod);
     }
@@ -67,11 +67,11 @@ final class RouterTest extends TestCase
     public function testMethodSpoofingIsHonoured(): void
     {
         $router = new Router();
-        $router->put('/pacientes/{id}', [RouteSpy::class, 'update']);
+        $router->put('/patients/{id}', [RouteSpy::class, 'update']);
 
         $router->dispatch(new Request([], ['_method' => 'PUT'], [], [
             'REQUEST_METHOD' => 'POST',
-            'REQUEST_URI' => '/pacientes/5',
+            'REQUEST_URI' => '/patients/5',
         ]));
 
         $this->assertSame('update', RouteSpy::$calledMethod);
@@ -80,9 +80,9 @@ final class RouterTest extends TestCase
     public function testTrailingSlashesAreNormalised(): void
     {
         $router = new Router();
-        $router->get('/agenda', [RouteSpy::class, 'index']);
+        $router->get('/schedule', [RouteSpy::class, 'index']);
 
-        $router->dispatch($this->request('GET', '/agenda/'));
+        $router->dispatch($this->request('GET', '/schedule/'));
 
         $this->assertSame('index', RouteSpy::$calledMethod);
     }
@@ -90,9 +90,9 @@ final class RouterTest extends TestCase
     public function testQueryStringIsIgnoredWhenMatching(): void
     {
         $router = new Router();
-        $router->get('/pacientes', [RouteSpy::class, 'index']);
+        $router->get('/patients', [RouteSpy::class, 'index']);
 
-        $router->dispatch($this->request('GET', '/pacientes?q=vega&page=2'));
+        $router->dispatch($this->request('GET', '/patients?q=vega&page=2'));
 
         $this->assertSame('index', RouteSpy::$calledMethod);
     }
@@ -100,9 +100,9 @@ final class RouterTest extends TestCase
     public function testMiddlewareRunsBeforeTheController(): void
     {
         $router = new Router();
-        $router->post('/pacientes', [RouteSpy::class, 'store'], [MiddlewareSpy::class]);
+        $router->post('/patients', [RouteSpy::class, 'store'], [MiddlewareSpy::class]);
 
-        $router->dispatch($this->request('POST', '/pacientes'));
+        $router->dispatch($this->request('POST', '/patients'));
 
         $this->assertSame(['middleware', 'store'], RouteSpy::$sequence);
     }
@@ -110,10 +110,10 @@ final class RouterTest extends TestCase
     public function testAParameterDoesNotMatchAcrossSegments(): void
     {
         $router = new Router();
-        $router->get('/pacientes/{id}', [RouteSpy::class, 'show']);
+        $router->get('/patients/{id}', [RouteSpy::class, 'show']);
 
-        $this->assertThrows(fn () => $router->dispatch($this->request('GET', '/pacientes/1/editar')));
-        $this->assertNull(RouteSpy::$calledMethod, 'La ruta con dos segmentos no debe coincidir');
+        $this->assertThrows(fn () => $router->dispatch($this->request('GET', '/patients/1/edit')));
+        $this->assertNull(RouteSpy::$calledMethod, 'A path with two segments must not match');
     }
 
     public function testUnknownRoutesRaiseANotFoundError(): void
@@ -123,7 +123,7 @@ final class RouterTest extends TestCase
 
         $status = null;
         try {
-            $router->dispatch($this->request('GET', '/ruta-inexistente'));
+            $router->dispatch($this->request('GET', '/missing-route'));
         } catch (HttpException $exception) {
             $status = $exception->status();
         }

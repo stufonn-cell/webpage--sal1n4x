@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -57,8 +57,8 @@ final class HelpersTest extends TestCase
 
     public function testUrlAlwaysStartsWithASingleSlash(): void
     {
-        $this->assertSame('/pacientes', url('pacientes'));
-        $this->assertSame('/pacientes', url('/pacientes'));
+        $this->assertSame('/patients', url('patients'));
+        $this->assertSame('/patients', url('/patients'));
         $this->assertSame('/', url());
     }
 
@@ -67,8 +67,8 @@ final class HelpersTest extends TestCase
         $value = uuid();
 
         $this->assertSame(36, strlen($value));
-        $this->assertSame('4', $value[14], 'El digito de version debe ser 4');
-        $this->assertTrue(in_array($value[19], ['8', '9', 'a', 'b'], true), 'Variante RFC 4122');
-        $this->assertTrue(uuid() !== uuid(), 'Cada llamada debe producir un valor distinto');
+        $this->assertSame('4', $value[14], 'The version digit must be 4');
+        $this->assertTrue(in_array($value[19], ['8', '9', 'a', 'b'], true), 'RFC 4122 variant');
+        $this->assertTrue(uuid() !== uuid(), 'Every call must produce a different value');
     }
 }

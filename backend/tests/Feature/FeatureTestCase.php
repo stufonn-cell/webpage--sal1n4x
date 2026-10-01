@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -33,8 +33,31 @@ abstract class FeatureTestCase extends TestCase
         try {
             Database::connection();
         } catch (PDOException $exception) {
-            throw new SkippedTest('base de datos no disponible');
+            throw new SkippedTest('database not available');
         }
+
+        $this->assertConnectedToTheTestDatabase();
+    }
+
+    /**
+     * Last line of defence before any truncation or installer run: the open
+     * connection must point at a database whose name ends in "_test". If it
+     * does not, the whole run stops.
+     */
+    private function assertConnectedToTheTestDatabase(): void
+    {
+        static $verified = false;
+        if ($verified) {
+            return;
+        }
+
+        $name = (string) Database::value('SELECT DATABASE()');
+        if (preg_match('/_test$/', $name) !== 1) {
+            fwrite(STDERR, sprintf("\n  Refusing to run feature tests against \"%s\": it is not a test database.\n\n", $name));
+            exit(1);
+        }
+
+        $verified = true;
     }
 
     protected function prepareSchema(): void
@@ -49,9 +72,12 @@ abstract class FeatureTestCase extends TestCase
 
     protected function truncateTables(): void
     {
+        // icd11_codes is not cleared: it is a large read-only catalog that
+        // Installer::migrate() loads once.
         $tables = [
             'payments', 'invoice_items', 'invoices', 'documents', 'consents',
-            'assessments', 'diagnoses', 'clinical_notes', 'appointments',
+            'assessments', 'diagnoses', 'clinical_notes',
+            'rips_report_items', 'rips_reports', 'appointments',
             'audit_log', 'settings', 'appointment_requests', 'login_attempts',
         ];
 
@@ -75,8 +101,8 @@ abstract class FeatureTestCase extends TestCase
             'uuid' => uuid(),
             'username' => $username,
             'email' => $username . '@psiclinic.test',
-            'password_hash' => password_hash('Clave12345', PASSWORD_DEFAULT),
-            'full_name' => 'Usuario ' . $username,
+            'password_hash' => password_hash('Password1234', PASSWORD_DEFAULT),
+            'full_name' => 'User ' . $username,
             'role' => $role,
         ]);
     }
@@ -88,12 +114,12 @@ abstract class FeatureTestCase extends TestCase
 
         return Database::insert('patients', $overrides + [
             'uuid' => uuid(),
-            'record_number' => sprintf('HC-TEST-%04d', $sequence),
-            'first_name' => 'Paciente',
-            'last_name' => 'Numero ' . $sequence,
+            'record_number' => sprintf('MR-TEST-%04d', $sequence),
+            'first_name' => 'Patient',
+            'last_name' => 'Number ' . $sequence,
             'birth_date' => '1990-01-15',
             'gender' => 'undisclosed',
-            'email' => 'paciente' . $sequence . '@psiclinic.test',
+            'email' => 'patient' . $sequence . '@psiclinic.test',
             'status' => 'active',
             'risk_level' => 'none',
         ]);
@@ -122,7 +148,7 @@ abstract class FeatureTestCase extends TestCase
             'format' => 'soap',
             'session_number' => 1,
             'session_date' => date('Y-m-d'),
-            'subjective' => 'Relato del paciente.',
+            'subjective' => 'The patient describes their week.',
             'risk_level' => 'none',
         ]);
     }

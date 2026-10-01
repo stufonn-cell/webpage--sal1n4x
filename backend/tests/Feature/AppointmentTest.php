@@ -1,9 +1,9 @@
 <?php
 
 /**
- * PsiClinic - sistema de historia clinica para psicologia.
- * Hecho por Salinas | github.com/stufonn-cell
- * Copyright (c) 2026. Todos los derechos reservados. Ver LICENSE.
+ * PsiClinic - clinical records system for psychology practices.
+ * Made by Salinas | github.com/stufonn-cell
+ * Copyright (c) 2026. All rights reserved. See LICENSE.
  */
 
 declare(strict_types=1);
@@ -25,7 +25,7 @@ final class AppointmentTest extends FeatureTestCase
 
         $this->assertTrue(
             Appointments::hasConflict($psychologistId, '2026-08-10 09:30:00', '2026-08-10 10:20:00'),
-            'Un solape parcial debe detectarse'
+            'A partial overlap must be detected'
         );
     }
 
@@ -38,7 +38,7 @@ final class AppointmentTest extends FeatureTestCase
 
         $this->assertFalse(
             Appointments::hasConflict($psychologistId, '2026-08-10 09:50:00', '2026-08-10 10:40:00'),
-            'Una cita que empieza justo al terminar la anterior es valida'
+            'An appointment that starts right when the previous one ends is valid'
         );
     }
 
@@ -50,7 +50,7 @@ final class AppointmentTest extends FeatureTestCase
 
         $this->assertFalse(
             Appointments::hasConflict($psychologistId, '2026-08-10 09:00:00', '2026-08-10 09:50:00', $appointmentId),
-            'Al editar, la propia cita se excluye de la comprobacion'
+            'When editing, the appointment itself is excluded from the check'
         );
     }
 
@@ -66,8 +66,8 @@ final class AppointmentTest extends FeatureTestCase
 
     public function testTwoProfessionalsCanShareTheSameSlot(): void
     {
-        $firstPsychologist = $this->createUser('psychologist', 'uno');
-        $secondPsychologist = $this->createUser('psychologist', 'dos');
+        $firstPsychologist = $this->createUser('psychologist', 'first');
+        $secondPsychologist = $this->createUser('psychologist', 'second');
         $patientId = $this->createPatient();
 
         $this->createAppointment($patientId, $firstPsychologist, '2026-08-10 09:00:00');
@@ -80,7 +80,7 @@ final class AppointmentTest extends FeatureTestCase
         $week = Appointments::week(new DateTimeImmutable('2026-08-12'));
 
         $this->assertCount(7, $week['days']);
-        $this->assertSame('2026-08-10', array_key_first($week['days']), 'La semana empieza en lunes');
+        $this->assertSame('2026-08-10', array_key_first($week['days']), 'The week starts on Monday');
         $this->assertSame('2026-08-16', array_key_last($week['days']));
     }
 
