@@ -1,0 +1,42 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use PsiClinic\Core\Env;
+use PsiClinic\Support\Installer;
+
+require dirname(__DIR__) . '/src/autoload.php';
+
+Env::load(dirname(__DIR__) . '/.env');
+date_default_timezone_set((string) Env::get('APP_TIMEZONE', 'UTC'));
+
+$availableCommands = [
+    'install' => 'Ejecuta las migraciones y carga los datos de demostracion',
+    'migrate' => 'Crea las tablas a partir de database/migrations',
+    'cie11' => 'Vuelve a cargar el catalogo CIE-11 desde database/data',
+    'seed' => 'Carga unicamente los datos de demostracion',
+    'fresh' => 'Elimina todas las tablas y vuelve a instalar desde cero',
+    'key' => 'Genera un valor para APP_KEY',
+    'hash' => 'Genera el hash de una contrasena: bin/console hash MiClave',
+];
+
+$command = $argv[1] ?? 'help';
+
+try {
+    match ($command) {
+        'install' => Installer::install(),
+        'migrate' => Installer::migrate(),
+        'cie11' => Installer::importIcd11(),
+        'seed' => Installer::seed(),
+        'fresh' => Installer::fresh(),
+        'key' => print base64_encode(random_bytes(32)) . PHP_EOL,
+        'hash' => print password_hash((string) ($argv[2] ?? ''), PASSWORD_DEFAULT) . PHP_EOL,
+        default => Installer::printHelp($availableCommands),
+    };
+} catch (Throwable $exception) {
+    fwrite(STDERR, 'Error: ' . $exception->getMessage() . PHP_EOL);
+    exit(1);
+}
+
+exit(0);
