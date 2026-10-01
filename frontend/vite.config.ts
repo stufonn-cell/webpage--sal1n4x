@@ -3,8 +3,8 @@ import { fileURLToPath, URL } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-// En desarrollo /api se reenvia a Nginx (que a su vez habla con PHP-FPM), asi
-// el navegador ve un unico origen y la cookie de sesion funciona sin CORS.
+// In development /api is proxied to Nginx (which in turn talks to PHP-FPM), so
+// the browser sees a single origin and the session cookie works without CORS.
 const apiTarget = process.env.VITE_API_PROXY ?? 'http://localhost:8080';
 
 export default defineConfig({
